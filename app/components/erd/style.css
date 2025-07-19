@@ -1,0 +1,5 @@
+@reference "tailwindcss";
+
+.header-btn {
+    @apply p-2 rounded-md hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+}
