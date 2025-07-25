@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+import {create} from "zustand";
 
 export interface DiagramData {
     id: string;
@@ -7,24 +8,31 @@ export interface DiagramData {
     lastUpdate: string;
 }
 
-interface DiagramState {
-    diagrams: DiagramData[];
-}
-
-const initialState: DiagramState = {
-    diagrams: [],
-}
-
-const diagramSlice = createSlice({
-    name: "diagram",
-    initialState,
-    reducers: {
-        initDiagrams(state, action: PayloadAction<DiagramData[]>) {
-            state.diagrams = action.payload;
-        }
+export const mockDiagrams: DiagramData[] = [
+    {
+        id: "1",
+        name: "Sample Diagram",
+        createAt: new Date().toISOString(),
+        lastUpdate: new Date().toISOString(),
     },
-});
+    {
+        id: "2",
+        name: "Another Diagram",
+        createAt: new Date().toISOString(),
+        lastUpdate: new Date().toISOString(),
+    },
+    {
+        id: "3",
+        name: "Third Diagram",
+        createAt: new Date().toISOString(),
+        lastUpdate: new Date().toISOString(),
+    },
+];
 
-export const { initDiagrams } = diagramSlice.actions
+const useDiagramStore = create<{
+    diagrams: DiagramData[];
+}>()((set) => ({
+    diagrams: mockDiagrams,
+}));
 
-export default diagramSlice.reducer
+export default useDiagramStore;

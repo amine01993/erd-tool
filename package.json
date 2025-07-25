@@ -9,13 +9,13 @@
         "lint": "next lint"
     },
     "dependencies": {
-        "@reduxjs/toolkit": "^2.8.2",
         "@xyflow/react": "^12.8.2",
+        "classcat": "^5.0.5",
         "classnames": "^2.5.1",
+        "nanoid": "^5.1.5",
         "next": "15.4.1",
         "react": "19.1.0",
-        "react-dom": "19.1.0",
-        "react-redux": "^9.2.0"
+        "react-dom": "19.1.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3",

@@ -1,5 +1,62 @@
-@reference "tailwindcss";
+@import "tailwindcss";
+
+@theme {
+    --inset-shadow-md: inset 0 1px 5px rgba(0, 0, 0, 0.4);
+}
 
 .header-btn {
     @apply p-2 rounded-md hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
 }
+
+.react-flow-container.entity .react-flow__pane {
+    cursor: url("/entity-cursor.png") 16 16, default;
+}
+
+.react-flow-container.edge .react-flow__pane {
+    cursor: url("/edge-cursor.png") 16 16, default;
+}
+
+.erd-items {
+    @apply flex flex-col gap-2 cursor-default;
+}
+
+.erd-items button {
+    @apply p-1 rounded-sm cursor-pointer hover:bg-gray-100 transition-colors duration-300;
+}
+
+.react-flow__node-entity.selected {
+    @apply shadow-md;
+}
+
+.entity-node {
+    @apply border border-gray-800 bg-white;
+}
+
+.entity-node .title {
+    @apply font-semibold border-b text-center flex items-center;
+}
+
+.entity-node .title .drag-handle {
+    @apply flex items-center relative z-1 p-1 pr-0;
+}
+
+.entity-node .title .name {
+    @apply flex-1 p-1 text-left cursor-default;
+}
+
+.entity-node .attributes {
+    @apply text-sm text-gray-600 flex flex-col gap-1 p-2 cursor-default;
+}
+
+:where(.entity-node.selector, .entity-node.entity) .react-flow__handle {
+    @apply invisible;
+}
+
+.entity-node.edge .react-flow__handle.target {
+    @apply top-1/2 pointer-events-none opacity-0;
+}
+
+.entity-node.edge .react-flow__handle.source {
+    @apply border-none rounded-none w-full h-full transform-none left-0 top-0 bg-transparent;
+}
+

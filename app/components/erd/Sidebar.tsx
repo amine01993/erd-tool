@@ -1,10 +1,10 @@
 import { memo } from "react";
 import SearchBar from "./SearchBar";
-import { useSelector } from "react-redux";
+import useDiagramStore from "../../store/diagram";
 import DiagramItem from "./DiagramItem";
 
 const Sidebar = () => {
-    const diagrams = useSelector((state: any) => state.diagram.diagrams);
+    const diagrams = useDiagramStore((state) => state.diagrams);
 
     return (
         <>
