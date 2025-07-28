@@ -1,35 +1,30 @@
 import { Roboto_Mono } from "next/font/google";
-import { memo, useCallback, useRef, useState } from "react";
+import {
+    memo,
+    type MouseEvent as RMouseEvent,
+    useCallback,
+    useRef,
+} from "react";
 import {
     Background,
     Controls,
-    Node,
-    Edge,
     MiniMap,
     ReactFlow,
-    applyNodeChanges,
-    applyEdgeChanges,
-    addEdge,
-    NodeChange,
-    EdgeChange,
-    Connection,
     SelectionMode,
     useReactFlow,
     ConnectionMode,
     ConnectionLineType,
     OnConnectStart,
-    OnConnectEnd,
-    ConnectionState,
     FinalConnectionState,
 } from "@xyflow/react";
 import { shallow } from "zustand/shallow";
+import cc from "classcat";
 import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
 import EntityNode from "./EntityNode";
 import ErdEdge from "./ErdEdge";
-import ErdItems from "./ErdItems";
+import ErdItemsPanel from "./ErdItemsPanel";
 import useErdItemsStore from "@/app/store/erd-items";
-import cc from "classcat";
 // import DevTools from "../devtools/Devtools";
 
 const robotoMono = Roboto_Mono({
@@ -52,6 +47,8 @@ const selector = (state: ErdState) => ({
     onEdgesChange: state.onEdgesChange,
     onConnect: state.onConnect,
     addConnection: state.addConnection,
+    addNode: state.addNode,
+    addSelfConnection: state.addSelfConnection,
 });
 
 const nodeOrigin: [number, number] = [0.5, 0];
@@ -73,6 +70,8 @@ const ERD = () => {
         onEdgesChange,
         onConnect,
         addConnection,
+        addNode,
+        addSelfConnection,
     } = useErdStore(selector, shallow);
     const { selectedItem } = useErdItemsStore();
 
@@ -85,13 +84,17 @@ const ERD = () => {
             const targetIsPane = (event.target as Element).classList.contains(
                 "react-flow__pane"
             );
+            
+            if(connectionState.fromNode && connectionState.fromNode?.id === connectionState.toNode?.id) {
+                addSelfConnection(connectionState.fromNode.id);
+                return;
+            }
 
             if (!targetIsPane || !connectingNodeId.current) {
                 return;
             }
 
             // when a connection is dropped on the pane it's not valid
-            // console.log("onConnectEnd", event, connectionState);
             if (!connectionState.isValid) {
                 // we need to remove the wrapper bounds, in order to get the correct position
                 const { clientX, clientY } =
@@ -111,6 +114,28 @@ const ERD = () => {
     const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
         connectingNodeId.current = nodeId;
     }, []);
+
+    const handlePaneClick = useCallback(
+        (event: RMouseEvent) => {
+            if (selectedItem !== "entity") {
+                return;
+            }
+
+            const erdItemsPanelElem = (event.target as HTMLElement).closest(".erd-items-panel");
+            const erdEntityElem = (event.target as HTMLElement).closest(".entity-node");
+            if (erdItemsPanelElem || erdEntityElem) {
+                return;
+            }
+
+            const position = screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
+
+            addNode(position);
+        },
+        [selectedItem]
+    );
 
     return (
         <div
@@ -140,12 +165,13 @@ const ERD = () => {
                 connectionLineStyle={{ stroke: "#000" }}
                 fitView
                 className={cc(["react-flow-container", selectedItem])}
+                onClick={handlePaneClick}
             >
                 <Background />
                 <Controls showInteractive={false} />
                 <MiniMap />
                 {/* <DevTools /> */}
-                <ErdItems />
+                <ErdItemsPanel />
             </ReactFlow>
         </div>
     );

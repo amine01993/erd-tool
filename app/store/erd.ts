@@ -21,7 +21,10 @@ export type ErdState = {
     onNodesChange: OnNodesChange;
     onEdgesChange: OnEdgesChange;
     onConnect: (params: Connection) => void;
+    getName: () => string;
     addConnection: (fromId: string, position: XYPosition) => void;
+    addNode: (position: XYPosition) => void;
+    addSelfConnection: (nodeId: string) => void;
 };
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
@@ -56,12 +59,18 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             edges: addEdge(params, get().edges),
         });
     },
-    addConnection: (fromId: string, position: XYPosition) => {
+    getName: () => {
         const { nodes } = get();
-        let name = "Entity", k = 1;
+        let name = "Entity",
+            k = 1;
         while (nodes.some((node) => node.data.name === name)) {
             name = `Entity (${k++})`;
         }
+        return name;
+    },
+    addConnection: (fromId: string, position: XYPosition) => {
+        const { getName } = get();
+        let name = getName()
 
         const newNode: Node = {
             id: nanoid(),
@@ -82,6 +91,33 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             edges: state.edges.concat(newEdge),
         }));
     },
+    addNode(position: XYPosition) {
+        const { getName } = get();
+        let name = getName()
+
+        const newNode: Node = {
+            id: nanoid(),
+            position,
+            data: { name, attributes: [] },
+            origin: [0.5, 0.0],
+            type: "entity",
+        };
+
+        set((state) => ({
+            nodes: state.nodes.concat(newNode),
+        }));
+    },
+    addSelfConnection: (nodeId: string) => {
+        const newEdge: Edge = {
+            id: nanoid(),
+            source: nodeId,
+            target: nodeId,
+        };
+
+        set((state) => ({
+            edges: state.edges.concat(newEdge),
+        }));
+    }
 }));
 
 export default useErdStore;

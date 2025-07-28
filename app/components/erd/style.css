@@ -8,55 +8,146 @@
     @apply p-2 rounded-md hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
 }
 
-.react-flow-container.entity .react-flow__pane {
-    cursor: url("/entity-cursor.png") 16 16, default;
-}
+.react-flow-container {
+    &.entity {
+        .react-flow__pane {
+            cursor: url("/entity-cursor.png") 16 16, default;
+        }
+    }
 
-.react-flow-container.edge .react-flow__pane {
-    cursor: url("/edge-cursor.png") 16 16, default;
+    &.edge {
+        .react-flow__pane {
+            cursor: url("/edge-cursor.png") 16 16, default;
+        }
+
+        .entity-node {
+            .react-flow__handle {
+                &.target {
+                    @apply top-1/2 pointer-events-none opacity-0;
+                }
+
+                &.source {
+                    @apply border-none rounded-none w-full h-full transform-none left-0 top-0 bg-transparent;
+                }
+            }
+        }
+    }
+
+    &.selector {
+        .react-flow__node-entity {
+            &.selected {
+                .entity-node {
+                    .react-flow__resize-control {
+                        @apply block;
+                    }
+                }
+            }
+
+            &:hover:not(.selected) {
+                @apply border-blue-400;
+
+                .entity-node .title {
+                    @apply border-blue-400;
+                }
+            }
+        }
+
+        .react-flow__edge-erd-edge {
+            &:hover:not(.selected) {
+                path {
+                    @apply stroke-(--color-blue-400)!;
+                }
+            }
+        }
+    }
+
+    &.selector,
+    &.entity {
+        .entity-node {
+            .react-flow__handle {
+                @apply invisible;
+            }
+        }
+    }
 }
 
 .erd-items {
     @apply flex flex-col gap-2 cursor-default;
+
+    button {
+        @apply p-1 rounded-sm cursor-pointer hover:bg-gray-100 transition-colors duration-300;
+    }
 }
 
-.erd-items button {
-    @apply p-1 rounded-sm cursor-pointer hover:bg-gray-100 transition-colors duration-300;
+.react-flow__node-entity {
+    @apply border border-gray-800 bg-white;
+
+    &.selected {
+        @apply shadow-md border-blue-600;
+
+        .entity-node .title {
+            @apply border-blue-600;
+        }
+    }
+
+    .react-flow__resize-control {
+        @apply hidden;
+
+        .line {
+            @apply border-blue-600;
+        }
+
+        .handle {
+            @apply bg-blue-600;
+        }
+    }
 }
 
-.react-flow__node-entity.selected {
-    @apply shadow-md;
+.react-flow__edge-erd-edge {
+    &.selected {
+        path {
+            @apply stroke-(--color-blue-600)!;
+        }
+    }
+
+    path {
+        @apply stroke-(--color-black)!;
+    }
 }
 
 .entity-node {
-    @apply border border-gray-800 bg-white;
+    @apply h-full flex flex-col overflow-hidden min-w-[199px] min-h-[99px];
+
+    .title {
+        @apply font-semibold border-b text-center flex items-center;
+
+        .drag-handle {
+            @apply flex items-center relative z-1 p-1 pr-0 w-[24px];
+        }
+
+        .name {
+            @apply flex-1 p-1 text-left cursor-default;
+        }
+    }
+
+    .attributes {
+        @apply text-sm text-gray-600 flex flex-col gap-1 p-2 cursor-default flex-1;
+    }
 }
 
-.entity-node .title {
-    @apply font-semibold border-b text-center flex items-center;
+/* .react-flow__handle.target {
+  top: 50%;
+  pointer-events: none;
+  opacity: 0;
 }
-
-.entity-node .title .drag-handle {
-    @apply flex items-center relative z-1 p-1 pr-0;
-}
-
-.entity-node .title .name {
-    @apply flex-1 p-1 text-left cursor-default;
-}
-
-.entity-node .attributes {
-    @apply text-sm text-gray-600 flex flex-col gap-1 p-2 cursor-default;
-}
-
-:where(.entity-node.selector, .entity-node.entity) .react-flow__handle {
-    @apply invisible;
-}
-
-.entity-node.edge .react-flow__handle.target {
-    @apply top-1/2 pointer-events-none opacity-0;
-}
-
-.entity-node.edge .react-flow__handle.source {
-    @apply border-none rounded-none w-full h-full transform-none left-0 top-0 bg-transparent;
-}
-
+ 
+.react-flow__handle.source {
+  top: 0;
+  left: 0;
+  transform: none;
+  background: #f6ad55;
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  border: none;
+} */

@@ -5,7 +5,7 @@ import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
 import { useCallback } from "react";
 
-const ErdItems = () => {
+const ErdItemsPanel = () => {
     const { selectedItem, selectItem } = useErdItemsStore();
 
     const handleSelection = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
@@ -14,8 +14,8 @@ const ErdItems = () => {
     }, []);
 
     return (
-        <Panel position="center-left" className="bg-gray-white p-1 shadow-md">
-            <ul className="erd-items">
+        <Panel position="center-left" className="erd-items-panel bg-white p-1 shadow-md">
+            <ul className="erd-items select-none">
                 <li>
                     <button
                         title="Select to Move and Resize Nodes"
@@ -71,4 +71,4 @@ const ErdItems = () => {
     );
 };
 
-export default ErdItems;
+export default ErdItemsPanel;
