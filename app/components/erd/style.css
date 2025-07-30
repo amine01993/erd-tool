@@ -108,11 +108,29 @@
         path {
             @apply stroke-(--color-blue-600)!;
         }
+
+        /* .edge-zero-marker-start,
+        .edge-zero-marker-end,
+        .edge-one-marker-start,
+        .edge-one-marker-end,
+        .edge-many-marker-start,
+        .edge-many-marker-end {
+            @apply stroke-(--color-blue-600)!;
+        } */
+    }
+    
+    path {
+        @apply stroke-(--color-black) stroke-1;
     }
 
-    path {
-        @apply stroke-(--color-black)!;
-    }
+    /* .edge-zero-marker-start,
+    .edge-zero-marker-end,
+    .edge-one-marker-start,
+    .edge-one-marker-end,
+    .edge-many-marker-start,
+    .edge-many-marker-end {
+        @apply stroke-(--color-black) stroke-[20px] fill-none;
+    } */
 }
 
 .entity-node {
@@ -135,19 +153,6 @@
     }
 }
 
-/* .react-flow__handle.target {
-  top: 50%;
-  pointer-events: none;
-  opacity: 0;
+.erd-connection-line {
+    @apply stroke-(--color-black);
 }
- 
-.react-flow__handle.source {
-  top: 0;
-  left: 0;
-  transform: none;
-  background: #f6ad55;
-  height: 100%;
-  width: 100%;
-  border-radius: 2px;
-  border: none;
-} */

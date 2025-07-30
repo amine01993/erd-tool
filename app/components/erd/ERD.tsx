@@ -25,6 +25,7 @@ import EntityNode from "./EntityNode";
 import ErdEdge from "./ErdEdge";
 import ErdItemsPanel from "./ErdItemsPanel";
 import useErdItemsStore from "@/app/store/erd-items";
+import ErdConnectionLine from "./ErdConnectionLine";
 // import DevTools from "../devtools/Devtools";
 
 const robotoMono = Roboto_Mono({
@@ -55,7 +56,14 @@ const nodeOrigin: [number, number] = [0.5, 0];
 
 const defaultEdgeOptions = {
     type: "erd-edge",
-    style: { stroke: "#000" },
+    markerStart: "edge-one-marker-start",
+    markerEnd: "edge-many-marker-end",
+    data: {
+        order: 1,
+        length: 1,
+        startLabel: "1",
+        endLabel: "*",
+    },
 };
 
 const ERD = () => {
@@ -80,15 +88,18 @@ const ERD = () => {
             event: MouseEvent | TouchEvent,
             connectionState: FinalConnectionState
         ) => {
+            if (
+                connectionState.fromNode &&
+                connectionState.fromNode?.id === connectionState.toNode?.id
+            ) {
+                addSelfConnection(connectionState.fromNode.id);
+                return;
+            }
+
             // we only want to create a new node if the connection ends on the pane
             const targetIsPane = (event.target as Element).classList.contains(
                 "react-flow__pane"
             );
-            
-            if(connectionState.fromNode && connectionState.fromNode?.id === connectionState.toNode?.id) {
-                addSelfConnection(connectionState.fromNode.id);
-                return;
-            }
 
             if (!targetIsPane || !connectingNodeId.current) {
                 return;
@@ -121,8 +132,12 @@ const ERD = () => {
                 return;
             }
 
-            const erdItemsPanelElem = (event.target as HTMLElement).closest(".erd-items-panel");
-            const erdEntityElem = (event.target as HTMLElement).closest(".entity-node");
+            const erdItemsPanelElem = (event.target as HTMLElement).closest(
+                ".erd-items-panel"
+            );
+            const erdEntityElem = (event.target as HTMLElement).closest(
+                ".entity-node"
+            );
             if (erdItemsPanelElem || erdEntityElem) {
                 return;
             }
@@ -142,6 +157,101 @@ const ERD = () => {
             className={`${robotoMono.className} h-full w-full`}
             ref={reactFlowWrapper}
         >
+            <svg style={{ position: "absolute", top: 0, left: 0 }}>
+                <defs>
+                    <marker
+                        id="edge-one-marker-start"
+                        viewBox="0 74 85 147"
+                        markerHeight={20}
+                        markerWidth={20}
+                        refX={-50}
+                        refY={148}
+                        orient="auto"
+                        className="edge-one-marker-start"
+                    >
+                        <path
+                            className="edge-one-marker-start"
+                            style={{
+                                stroke: "#00f",
+                                strokeWidth: 20,
+                            }}
+                            d="M55 221.5v-141M0 147.5h85"
+                        />
+                    </marker>
+                    <marker
+                        id="edge-one-marker-end"
+                        viewBox="0 74 85 147"
+                        markerHeight={20}
+                        markerWidth={20}
+                        refX={150}
+                        refY={148}
+                        orient="auto"
+                    >
+                        <path
+                            className="edge-one-marker-end"
+                            style={{
+                                stroke: "#000",
+                                strokeWidth: 20,
+                            }}
+                            d="M30 73.5v141m55-67H0"
+                        />
+                    </marker>
+                    <marker
+                        id="edge-many-marker-start"
+                        viewBox="0 74 85 147"
+                        markerHeight={20}
+                        markerWidth={20}
+                        refX={-50}
+                        refY={148}
+                        orient="auto"
+                    >
+                        <path
+                            className="edge-many-marker-start"
+                            d="m10 212.5 66.5-68M10 82.5l66.5 68"
+                            style={{
+                                fill: "none",
+                                stroke: "#000",
+                                strokeWidth: 20,
+                            }}
+                        ></path>
+                        <path
+                            className="edge-many-marker-start"
+                            style={{
+                                stroke: "#000",
+                                strokeWidth: 20,
+                            }}
+                            d="M0 147.5h85"
+                        ></path>
+                    </marker>
+                    <marker
+                        id="edge-many-marker-end"
+                        viewBox="0 74 85 147"
+                        markerHeight={20}
+                        markerWidth={20}
+                        refX={150}
+                        refY={148}
+                        orient="auto"
+                    >
+                        <path
+                            className="edge-many-marker-end"
+                            d="m76.5 82.5-66.5 68m66.5 62-66.5-68"
+                            style={{
+                                fill: "none",
+                                stroke: "#000",
+                                strokeWidth: 20,
+                            }}
+                        />
+                        <path
+                            className="edge-many-marker-end"
+                            d="M0 147.5h85"
+                            style={{
+                                stroke: "#000",
+                                strokeWidth: 20,
+                            }}
+                        />
+                    </marker>
+                </defs>
+            </svg>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -161,8 +271,7 @@ const ERD = () => {
                 nodeOrigin={nodeOrigin}
                 connectionMode={ConnectionMode.Loose}
                 defaultEdgeOptions={defaultEdgeOptions}
-                connectionLineType={ConnectionLineType.Straight}
-                connectionLineStyle={{ stroke: "#000" }}
+                connectionLineComponent={ErdConnectionLine}
                 fitView
                 className={cc(["react-flow-container", selectedItem])}
                 onClick={handlePaneClick}

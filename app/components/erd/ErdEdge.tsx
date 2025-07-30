@@ -1,43 +1,68 @@
 import {
     BaseEdge,
+    Edge,
+    EdgeLabelRenderer,
     EdgeProps,
+    getSmoothStepPath,
     getStraightPath,
     useInternalNode,
 } from "@xyflow/react";
-import { getEdgeParams } from "@/app/helper/items";
+import { getEdgeParams, getSelfLoopPath } from "@/app/helper/items";
 
-function ErdEdge({ id, source, target, markerEnd, style }: EdgeProps) {
+export type ErdEdgeData = {
+    startLabel: string;
+    endLabel: string;
+    order: number;
+    length: number;
+}
+
+function ErdEdge({
+    id,
+    source,
+    target,
+    markerStart,
+    markerEnd,
+    style,
+    data,
+}: EdgeProps<
+    Edge<ErdEdgeData>
+>) {
     const sourceNode = useInternalNode(source);
+    const targetNode = useInternalNode(target);
 
-    if (!sourceNode) {
+    // console.log("ErdEdge", {
+    //     id,
+    //     source,
+    //     target,
+    //     order: data?.order,
+    //     length: data?.length,
+    // });
+
+    if (!sourceNode || !targetNode) {
         return null;
     }
 
     if (source === target) {
-        const {x, y} = sourceNode.internals.positionAbsolute;
-        const sx = x + sourceNode.measured.width!;
-        const sy = y + 30;
-        const tx = x;
-        const ty = y + 30;
-        const radiusX = (sx - tx) * 0.6;
-        const radiusY = 50;
-        const edgePath = `M ${
-            sx - 5
-        } ${sy} A ${radiusX} ${radiusY} 0 1 0 ${tx + 2} ${ty}`;
+        const edgePath = getSelfLoopPath(
+            sourceNode,
+            data?.order || 1,
+            data?.length || 1
+        );
 
-        return <BaseEdge path={edgePath} markerEnd={markerEnd} />;
+        return (
+            <BaseEdge
+                path={edgePath}
+                markerStart={markerStart}
+                markerEnd={markerEnd}
+            />
+        );
     }
 
-
-    const targetNode = useInternalNode(target);
-
-    if (!targetNode) {
-        return null;
-    }
-
-    const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
+    const { sx, sy, tx, ty } = getEdgeParams(
         sourceNode,
-        targetNode
+        targetNode,
+        data?.order || 1,
+        data?.length || 1
     );
 
     const [edgePath] = getStraightPath({
@@ -48,14 +73,51 @@ function ErdEdge({ id, source, target, markerEnd, style }: EdgeProps) {
     });
 
     return (
-        <path
-            id={id}
-            className="react-flow__edge-path"
-            d={edgePath}
-            markerEnd={markerEnd}
-            style={style}
-        />
+        <>
+            <BaseEdge
+                id={id}
+                className="react-flow__edge-path"
+                path={edgePath}
+                markerStart={markerStart}
+                markerEnd={markerEnd}
+                style={style}
+            />
+
+            <EdgeLabelRenderer>
+                {data?.startLabel && (
+                    <EdgeLabel
+                        transform={`translate(-50%, 0%) translate(${sx}px,${sy}px)`}
+                        label={data.startLabel}
+                    />
+                )}
+                {data?.endLabel && (
+                    <EdgeLabel
+                        transform={`translate(-50%, -100%) translate(${tx}px,${ty}px)`}
+                        label={data.endLabel}
+                    />
+                )}
+            </EdgeLabelRenderer>
+        </>
     );
 }
 
 export default ErdEdge;
+
+function EdgeLabel({ transform, label }: { transform: string; label: string }) {
+    return (
+        <div
+            style={{
+                position: "absolute",
+                background: "rgba(255, 255, 255, 0.75)",
+                padding: "5px 10px",
+                color: "#ff5050",
+                fontSize: 12,
+                fontWeight: 700,
+                transform,
+            }}
+            className="nodrag nopan"
+        >
+            {label}
+        </div>
+    );
+}
