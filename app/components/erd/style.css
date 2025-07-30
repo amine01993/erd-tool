@@ -156,3 +156,15 @@
 .erd-connection-line {
     @apply stroke-(--color-black);
 }
+
+.edge-label {
+    @apply absolute bg-gray-700/5 backdrop-blur-xs text-xs text-gray-800 cursor-pointer pointer-events-auto;
+
+    button {
+        @apply bg-transparent border-none hover:bg-gray-700/7 px-1 py-0.5 h-5;
+    }
+
+    select {
+        @apply outline-1 -outline-offset-1 bg-gray-50 hover:bg-gray-100 px-1 py-0.5 h-5 w-12 appearance-none;
+    }
+}

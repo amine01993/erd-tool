@@ -13,7 +13,6 @@ import {
     SelectionMode,
     useReactFlow,
     ConnectionMode,
-    ConnectionLineType,
     OnConnectStart,
     FinalConnectionState,
 } from "@xyflow/react";
@@ -61,8 +60,8 @@ const defaultEdgeOptions = {
     data: {
         order: 1,
         length: 1,
-        startLabel: "1",
-        endLabel: "*",
+        startValue: "1",
+        endValue: "*",
     },
 };
 
@@ -160,95 +159,94 @@ const ERD = () => {
             <svg style={{ position: "absolute", top: 0, left: 0 }}>
                 <defs>
                     <marker
-                        id="edge-one-marker-start"
-                        viewBox="0 74 85 147"
-                        markerHeight={20}
-                        markerWidth={20}
-                        refX={-50}
-                        refY={148}
+                        id="edge-zero-marker-start"
+                        viewBox="0 0 108 215"
+                        markerHeight={11}
+                        markerWidth={11}
+                        refX={-20}
+                        refY={107}
                         orient="auto"
-                        className="edge-one-marker-start"
                     >
-                        <path
-                            className="edge-one-marker-start"
+                        <circle
+                            cx="60.5"
+                            cy="107.5"
+                            r="33.5"
                             style={{
-                                stroke: "#00f",
-                                strokeWidth: 20,
+                                fill: "#fff",
+                                stroke: "#000",
+                                strokeWidth: 28,
+                                strokeMiterlimit: 10,
                             }}
-                            d="M55 221.5v-141M0 147.5h85"
                         />
+                    </marker>
+                    <marker
+                        id="edge-zero-marker-end"
+                        viewBox="0 0 108 215"
+                        markerHeight={11}
+                        markerWidth={11}
+                        refX={125}
+                        refY={110}
+                        orient="auto"
+                    >
+                        <circle
+                            cx="48.5"
+                            cy="107.5"
+                            r="33.5"
+                            style={{
+                                fill: "#fff",
+                                stroke: "#000",
+                                strokeWidth: 28,
+                                strokeMiterlimit: 10,
+                            }}
+                        />
+                    </marker>
+                    <marker
+                        id="edge-one-marker-start"
+                        viewBox="0 0 108 215"
+                        markerHeight={11}
+                        markerWidth={11}
+                        refX={0}
+                        refY={110}
+                        orient="auto"
+                    >
+                        <path d="M63 0h29v215H63z" />
                     </marker>
                     <marker
                         id="edge-one-marker-end"
-                        viewBox="0 74 85 147"
-                        markerHeight={20}
-                        markerWidth={20}
-                        refX={150}
-                        refY={148}
+                        viewBox="0 0 108 215"
+                        markerHeight={11}
+                        markerWidth={11}
+                        refX={100}
+                        refY={110}
                         orient="auto"
                     >
-                        <path
-                            className="edge-one-marker-end"
-                            style={{
-                                stroke: "#000",
-                                strokeWidth: 20,
-                            }}
-                            d="M30 73.5v141m55-67H0"
-                        />
+                        <path d="M16 0h29v215H16z" />
                     </marker>
                     <marker
                         id="edge-many-marker-start"
-                        viewBox="0 74 85 147"
-                        markerHeight={20}
-                        markerWidth={20}
-                        refX={-50}
-                        refY={148}
+                        viewBox="0 0 108 215"
+                        markerHeight={11}
+                        markerWidth={11}
+                        refX={0}
+                        refY={110}
                         orient="auto"
                     >
-                        <path
-                            className="edge-many-marker-start"
-                            d="m10 212.5 66.5-68M10 82.5l66.5 68"
-                            style={{
-                                fill: "none",
-                                stroke: "#000",
-                                strokeWidth: 20,
-                            }}
-                        ></path>
-                        <path
-                            className="edge-many-marker-start"
-                            style={{
-                                stroke: "#000",
-                                strokeWidth: 20,
-                            }}
-                            d="M0 147.5h85"
-                        ></path>
+                        <path d="M0 92.5h108v29H0z" />
+                        <path d="M20.8 193.5 93.2 121l-20.5-20.5L0 173v41.9z" />
+                        <path d="M72.7 113.5 0 41V0l20.8 20.5L93.2 93z" />
                     </marker>
                     <marker
                         id="edge-many-marker-end"
-                        viewBox="0 74 85 147"
-                        markerHeight={20}
-                        markerWidth={20}
-                        refX={150}
-                        refY={148}
+                        viewBox="0 0 108 215"
+                        markerHeight={11}
+                        markerWidth={11}
+                        refX={100}
+                        refY={110}
                         orient="auto"
                     >
-                        <path
-                            className="edge-many-marker-end"
-                            d="m76.5 82.5-66.5 68m66.5 62-66.5-68"
-                            style={{
-                                fill: "none",
-                                stroke: "#000",
-                                strokeWidth: 20,
-                            }}
-                        />
-                        <path
-                            className="edge-many-marker-end"
-                            d="M0 147.5h85"
-                            style={{
-                                stroke: "#000",
-                                strokeWidth: 20,
-                            }}
-                        />
+                        <path d="M0 92.5h108v29H0z" />
+                        <path d="M87.2 193.5 14.8 121l20.5-20.5L108 173v41.9z" />
+                        <path d="M35.3 113.5 108 41V0L87.2 20.5 14.8 93z" />
                     </marker>
                 </defs>
             </svg>

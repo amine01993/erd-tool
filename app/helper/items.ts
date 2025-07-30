@@ -67,7 +67,6 @@ export function getEdgeParams(
     edgeOrder: number,
     edgeLength: number // is the number of edges connecting the source and target nodes
 ) {
-    console.log("getEdgeParams", {edgeOrder, edgeLength})
     const sourceIntersectionPoint = getNodeIntersection(
         source,
         target,
@@ -81,23 +80,17 @@ export function getEdgeParams(
         edgeLength
     );
 
-    // const sourcePos = getEdgePosition(source, sourceIntersectionPoint);
-    // const targetPos = getEdgePosition(target, targetIntersectionPoint);
+    const sourcePos = getEdgePosition(source, sourceIntersectionPoint);
+    const targetPos = getEdgePosition(target, targetIntersectionPoint);
 
-    // console.log("getEdgeParams", {
-    //     sourceIntersectionPoint,
-    //     targetIntersectionPoint,
-    //     sourcePos,
-    //     targetPos,
-    // });
 
     return {
         sx: sourceIntersectionPoint.x,
         sy: sourceIntersectionPoint.y,
         tx: targetIntersectionPoint.x,
         ty: targetIntersectionPoint.y,
-        // sourcePos,
-        // targetPos,
+        sourcePos,
+        targetPos,
     };
 }
 

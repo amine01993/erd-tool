@@ -27,6 +27,7 @@ export type ErdState = {
     addConnection: (fromId: string, position: XYPosition) => void;
     addNode: (position: XYPosition) => void;
     addSelfConnection: (nodeId: string) => void;
+    updateEdgeLabel: (id: string, type: "start" | "end", label: string) => void;
 };
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
@@ -74,13 +75,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             id: "1->2",
             source: "1",
             target: "2",
-            markerStart: "edge-one-marker-start",
-            markerEnd: "edge-one-marker-end",
+            markerStart: "edge-zero-marker-start",
+            markerEnd: "edge-zero-marker-end",
             data: {
                 order: 1,
                 length: 1,
-                startLabel: "1",
-                endLabel: "1",
+                startValue: "0..1",
+                endValue: "0..1",
             },
         },
         {
@@ -92,8 +93,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             data: {
                 order: 1,
                 length: 1,
-                startLabel: "N",
-                endLabel: "N",
+                startValue: "*",
+                endValue: "*",
             },
         },
     ],
@@ -103,13 +104,12 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
     },
     onEdgesChange: (changes: EdgeChange[]) => {
-        console.log("onEdgesChange")
+        console.log("onEdgesChange");
         // set({
         //     edges: applyEdgeChanges(changes, get().edges),
         // });
     },
     onConnect: (params: Connection) => {
-        console.log("onConnect", params);
         const { source, target } = params;
         const { edges } = get();
 
@@ -125,13 +125,11 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             id: nanoid(),
             source,
             target,
-            // markerStart: "edge-one-marker-start",
-            // markerEnd: "edge-many-marker-end",
             data: {
                 order: sharedEdges.length + 1,
                 length: sharedEdges.length + 1,
-                startLabel: "1",
-                endLabel: "*",
+                startValue: "1",
+                endValue: "*",
             },
         };
 
@@ -156,7 +154,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         return name;
     },
     addConnection: (fromId: string, position: XYPosition) => {
-        console.log("addConnection", fromId);
         const { getName } = get();
         let name = getName();
 
@@ -172,14 +169,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             id: nanoid(),
             source: fromId,
             target: newNode.id,
-            // markerStart: "edge-one-marker-start",
-            // markerEnd: "edge-many-marker-end",
-            // data: {
-            //     order: 1,
-            //     length: 1,
-            //     startLabel: "1",
-            //     endLabel: "*",
-            // },
         };
 
         set((state) => ({
@@ -204,7 +193,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }));
     },
     addSelfConnection: (nodeId: string) => {
-        console.log("addSelfConnection", nodeId);
         const { edges } = get();
 
         const sharedEdges = edges
@@ -220,14 +208,11 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             data: {
                 order: sharedEdges.length + 1,
                 length: sharedEdges.length + 1,
-                startLabel: "1",
-                endLabel: "1",
+                startValue: "1",
+                endValue: "1",
             },
         };
 
-        // set((state) => ({
-        //     edges: state.edges.concat(newEdge),
-        // }));
         set((state) => {
             state.edges.forEach((e) => {
                 if (sharedEdges.includes(e.id) && e.data) {
@@ -237,6 +222,40 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             return {
                 edges: state.edges.concat(newEdge),
             };
+        });
+    },
+    updateEdgeLabel(id: string, type: "start" | "end", label: string) {
+        const { edges } = get();
+
+        let marker;
+        switch (label) {
+            case "0..1":
+                marker = "edge-zero-marker";
+                break;
+            case "1":
+                marker = "edge-one-marker";
+                break;
+            default:
+                marker = "edge-many-marker";
+                break;
+        }
+        marker += "-" + type;
+
+        set({
+            edges: edges.map((e) => {
+                if (e.id !== id) return e;
+                return {
+                    ...e,
+                    markerStart: type === "start" ? marker : e.markerStart,
+                    markerEnd: type === "end" ? marker : e.markerEnd,
+                    data: {
+                        ...e.data!,
+                        startValue:
+                            type === "start" ? label : e.data!.startValue,
+                        endValue: type === "end" ? label : e.data!.endValue,
+                    },
+                };
+            }),
         });
     },
 }));
