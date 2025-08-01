@@ -46,8 +46,8 @@ const selector = (state: ErdState) => ({
     onNodesChange: state.onNodesChange,
     onEdgesChange: state.onEdgesChange,
     onConnect: state.onConnect,
+    addEntity: state.addEntity,
     addConnection: state.addConnection,
-    addNode: state.addNode,
     addSelfConnection: state.addSelfConnection,
 });
 
@@ -77,7 +77,7 @@ const ERD = () => {
         onEdgesChange,
         onConnect,
         addConnection,
-        addNode,
+        addEntity,
         addSelfConnection,
     } = useErdStore(selector, shallow);
     const { selectedItem } = useErdItemsStore();
@@ -146,7 +146,7 @@ const ERD = () => {
                 y: event.clientY,
             });
 
-            addNode(position);
+            addEntity(position);
         },
         [selectedItem]
     );
@@ -156,7 +156,7 @@ const ERD = () => {
             className={`${robotoMono.className} h-full w-full`}
             ref={reactFlowWrapper}
         >
-            <svg style={{ position: "absolute", top: 0, left: 0 }}>
+            <svg style={{ position: "absolute", top: 0, left: 0, zIndex: -1 }}>
                 <defs>
                     <marker
                         id="edge-zero-marker-start"

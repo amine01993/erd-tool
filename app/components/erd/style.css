@@ -118,7 +118,7 @@
             @apply stroke-(--color-blue-600)!;
         } */
     }
-    
+
     path {
         @apply stroke-(--color-black) stroke-1;
     }
@@ -166,5 +166,146 @@
 
     select {
         @apply outline-1 -outline-offset-1 bg-gray-50 hover:bg-gray-100 px-1 py-0.5 h-5 w-12 appearance-none;
+    }
+}
+
+.entity-info {
+    @apply flex flex-col min-h-full h-full;
+
+    button {
+        @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
+    }
+
+    .error {
+        @apply text-sm text-[#800E13] font-medium;
+    }
+
+    .details {
+        @apply flex-1 h-full min-h-[calc(100%-54px)] flex flex-col;
+
+        ul {
+            li {
+                &:last-child {
+                    @apply mt-2;
+                }
+            }
+        }
+
+        .attribute-form {
+            scrollbar-width: thin;
+            scrollbar-color: #640d14 #fefbfb;
+            @apply flex flex-col border-t border-gray-400 gap-2 relative;
+            @apply -ml-3 pl-3 mt-3 pr-2 py-3 -mr-3;
+            @apply overflow-y-auto overflow-x-hidden h-full min-h-[calc(100%-66px)];
+
+            &.with-scrollbar {
+                @apply py-0;
+
+                &::before,
+                &::after {
+                    @apply content-[""] sticky h-3 min-h-3 -ml-3 w-[calc(100%+var(--spacing)*5)];
+                }
+                &::before {
+                    @apply top-0 -mb-2;
+                    background-image: linear-gradient(
+                        rgb(56 4 14 / 20%),
+                        transparent
+                    );
+                }
+                &::after {
+                    @apply bottom-0 -mt-2;
+                    background-image: linear-gradient(
+                        0,
+                        rgb(56 4 14 / 20%),
+                        transparent
+                    );
+                }
+            }
+        }
+
+        .input-field {
+            @apply flex flex-col;
+
+            label {
+                @apply font-medium;
+            }
+
+            input {
+                @apply border-1 border-gray-400 bg-white p-2 rounded-md;
+                @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
+            }
+
+            .required {
+                @apply text-[#640D14] ml-0.5;
+            }
+        }
+
+        .text-area-field {
+            @apply flex flex-col;
+
+            label {
+                @apply font-medium;
+            }
+
+            textarea {
+                @apply border-1 border-gray-400 bg-white p-2 rounded-md;
+            }
+
+            .required {
+                @apply text-[#640D14] ml-0.5;
+            }
+        }
+
+        .select-field {
+            @apply flex flex-col;
+
+            label {
+                @apply font-medium;
+            }
+
+            select {
+                @apply border-1 border-gray-400 bg-white p-2 rounded-md appearance-none;
+            }
+        }
+
+        .checkbox-field {
+            @apply flex gap-2;
+
+            label {
+                @apply font-medium;
+            }
+
+            input {
+                @apply p-2;
+            }
+        }
+
+        .edit-attribute-btn {
+            @apply p-2 flex items-center justify-self-end;
+            @apply bg-[#335c67] hover:bg-[#2a4c55] text-white;
+        }
+
+        .remove-attribute-btn {
+            @apply p-2 flex items-center justify-self-end;
+            @apply bg-[#640D14] hover:bg-[#44090e] text-white;
+        }
+
+        .add-attribute-btn {
+            @apply p-2 flex gap-1 items-center justify-self-end;
+            @apply bg-[#003049] hover:bg-[#000305] text-white;
+        }
+    }
+
+    .actions {
+        @apply flex justify-between mt-3;
+
+        .back-btn {
+            @apply flex gap-2 p-2 border-1 items-center;
+            @apply bg-[#003049] hover:bg-[#000305] text-white font-semibold;
+        }
+        .submit-btn {
+            @apply flex gap-2 p-2 border-1 items-center;
+            @apply bg-[#AD2831] hover:bg-[#800E13] text-white font-semibold;
+        }
     }
 }

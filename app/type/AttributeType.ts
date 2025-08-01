@@ -1,4 +1,4 @@
-export const types = {
+export const attributeTypes = {
     uuid: {
         hasDefault: false,
         hasPrecision: false,
@@ -63,7 +63,7 @@ export const types = {
         hasNullable: true,
         hasAutoIncrement: true,
     },
-    number: {
+    numeric: {
         hasDefault: true,
         hasPrecision: false,
         hasScale: false,
@@ -155,4 +155,4 @@ export const types = {
     },
 };
 
-export type AttributeType = keyof typeof types;
+export type AttributeType = keyof typeof attributeTypes;

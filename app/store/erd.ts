@@ -11,35 +11,42 @@ import {
     addEdge,
     XYPosition,
     useInternalNode,
+    NodeSelectionChange,
 } from "@xyflow/react";
 import { createWithEqualityFn } from "zustand/traditional";
-import { EntityData } from "../components/erd/EntityNode";
 import { nanoid } from "nanoid";
 import { ErdEdgeData } from "../components/erd/ErdEdge";
+import { EntityData, AttributeData } from "../type/EntityType";
 
 export type ErdState = {
-    nodes: Node[];
+    selectedNodeId: string | null;
+    nodes: Node<EntityData>[];
     edges: Edge<ErdEdgeData>[];
     onNodesChange: OnNodesChange;
     onEdgesChange: OnEdgesChange;
     onConnect: (params: Connection) => void;
     getName: () => string;
     addConnection: (fromId: string, position: XYPosition) => void;
-    addNode: (position: XYPosition) => void;
+    addEntity: (position: XYPosition) => void;
     addSelfConnection: (nodeId: string) => void;
     updateEdgeLabel: (id: string, type: "start" | "end", label: string) => void;
+    addAttribute: (id: string, attribute: AttributeData) => void;
+    editAttribute: (id: string, attribute: AttributeData) => void;
+    removeAttribute: (id: string, attributeId: string) => void;
+    updateEntityName: (id: string, newName: string) => void;
 };
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
+    selectedNodeId: null,
     nodes: [
         {
             id: "1",
             data: {
                 name: "Node 1",
                 attributes: [
-                    { name: "Attribute 1", type: "string" },
-                    { name: "Attribute 2", type: "integer" },
-                    { name: "Attribute 3", type: "boolean" },
+                    { id: nanoid(5), name: "Attribute 1", type: "string" },
+                    { id: nanoid(5), name: "Attribute 2", type: "integer" },
+                    { id: nanoid(5), name: "Attribute 3", type: "boolean" },
                 ],
             },
             position: { x: 0, y: 0 },
@@ -50,8 +57,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             data: {
                 name: "Node 2",
                 attributes: [
-                    { name: "Attribute 4", type: "string" },
-                    { name: "Attribute 5", type: "integer" },
+                    { id: nanoid(5), name: "Attribute 4", type: "string" },
+                    { id: nanoid(5), name: "Attribute 5", type: "integer" },
                 ],
             },
             position: { x: -200, y: 200 },
@@ -62,8 +69,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             data: {
                 name: "Node 3",
                 attributes: [
-                    { name: "Attribute 6", type: "string" },
-                    { name: "Attribute 7", type: "integer" },
+                    { id: nanoid(5), name: "Attribute 6", type: "string" },
+                    { id: nanoid(5), name: "Attribute 7", type: "integer" },
                 ],
             },
             position: { x: 150, y: 300 },
@@ -99,15 +106,28 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         },
     ],
     onNodesChange: (changes: NodeChange[]) => {
+        const { selectedNodeId } = get();
+        let selectedId = selectedNodeId;
+
+        for (const change of changes) {
+            const selected = (change as NodeSelectionChange).selected;
+
+            if (selected) {
+                selectedId = (change as NodeSelectionChange).id;
+                break;
+            }
+        }
+
         set({
+            selectedNodeId: selectedId,
             nodes: applyNodeChanges(changes, get().nodes),
         });
     },
     onEdgesChange: (changes: EdgeChange[]) => {
         console.log("onEdgesChange");
-        // set({
-        //     edges: applyEdgeChanges(changes, get().edges),
-        // });
+        set({
+            edges: applyEdgeChanges(changes, get().edges),
+        });
     },
     onConnect: (params: Connection) => {
         const { source, target } = params;
@@ -153,11 +173,27 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
         return name;
     },
-    addConnection: (fromId: string, position: XYPosition) => {
+    addEntity(position: XYPosition) {
         const { getName } = get();
         let name = getName();
 
-        const newNode: Node = {
+        const newNode: Node<EntityData> = {
+            id: nanoid(),
+            position,
+            data: { name, attributes: [] },
+            origin: [0.5, 0.0],
+            type: "entity",
+        };
+
+        set((state) => ({
+            nodes: state.nodes.concat(newNode),
+        }));
+    },
+     addConnection: (fromId: string, position: XYPosition) => {
+        const { getName } = get();
+        let name = getName();
+
+        const newNode: Node<EntityData> = {
             id: nanoid(),
             position,
             data: { name, attributes: [] },
@@ -174,22 +210,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         set((state) => ({
             nodes: state.nodes.concat(newNode),
             edges: state.edges.concat(newEdge),
-        }));
-    },
-    addNode(position: XYPosition) {
-        const { getName } = get();
-        let name = getName();
-
-        const newNode: Node = {
-            id: nanoid(),
-            position,
-            data: { name, attributes: [] },
-            origin: [0.5, 0.0],
-            type: "entity",
-        };
-
-        set((state) => ({
-            nodes: state.nodes.concat(newNode),
         }));
     },
     addSelfConnection: (nodeId: string) => {
@@ -258,6 +278,75 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             }),
         });
     },
+    addAttribute(id: string, attribute: AttributeData) {
+        const { nodes } = get();
+
+        set({
+            nodes: nodes.map((n) => {
+                if (n.id !== id) return n;
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        attributes: [...n.data.attributes, attribute],
+                    },
+                };
+            }),
+        });
+    },
+    editAttribute(id: string, attribute: AttributeData) {
+        const { nodes } = get();
+
+        set({
+            nodes: nodes.map((n) => {
+                if (n.id !== id) return n;
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        attributes: n.data.attributes.map((a) => {
+                            if (a.id !== attribute.id) return a;
+                            return attribute;
+                        }),
+                    },
+                };
+            }),
+        });
+    },
+    removeAttribute(id: string, attributeId: string) {
+        const { nodes } = get();
+
+        set({
+            nodes: nodes.map((n) => {
+                if (n.id !== id) return n;
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        attributes: n.data.attributes.filter(
+                            (a) => a.id !== attributeId
+                        ),
+                    },
+                };
+            }),
+        });
+    },
+    updateEntityName(id: string, newName: string) {
+        const { nodes } = get();
+
+        set({
+            nodes: nodes.map((n) => {
+                if (n.id !== id) return n;
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        name: newName,
+                    },
+                };
+            }),
+        });
+    }
 }));
 
 export default useErdStore;

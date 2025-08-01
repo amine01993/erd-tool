@@ -2,32 +2,9 @@ import { memo } from "react";
 import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import cc from "classcat";
-import { AttributeType } from "@/app/enum/AttributeType";
+import { AttributeType } from "@/app/type/AttributeType";
 import useErdItemsStore from "@/app/store/erd-items";
-
-export interface EntityData {
-    name: string;
-    attributes: AttributeData[];
-}
-
-export interface AttributeData {
-    name: string;
-    type: AttributeType;
-    isNullable?: boolean;
-    defaultValue?: any;
-    isCurrent?: boolean;
-    isPrimaryKey?: boolean;
-    isAutoIncrement?: boolean;
-    isUnique?: boolean;
-    isForeignKey?: boolean;
-    foreignKeyTable?: string;
-    foreignKeyColumn?: string;
-    length?: number;
-    precision?: number;
-    scale?: number;
-    description?: string;
-    isUnicode?: boolean;
-}
+import { EntityData } from "../../type/EntityType";
 
 const EntityNode = (props: { data: EntityData }) => {
     const { name, attributes } = props.data;

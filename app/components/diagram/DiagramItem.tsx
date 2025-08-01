@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
-import { DiagramData } from "@/app/store/diagram";
 import classNames from "classnames";
+import { DiagramData } from "@/app/store/diagram";
 import { formatLastUpdate } from "@/app/helper/utils";
 
 interface DiagramItemProps {
