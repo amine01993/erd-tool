@@ -4,13 +4,17 @@ import { EntityFormAction, EntityFormState } from "../type/EntityFormType";
 import useErdStore from "../store/erd";
 
 export function useEntityForm(
-    dispatch: ActionDispatch<[action: EntityFormAction]>,
+    dispatch: ActionDispatch<[action: EntityFormAction]>
 ) {
-    const { nodes } = useErdStore();
+    const { selectedNodeId, nodes } = useErdStore();
 
     const entityNames = useMemo(() => {
-        return new Set(nodes.map((node) => node.data.name));
-    }, [nodes]);
+        return new Set(
+            nodes
+                .filter((node) => node.id !== selectedNodeId)
+                .map((node) => node.data.name)
+        );
+    }, [selectedNodeId, nodes]);
 
     const handleNameChange = useCallback(
         (e: ChangeEvent<HTMLInputElement>) => {
@@ -30,7 +34,7 @@ export function useEntityForm(
     return {
         handleNameChange,
         handleNameBlur,
-    }
+    };
 }
 
 export const initialEntityState: EntityFormState = {

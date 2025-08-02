@@ -152,7 +152,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     onEdgesChange: (changes: EdgeChange[]) => {
         const { edges, getMarkersName } = get();
         const newEdges = applyEdgeChanges(changes, edges);
-        console.log("newEdges", newEdges);
         newEdges.forEach((e) => {
             if (e.data) {
                 let { markerStart, markerEnd } = getMarkersName(
@@ -165,7 +164,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 }
                 e.markerStart = markerStart;
                 e.markerEnd = markerEnd;
-                console.log("data", e.data, { markerStart, markerEnd });
             }
         });
         set({
@@ -339,7 +337,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 if (!markerEnd.endsWith("-selected")) {
                     markerEnd += "-selected";
                 }
-                // console.log("updateEdgeLabel",{markerStart, markerEnd})
                 return {
                     ...e,
                     markerStart,

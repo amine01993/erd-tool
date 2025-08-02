@@ -163,12 +163,10 @@ const ERD = () => {
         if(edgeElem) {
             edgeElem.classList.add("hovered");
         }
-        // console.log("Edge hover enter:", edge.id, edgeElem);
         onEdgeHover(edge, true);
     }, []);
 
     const onEdgeMouseLeave = useCallback((_: any, edge: Edge<ErdEdgeData>) => {
-        // console.log("Edge hover leave:", edge.id);
         const edgeElem = reactFlowWrapper.current?.querySelector(
             `.react-flow__edge-erd-edge[data-id="${edge.id}"]`
         );
