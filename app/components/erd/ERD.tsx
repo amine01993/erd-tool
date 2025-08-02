@@ -15,16 +15,19 @@ import {
     ConnectionMode,
     OnConnectStart,
     FinalConnectionState,
+    Edge,
 } from "@xyflow/react";
 import { shallow } from "zustand/shallow";
 import cc from "classcat";
 import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
 import EntityNode from "./EntityNode";
-import ErdEdge from "./ErdEdge";
+import ErdEdge, { ErdEdgeData } from "./ErdEdge";
 import ErdItemsPanel from "./ErdItemsPanel";
 import useErdItemsStore from "@/app/store/erd-items";
 import ErdConnectionLine from "./ErdConnectionLine";
+import Markers from "./Markers";
+import { on } from "events";
 // import DevTools from "../devtools/Devtools";
 
 const robotoMono = Roboto_Mono({
@@ -45,6 +48,7 @@ const selector = (state: ErdState) => ({
     edges: state.edges,
     onNodesChange: state.onNodesChange,
     onEdgesChange: state.onEdgesChange,
+    onEdgeHover: state.onEdgeHover,
     onConnect: state.onConnect,
     addEntity: state.addEntity,
     addConnection: state.addConnection,
@@ -66,7 +70,7 @@ const defaultEdgeOptions = {
 };
 
 const ERD = () => {
-    const reactFlowWrapper = useRef(null);
+    const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
     const connectingNodeId = useRef<string | null>(null);
     const { screenToFlowPosition } = useReactFlow();
 
@@ -75,6 +79,7 @@ const ERD = () => {
         edges,
         onNodesChange,
         onEdgesChange,
+        onEdgeHover,
         onConnect,
         addConnection,
         addEntity,
@@ -151,105 +156,34 @@ const ERD = () => {
         [selectedItem]
     );
 
+    const onEdgeMouseEnter = useCallback((_: any, edge: Edge<ErdEdgeData>) => {
+        const edgeElem = reactFlowWrapper.current?.querySelector(
+            `.react-flow__edge-erd-edge[data-id="${edge.id}"]`
+        );
+        if(edgeElem) {
+            edgeElem.classList.add("hovered");
+        }
+        // console.log("Edge hover enter:", edge.id, edgeElem);
+        onEdgeHover(edge, true);
+    }, []);
+
+    const onEdgeMouseLeave = useCallback((_: any, edge: Edge<ErdEdgeData>) => {
+        // console.log("Edge hover leave:", edge.id);
+        const edgeElem = reactFlowWrapper.current?.querySelector(
+            `.react-flow__edge-erd-edge[data-id="${edge.id}"]`
+        );
+        if(edgeElem) {
+            edgeElem.classList.remove("hovered");
+        }
+        onEdgeHover(edge, false);
+    }, []);
+
     return (
         <div
             className={`${robotoMono.className} h-full w-full`}
             ref={reactFlowWrapper}
         >
-            <svg style={{ position: "absolute", top: 0, left: 0, zIndex: -1 }}>
-                <defs>
-                    <marker
-                        id="edge-zero-marker-start"
-                        viewBox="0 0 108 215"
-                        markerHeight={11}
-                        markerWidth={11}
-                        refX={-20}
-                        refY={107}
-                        orient="auto"
-                    >
-                        <circle
-                            cx="60.5"
-                            cy="107.5"
-                            r="33.5"
-                            style={{
-                                fill: "#fff",
-                                stroke: "#000",
-                                strokeWidth: 28,
-                                strokeMiterlimit: 10,
-                            }}
-                        />
-                    </marker>
-                    <marker
-                        id="edge-zero-marker-end"
-                        viewBox="0 0 108 215"
-                        markerHeight={11}
-                        markerWidth={11}
-                        refX={125}
-                        refY={110}
-                        orient="auto"
-                    >
-                        <circle
-                            cx="48.5"
-                            cy="107.5"
-                            r="33.5"
-                            style={{
-                                fill: "#fff",
-                                stroke: "#000",
-                                strokeWidth: 28,
-                                strokeMiterlimit: 10,
-                            }}
-                        />
-                    </marker>
-                    <marker
-                        id="edge-one-marker-start"
-                        viewBox="0 0 108 215"
-                        markerHeight={11}
-                        markerWidth={11}
-                        refX={0}
-                        refY={110}
-                        orient="auto"
-                    >
-                        <path d="M63 0h29v215H63z" />
-                    </marker>
-                    <marker
-                        id="edge-one-marker-end"
-                        viewBox="0 0 108 215"
-                        markerHeight={11}
-                        markerWidth={11}
-                        refX={100}
-                        refY={110}
-                        orient="auto"
-                    >
-                        <path d="M16 0h29v215H16z" />
-                    </marker>
-                    <marker
-                        id="edge-many-marker-start"
-                        viewBox="0 0 108 215"
-                        markerHeight={11}
-                        markerWidth={11}
-                        refX={0}
-                        refY={110}
-                        orient="auto"
-                    >
-                        <path d="M0 92.5h108v29H0z" />
-                        <path d="M20.8 193.5 93.2 121l-20.5-20.5L0 173v41.9z" />
-                        <path d="M72.7 113.5 0 41V0l20.8 20.5L93.2 93z" />
-                    </marker>
-                    <marker
-                        id="edge-many-marker-end"
-                        viewBox="0 0 108 215"
-                        markerHeight={11}
-                        markerWidth={11}
-                        refX={100}
-                        refY={110}
-                        orient="auto"
-                    >
-                        <path d="M0 92.5h108v29H0z" />
-                        <path d="M87.2 193.5 14.8 121l20.5-20.5L108 173v41.9z" />
-                        <path d="M35.3 113.5 108 41V0L87.2 20.5 14.8 93z" />
-                    </marker>
-                </defs>
-            </svg>
+            <Markers />
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -260,6 +194,8 @@ const ERD = () => {
                 onConnect={onConnect}
                 onConnectStart={onConnectStart}
                 onConnectEnd={onConnectEnd}
+                onEdgeMouseEnter={onEdgeMouseEnter}
+                onEdgeMouseLeave={onEdgeMouseLeave}
                 panOnScroll
                 selectionOnDrag
                 panOnDrag={false}

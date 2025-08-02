@@ -20,8 +20,13 @@ export type ErdState = {
     selectedNodeId: string | null;
     nodes: Node<EntityData>[];
     edges: Edge<ErdEdgeData>[];
+    getMarkersName: (
+        startVal: string,
+        endVal: string
+    ) => { markerStart: string; markerEnd: string };
     onNodesChange: OnNodesChange;
     onEdgesChange: OnEdgesChange;
+    onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => void;
     onConnect: (params: Connection) => void;
     getName: () => string;
     addConnection: (fromId: string, position: XYPosition) => void;
@@ -103,6 +108,29 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             },
         },
     ],
+    getMarkersName(startVal: string, endVal: string) {
+        let markerStart = "",
+            markerEnd = "";
+        if (startVal === "*") {
+            markerStart = "edge-many-marker-start";
+        }
+        if (startVal === "1") {
+            markerStart = "edge-one-marker-start";
+        }
+        if (startVal === "0..1") {
+            markerStart = "edge-zero-marker-start";
+        }
+        if (endVal === "*") {
+            markerEnd = "edge-many-marker-end";
+        }
+        if (endVal === "1") {
+            markerEnd = "edge-one-marker-end";
+        }
+        if (endVal === "0..1") {
+            markerEnd = "edge-zero-marker-end";
+        }
+        return { markerStart, markerEnd };
+    },
     onNodesChange: (changes: NodeChange[]) => {
         const { selectedNodeId } = get();
         let selectedId = selectedNodeId;
@@ -122,9 +150,51 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
     },
     onEdgesChange: (changes: EdgeChange[]) => {
-        set({
-            edges: applyEdgeChanges(changes, get().edges),
+        const { edges, getMarkersName } = get();
+        const newEdges = applyEdgeChanges(changes, edges);
+        console.log("newEdges", newEdges);
+        newEdges.forEach((e) => {
+            if (e.data) {
+                let { markerStart, markerEnd } = getMarkersName(
+                    String(e.data.startValue),
+                    String(e.data.endValue)
+                );
+                if (e.selected) {
+                    markerStart += "-selected";
+                    markerEnd += "-selected";
+                }
+                e.markerStart = markerStart;
+                e.markerEnd = markerEnd;
+                console.log("data", e.data, { markerStart, markerEnd });
+            }
         });
+        set({
+            edges: newEdges,
+        });
+    },
+    onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => {
+        const { edges, getMarkersName } = get();
+        if (edge.selected) return;
+        if (edge.data) {
+            let { markerStart, markerEnd } = getMarkersName(
+                String(edge.data.startValue),
+                String(edge.data.endValue)
+            );
+            if (hovered) {
+                markerStart += "-hover";
+                markerEnd += "-hover";
+            }
+            set({
+                edges: edges.map((e) => {
+                    if (e.id !== edge.id) return e;
+                    return {
+                        ...edge,
+                        markerStart,
+                        markerEnd,
+                    };
+                }),
+            });
+        }
     },
     onConnect: (params: Connection) => {
         const { source, target } = params;
@@ -261,10 +331,19 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         set({
             edges: edges.map((e) => {
                 if (e.id !== id) return e;
+                let markerStart = type === "start" ? marker : String(e.markerStart);
+                let markerEnd = type === "end" ? marker : String(e.markerEnd);
+                if (!markerStart.endsWith("-selected")) {
+                    markerStart += "-selected";
+                }
+                if (!markerEnd.endsWith("-selected")) {
+                    markerEnd += "-selected";
+                }
+                // console.log("updateEdgeLabel",{markerStart, markerEnd})
                 return {
                     ...e,
-                    markerStart: type === "start" ? marker : e.markerStart,
-                    markerEnd: type === "end" ? marker : e.markerEnd,
+                    markerStart,
+                    markerEnd,
                     data: {
                         ...e.data!,
                         startValue:
