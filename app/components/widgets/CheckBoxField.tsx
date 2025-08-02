@@ -1,5 +1,5 @@
-import { nanoid } from "nanoid";
 import { ChangeEvent, memo, useMemo } from "react";
+import { nanoid } from "nanoid";
 
 const CheckBoxField = ({
     label,

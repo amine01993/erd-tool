@@ -181,7 +181,7 @@
     }
 
     .details {
-        @apply flex-1 h-full min-h-[calc(100%-54px)] flex flex-col;
+        @apply flex-1 h-full min-h-[calc(100%-54px)] flex flex-col text-[#640D14];
 
         ul {
             li {
@@ -231,7 +231,7 @@
             }
 
             input {
-                @apply border-1 border-gray-400 bg-white p-2 rounded-md;
+                @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
                 @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
             }
 
@@ -248,7 +248,7 @@
             }
 
             textarea {
-                @apply border-1 border-gray-400 bg-white p-2 rounded-md;
+                @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
             }
 
             .required {
@@ -264,7 +264,7 @@
             }
 
             select {
-                @apply border-1 border-gray-400 bg-white p-2 rounded-md appearance-none;
+                @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
             }
         }
 

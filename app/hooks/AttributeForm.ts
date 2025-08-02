@@ -23,10 +23,28 @@ import {
 export function useAttributeForm(
     attributesRef: RefObject<HTMLDivElement | null>,
     state: AttributeFormState,
-    dispatch: ActionDispatch<[action: AttributeFormAction]>
+    dispatch: ActionDispatch<[action: AttributeFormAction]>,
+    nodeId?: string,
+    attributeId?: string
 ) {
     const { nodes } = useErdStore();
 
+    const attributeNames = useMemo(() => {
+        const names = new Set<string>();
+        if (nodeId) {
+            for (const node of nodes) {
+                if (node.id === nodeId) {
+                    node.data.attributes.forEach((a) => {
+                        if (!attributeId || attributeId !== a.id) {
+                            names.add(a.name);
+                        }
+                    });
+                    break;
+                }
+            }
+        }
+        return names;
+    }, [nodeId, attributeId]);
     const typeOptions = useMemo(() => {
         return Object.keys(attributeTypes).map((type) => ({
             value: type,
@@ -93,12 +111,11 @@ export function useAttributeForm(
     const handleInputField = useCallback(
         (field: keyof AttributeFormState["values"]) => {
             return (event: ChangeEvent<HTMLInputElement>) => {
-                console.log("dispatch", field, event.target.value.trim());
-
                 dispatch({
                     type: "SET_FIELD",
                     field,
                     value: event.target.value.trim(),
+                    attributeNames,
                 });
             };
         },
@@ -229,6 +246,7 @@ export function useAttributeForm(
     }, [state.values.type, state.values.isPrimaryKey]);
 
     return {
+        attributeNames,
         typeOptions,
         referenceOptions,
         referenceColumn,
@@ -291,13 +309,13 @@ export const initialAttributeFormState: AttributeFormState = {
 const validateAttributeField = (
     field: string,
     value: string,
-    state: AttributeFormState
+    state: AttributeFormState,
+    attributeNames?: Set<string>
 ): string | null => {
     let validation;
     switch (field) {
         case "name":
-            validation = validateName(value);
-            console.log("validateAttributeField", value, validation);
+            validation = validateName(value, attributeNames);
             return validation.valid ? null : validation.errors[0];
         case "defaultValue":
             validation = validateDefault(value, state.values.type);
@@ -321,6 +339,15 @@ export const attributeFormReducer = (
     action: AttributeFormAction
 ): AttributeFormState => {
     switch (action.type) {
+        case "SET_VALUES": {
+            return {
+                ...state,
+                values: {
+                    ...state.values,
+                    ...action.values,
+                },
+            };
+        }
         case "SET_FIELD": {
             const newValues = { ...state.values, [action.field]: action.value };
             let errors = { ...state.errors };
@@ -336,13 +363,16 @@ export const attributeFormReducer = (
                 const error = validateAttributeField(
                     action.field,
                     String(action.value),
-                    state
+                    state,
+                    action.attributeNames
                 );
-                if(error) {
-                    errors[action.field as keyof AttributeFormState["errors"]] =error;
-                }
-                else {
-                    delete errors[action.field as keyof AttributeFormState["errors"]]
+                if (error) {
+                    errors[action.field as keyof AttributeFormState["errors"]] =
+                        error;
+                } else {
+                    delete errors[
+                        action.field as keyof AttributeFormState["errors"]
+                    ];
                 }
             }
 

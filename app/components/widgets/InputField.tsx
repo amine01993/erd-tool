@@ -1,5 +1,5 @@
-import { nanoid } from "nanoid";
 import { ChangeEvent, FocusEvent, memo, useMemo } from "react";
+import { nanoid } from "nanoid";
 
 const InputField = ({
     label,
@@ -32,10 +32,6 @@ const InputField = ({
         return nanoid(5);
     }, []);
 
-    console.log("InputField rendered", {
-        touched,error,label
-    });
-
     return (
         <div className="input-field">
             <label htmlFor={id}>
@@ -54,9 +50,7 @@ const InputField = ({
                 min={type === "number" && min !== undefined ? min : undefined}
                 disabled={disabled}
             />
-            {error && touched && (
-                <span className="error">{error}</span>
-            )}
+            {error && touched && <span className="error">{error}</span>}
         </div>
     );
 };

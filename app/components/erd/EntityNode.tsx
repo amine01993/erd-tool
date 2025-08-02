@@ -2,7 +2,6 @@ import { memo } from "react";
 import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import cc from "classcat";
-import { AttributeType } from "@/app/type/AttributeType";
 import useErdItemsStore from "@/app/store/erd-items";
 import { EntityData } from "../../type/EntityType";
 

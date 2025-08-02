@@ -1,9 +1,9 @@
 import Image from "next/image";
-import { Icon } from "@iconify/react";
+import { useCallback } from "react";
 import { Panel } from "@xyflow/react";
+import { Icon } from "@iconify/react";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
-import { useCallback } from "react";
 
 const ErdItemsPanel = () => {
     const { selectedItem, selectItem } = useErdItemsStore();

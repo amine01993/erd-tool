@@ -1,14 +1,13 @@
 import Image from "next/image";
 import { memo } from "react";
 import { Icon } from "@iconify/react";
-import "./style.css";
 import classNames from "classnames";
 
 const Header = () => {
     return (
         <header
             className={classNames(
-                "flex items-center justify-between px-3 py-2 bg-[#fcf3f3] text-[#640D14]",
+                "flex items-center justify-between px-3 py-2 bg-[#fefbfb] text-[#640D14]",
                 "border-b border-[#640D14]",
             )}
         >

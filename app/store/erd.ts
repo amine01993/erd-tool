@@ -8,9 +8,7 @@ import {
     applyNodeChanges,
     applyEdgeChanges,
     Connection,
-    addEdge,
     XYPosition,
-    useInternalNode,
     NodeSelectionChange,
 } from "@xyflow/react";
 import { createWithEqualityFn } from "zustand/traditional";
@@ -42,11 +40,11 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         {
             id: "1",
             data: {
-                name: "Node 1",
+                name: "Node_1",
                 attributes: [
-                    { id: nanoid(5), name: "Attribute 1", type: "string" },
-                    { id: nanoid(5), name: "Attribute 2", type: "integer" },
-                    { id: nanoid(5), name: "Attribute 3", type: "boolean" },
+                    { id: nanoid(5), name: "Attribute_1", type: "string" },
+                    { id: nanoid(5), name: "Attribute_2", type: "integer" },
+                    { id: nanoid(5), name: "Attribute_3", type: "boolean" },
                 ],
             },
             position: { x: 0, y: 0 },
@@ -55,10 +53,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         {
             id: "2",
             data: {
-                name: "Node 2",
+                name: "Node_2",
                 attributes: [
-                    { id: nanoid(5), name: "Attribute 4", type: "string" },
-                    { id: nanoid(5), name: "Attribute 5", type: "integer" },
+                    { id: nanoid(5), name: "Attribute_4", type: "string" },
+                    { id: nanoid(5), name: "Attribute_5", type: "integer" },
                 ],
             },
             position: { x: -200, y: 200 },
@@ -67,10 +65,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         {
             id: "3",
             data: {
-                name: "Node 3",
+                name: "Node_3",
                 attributes: [
-                    { id: nanoid(5), name: "Attribute 6", type: "string" },
-                    { id: nanoid(5), name: "Attribute 7", type: "integer" },
+                    { id: nanoid(5), name: "Attribute_6", type: "string" },
+                    { id: nanoid(5), name: "Attribute_7", type: "integer" },
                 ],
             },
             position: { x: 150, y: 300 },
@@ -124,7 +122,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
     },
     onEdgesChange: (changes: EdgeChange[]) => {
-        console.log("onEdgesChange");
         set({
             edges: applyEdgeChanges(changes, get().edges),
         });
@@ -189,7 +186,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             nodes: state.nodes.concat(newNode),
         }));
     },
-     addConnection: (fromId: string, position: XYPosition) => {
+    addConnection: (fromId: string, position: XYPosition) => {
         const { getName } = get();
         let name = getName();
 
@@ -346,7 +343,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 };
             }),
         });
-    }
+    },
 }));
 
 export default useErdStore;

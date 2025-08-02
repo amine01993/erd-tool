@@ -4,6 +4,7 @@ import {
     MouseEvent,
     useCallback,
     useEffect,
+    useMemo,
     useReducer,
     useState,
 } from "react";
@@ -13,7 +14,6 @@ import { EntityData } from "../../type/EntityType";
 import AttributeList from "./AttributeList";
 import AttributeForm from "./AttributeForm";
 import { validateName } from "@/app/helper/validation";
-import { time } from "console";
 
 interface EntityFormState {
     value: string;
@@ -26,6 +26,7 @@ type EntityFormAction =
     | {
           type: "SET_FIELD";
           value: string;
+          entityNames?: Set<string>;
       }
     | { type: "SET_TOUCHED" };
 
@@ -42,7 +43,7 @@ const entityFormReducer = (
 ): EntityFormState => {
     switch (action.type) {
         case "SET_FIELD": {
-            const validation = validateName(action.value);
+            const validation = validateName(action.value, action.entityNames);
 
             const error = validation.valid ? undefined : validation.errors[0];
 
@@ -74,11 +75,20 @@ const EntityInfo = () => {
     );
     const [state, dispatch] = useReducer(entityFormReducer, initialEntityState);
 
+    const entityNames = useMemo(() => {
+        return new Set(nodes.map((node) => node.data.name));
+    }, [nodes]);
+
     const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         dispatch({
             type: "SET_FIELD",
             value: e.target.value,
+            entityNames,
         });
+    }, [entityNames]);
+
+    const handleAttributeAdd = useCallback(() => {
+        setEditingAttribute("");
     }, []);
 
     const handleAttributeEdit = useCallback(
@@ -86,7 +96,6 @@ const EntityInfo = () => {
             const attributeId = event.currentTarget.dataset.id;
             if (attributeId) {
                 setEditingAttribute(attributeId);
-                console.log(`Editing attribute: ${attributeId}`);
             }
         },
         []
@@ -96,8 +105,6 @@ const EntityInfo = () => {
         (event: MouseEvent<HTMLButtonElement>) => {
             const attributeId = event.currentTarget.dataset.id;
             if (selectedNodeId && attributeId) {
-                // Logic to remove attribute
-                console.log(`Removing attribute: ${attributeId}`);
                 setSelectedData((prev) => {
                     if (!prev) return prev;
                     return {
@@ -107,29 +114,21 @@ const EntityInfo = () => {
                         ),
                     };
                 });
-                // Call the store action to remove the attribute
                 removeAttribute(selectedNodeId, attributeId);
             }
         },
         [selectedNodeId]
     );
 
-    const handleAttributeAdd = useCallback(() => {
-        console.log(`Adding attribute`);
-        setEditingAttribute("");
-    }, []);
-
     const handleNameBlur = useCallback(() => {
         dispatch({ type: "SET_TOUCHED" });
     }, []);
 
     useEffect(() => {
-        console.log("Selected node changed:", selectedNodeId);
         if (selectedNodeId) {
             const selectedData = nodes.find(
                 (node) => node.id === selectedNodeId
             )?.data;
-            console.log("Selected data:", selectedData);
             if (selectedData) {
                 dispatch({
                     type: "SET_FIELD",
@@ -141,10 +140,7 @@ const EntityInfo = () => {
         }
     }, [selectedNodeId]);
 
-    // console.log("EntityInfo rendered", { editingAttribute });
-
     useEffect(() => {
-        console.log("effect timeout");
         let timeoutId: NodeJS.Timeout | null = null;
         if (selectedNodeId && state.isValid) {
             timeoutId = setTimeout(() => {
@@ -188,9 +184,11 @@ const EntityInfo = () => {
                                     editingAttribute === "") && (
                                     <AttributeForm
                                         editingAttribute={editingAttribute}
+                                        selectedData={selectedData}
                                         setEditingAttribute={
                                             setEditingAttribute
                                         }
+                                        setSelectedData={setSelectedData}
                                     />
                                 )}
                             </>

@@ -46,6 +46,7 @@ export type AttributeFormAction =
           type: "SET_FIELD";
           field: keyof AttributeFormState["values"];
           value: string | boolean;
+          attributeNames?: Set<string>;
       }
     | { type: "SET_TOUCHED"; field: keyof AttributeFormState["touched"] }
     | { type: "SET_SUBMITTING"; isSubmitting: boolean };

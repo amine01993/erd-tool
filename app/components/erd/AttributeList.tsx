@@ -1,6 +1,6 @@
 import { memo, MouseEvent } from "react";
-import { EntityData } from "../../type/EntityType";
 import { Icon } from "@iconify/react";
+import { EntityData } from "../../type/EntityType";
 
 interface AttributeListProps {
     selectedData: EntityData;

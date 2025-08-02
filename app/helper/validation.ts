@@ -1,4 +1,3 @@
-import { AttributeFormState } from "../type/AttributeFormType";
 import { attributeTypes } from "../type/AttributeType";
 
 // prettier-ignore
@@ -16,11 +15,12 @@ const reserved = new Set([
     "true","union", "unique", "user", "using", "variadic", "verbose", "when", "window", "with"
 ]);
 
-export function validateName(name: string) {
+export function validateName(name: string, uniqueNames?: Set<string>) {
     const errors: string[] = [];
-    console.log("validateName", name, Boolean(name))
     if (!name) {
         errors.push("Name cannot be empty");
+    } else if (uniqueNames && uniqueNames.has(name)) {
+        errors.push("This name already exists");
     } else if (name.length > 63) {
         errors.push("Name must not exceed 63 characters.");
     } else if (!/^[a-zA-Z]/.test(name)) {

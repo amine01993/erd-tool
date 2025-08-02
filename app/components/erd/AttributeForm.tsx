@@ -1,4 +1,12 @@
-import { Dispatch, memo, useCallback, useReducer, useRef } from "react";
+import {
+    Dispatch,
+    memo,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useReducer,
+    useRef,
+} from "react";
 import { nanoid } from "nanoid";
 import { Icon } from "@iconify/react";
 import InputField from "../widgets/InputField";
@@ -11,16 +19,20 @@ import {
     useAttributeForm,
 } from "@/app/hooks/AttributeForm";
 import useErdStore from "@/app/store/erd";
-import { AttributeData } from "@/app/type/EntityType";
+import { AttributeData, EntityData } from "@/app/type/EntityType";
 
 interface AttributeFormProps {
+    selectedData: EntityData;
     editingAttribute: string | null;
-    setEditingAttribute: Dispatch<React.SetStateAction<string | null>>;
+    setEditingAttribute: Dispatch<SetStateAction<string | null>>;
+    setSelectedData: Dispatch<SetStateAction<EntityData | undefined>>;
 }
 
 const AttributeForm = ({
+    selectedData,
     editingAttribute,
     setEditingAttribute,
+    setSelectedData,
 }: AttributeFormProps) => {
     const attributesRef = useRef<HTMLDivElement>(null);
     const { selectedNodeId, addAttribute, editAttribute } = useErdStore();
@@ -61,7 +73,13 @@ const AttributeForm = ({
         handleNullableChange,
         handleDescriptionChange,
         handleUnicodeChange,
-    } = useAttributeForm(attributesRef, state, dispatch);
+    } = useAttributeForm(
+        attributesRef,
+        state,
+        dispatch,
+        selectedNodeId ?? undefined,
+        editingAttribute ?? undefined
+    );
 
     const handleSubmit = useCallback(
         (event: React.FormEvent<HTMLFormElement>) => {
@@ -83,16 +101,31 @@ const AttributeForm = ({
                         ...state.values,
                     };
                     editAttribute(selectedNodeId, attribute);
+                    setSelectedData((prev) => {
+                        if (!prev) return prev;
+                        return {
+                            ...prev,
+                            attributes: prev.attributes.map((attr) =>
+                                attr.id === editingAttribute ? attribute : attr
+                            ),
+                        };
+                    });
                 } else {
                     const attribute: AttributeData = {
                         id: nanoid(5),
                         ...state.values,
                     };
                     addAttribute(selectedNodeId, attribute);
+                    setSelectedData((prev) => {
+                        if (!prev) return prev;
+                        return {
+                            ...prev,
+                            attributes: [...prev.attributes, attribute],
+                        };
+                    });
                 }
                 setEditingAttribute(null);
             }
-            console.log("Form submitted with values:", state.isValid, state.values);
             // dispatch({ type: "SET_SUBMITTING", isSubmitting: false });
         },
         [
@@ -108,6 +141,17 @@ const AttributeForm = ({
     const handleBack = useCallback(() => {
         setEditingAttribute(null);
     }, []);
+
+    useEffect(() => {
+        if (editingAttribute) {
+            const attribute = selectedData.attributes.find(
+                (attr) => attr.id === editingAttribute
+            );
+            if (attribute) {
+                dispatch({ type: "SET_VALUES", values: attribute });
+            }
+        }
+    }, [editingAttribute]);
 
     return (
         <div className="attribute-form" ref={attributesRef}>
