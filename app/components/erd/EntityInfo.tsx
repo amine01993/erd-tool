@@ -13,58 +13,7 @@ import InputField from "../widgets/InputField";
 import { EntityData } from "../../type/EntityType";
 import AttributeList from "./AttributeList";
 import AttributeForm from "./AttributeForm";
-import { validateName } from "@/app/helper/validation";
-
-interface EntityFormState {
-    value: string;
-    error: string | undefined;
-    touched: boolean;
-    isValid: boolean;
-}
-
-type EntityFormAction =
-    | {
-          type: "SET_FIELD";
-          value: string;
-          entityNames?: Set<string>;
-      }
-    | { type: "SET_TOUCHED" };
-
-const initialEntityState: EntityFormState = {
-    value: "",
-    error: undefined,
-    touched: false,
-    isValid: false,
-};
-
-const entityFormReducer = (
-    state: EntityFormState,
-    action: EntityFormAction
-): EntityFormState => {
-    switch (action.type) {
-        case "SET_FIELD": {
-            const validation = validateName(action.value, action.entityNames);
-
-            const error = validation.valid ? undefined : validation.errors[0];
-
-            return {
-                ...state,
-                value: action.value,
-                error,
-                isValid: !error,
-            };
-        }
-
-        case "SET_TOUCHED":
-            return {
-                ...state,
-                touched: true,
-            };
-
-        default:
-            return state;
-    }
-};
+import { entityFormReducer, initialEntityState, useEntityForm } from "@/app/hooks/EntityForm";
 
 const EntityInfo = () => {
     const { selectedNodeId, nodes, removeAttribute, updateEntityName } =
@@ -74,18 +23,7 @@ const EntityInfo = () => {
         null
     );
     const [state, dispatch] = useReducer(entityFormReducer, initialEntityState);
-
-    const entityNames = useMemo(() => {
-        return new Set(nodes.map((node) => node.data.name));
-    }, [nodes]);
-
-    const handleNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-        dispatch({
-            type: "SET_FIELD",
-            value: e.target.value,
-            entityNames,
-        });
-    }, [entityNames]);
+    const { handleNameChange, handleNameBlur } = useEntityForm(dispatch);
 
     const handleAttributeAdd = useCallback(() => {
         setEditingAttribute("");
@@ -119,10 +57,6 @@ const EntityInfo = () => {
         },
         [selectedNodeId]
     );
-
-    const handleNameBlur = useCallback(() => {
-        dispatch({ type: "SET_TOUCHED" });
-    }, []);
 
     useEffect(() => {
         if (selectedNodeId) {

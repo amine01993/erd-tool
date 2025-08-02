@@ -24,16 +24,15 @@ export function useAttributeForm(
     attributesRef: RefObject<HTMLDivElement | null>,
     state: AttributeFormState,
     dispatch: ActionDispatch<[action: AttributeFormAction]>,
-    nodeId?: string,
     attributeId?: string
 ) {
-    const { nodes } = useErdStore();
+    const { selectedNodeId, nodes } = useErdStore();
 
     const attributeNames = useMemo(() => {
         const names = new Set<string>();
-        if (nodeId) {
+        if (selectedNodeId) {
             for (const node of nodes) {
-                if (node.id === nodeId) {
+                if (node.id === selectedNodeId) {
                     node.data.attributes.forEach((a) => {
                         if (!attributeId || attributeId !== a.id) {
                             names.add(a.name);
@@ -44,7 +43,7 @@ export function useAttributeForm(
             }
         }
         return names;
-    }, [nodeId, attributeId]);
+    }, [selectedNodeId, attributeId]);
     const typeOptions = useMemo(() => {
         return Object.keys(attributeTypes).map((type) => ({
             value: type,
@@ -243,10 +242,9 @@ export function useAttributeForm(
                 attributesRef.current.classList.remove("with-scrollbar");
             }
         }
-    }, [state.values.type, state.values.isPrimaryKey]);
+    }, [state.values.type, state.values.isPrimaryKey, state.errors]);
 
     return {
-        attributeNames,
         typeOptions,
         referenceOptions,
         referenceColumn,

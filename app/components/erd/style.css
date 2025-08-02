@@ -170,7 +170,7 @@
 }
 
 .entity-info {
-    @apply flex flex-col min-h-full h-full;
+    @apply flex flex-col h-full;
 
     button {
         @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
@@ -181,7 +181,7 @@
     }
 
     .details {
-        @apply flex-1 h-full min-h-[calc(100%-54px)] flex flex-col text-[#640D14];
+        @apply flex-1 h-full flex flex-col text-[#640D14];
 
         ul {
             li {
@@ -195,11 +195,11 @@
             scrollbar-width: thin;
             scrollbar-color: #640d14 #fefbfb;
             @apply flex flex-col border-t border-gray-400 gap-2 relative;
-            @apply -ml-3 pl-3 mt-3 pr-2 py-3 -mr-3;
-            @apply overflow-y-auto overflow-x-hidden h-full min-h-[calc(100%-66px)];
+            @apply -ml-3 pl-3 mt-3 pr-3 py-3 -mr-3;
+            @apply overflow-y-auto overflow-x-hidden h-full;
 
             &.with-scrollbar {
-                @apply py-0;
+                @apply py-0 pr-2;
 
                 &::before,
                 &::after {

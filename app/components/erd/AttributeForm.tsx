@@ -77,8 +77,7 @@ const AttributeForm = ({
         attributesRef,
         state,
         dispatch,
-        selectedNodeId ?? undefined,
-        editingAttribute ?? undefined
+        editingAttribute ?? undefined,
     );
 
     const handleSubmit = useCallback(
