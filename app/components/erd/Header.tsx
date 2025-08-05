@@ -1,14 +1,30 @@
 import Image from "next/image";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import classNames from "classnames";
+import useDiagramStore from "@/app/store/diagram";
 
 const Header = () => {
+    const { selectedDiagram, createDiagram, duplicateDiagram, deleteDiagram } =
+        useDiagramStore();
+
+    const handleNewDiagram = useCallback(() => {
+        createDiagram();
+    }, [createDiagram]);
+
+    const handleDuplicateDiagram = useCallback(() => {
+        duplicateDiagram();
+    }, [duplicateDiagram]);
+
+    const handleDeleteDiagram = useCallback(() => {
+        deleteDiagram();
+    }, [deleteDiagram]);
+
     return (
         <header
             className={classNames(
                 "flex items-center justify-between px-3 py-2 bg-[#fefbfb] text-[#640D14]",
-                "border-b border-[#640D14]",
+                "border-b border-[#640D14]"
             )}
         >
             <div className="flex items-center gap-1">
@@ -21,23 +37,32 @@ const Header = () => {
                     priority
                 />
 
-                <button aria-label="Create new diagram" className="header-btn">
+                <button
+                    aria-label="Create new diagram"
+                    className="header-btn"
+                    onClick={handleNewDiagram}
+                >
                     <Icon icon="tabler:circle-plus" fontSize={21} />
                 </button>
 
-                <button
-                    aria-label="Duplicate selected diagram"
-                    className="header-btn"
-                >
-                    <Icon icon="tabler:layers-subtract" fontSize={21} />
-                </button>
-
-                <button
-                    aria-label="Delete selected diagram"
-                    className="header-btn"
-                >
-                    <Icon icon="tabler:trash" fontSize={21} />
-                </button>
+                {selectedDiagram !== "" && (
+                    <>
+                        <button
+                            aria-label="Duplicate selected diagram"
+                            className="header-btn"
+                            onClick={handleDuplicateDiagram}
+                        >
+                            <Icon icon="tabler:layers-subtract" fontSize={21} />
+                        </button>
+                        <button
+                            aria-label="Delete selected diagram"
+                            className="header-btn"
+                            onClick={handleDeleteDiagram}
+                        >
+                            <Icon icon="tabler:trash" fontSize={21} />
+                        </button>
+                    </>
+                )}
 
                 <button className="flex items-center gap-2 header-btn">
                     <Icon icon="tabler:database-export" fontSize={21} />

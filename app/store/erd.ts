@@ -13,8 +13,9 @@ import {
 } from "@xyflow/react";
 import { createWithEqualityFn } from "zustand/traditional";
 import { nanoid } from "nanoid";
-import { ErdEdgeData } from "../components/erd/ErdEdge";
 import { EntityData, AttributeData } from "../type/EntityType";
+import { ErdEdgeData } from "../type/EdgeType";
+import useDiagramStore from "./diagram";
 
 export type ErdState = {
     selectedNodeId: string | null;
@@ -28,6 +29,7 @@ export type ErdState = {
     onEdgesChange: OnEdgesChange;
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => void;
     onConnect: (params: Connection) => void;
+    initErd: (nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) => void;
     getName: () => string;
     addConnection: (fromId: string, position: XYPosition) => void;
     addEntity: (position: XYPosition) => void;
@@ -41,73 +43,15 @@ export type ErdState = {
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     selectedNodeId: null,
-    nodes: [
-        {
-            id: "1",
-            data: {
-                name: "Node_1",
-                attributes: [
-                    { id: nanoid(5), name: "Attribute_1", type: "string" },
-                    { id: nanoid(5), name: "Attribute_2", type: "integer" },
-                    { id: nanoid(5), name: "Attribute_3", type: "boolean" },
-                ],
-            },
-            position: { x: 0, y: 0 },
-            type: "entity",
-        },
-        {
-            id: "2",
-            data: {
-                name: "Node_2",
-                attributes: [
-                    { id: nanoid(5), name: "Attribute_4", type: "string" },
-                    { id: nanoid(5), name: "Attribute_5", type: "integer" },
-                ],
-            },
-            position: { x: -200, y: 200 },
-            type: "entity",
-        },
-        {
-            id: "3",
-            data: {
-                name: "Node_3",
-                attributes: [
-                    { id: nanoid(5), name: "Attribute_6", type: "string" },
-                    { id: nanoid(5), name: "Attribute_7", type: "integer" },
-                ],
-            },
-            position: { x: 150, y: 300 },
-            type: "entity",
-        },
-    ],
-    edges: [
-        {
-            id: "1->2",
-            source: "1",
-            target: "2",
-            markerStart: "edge-zero-marker-start",
-            markerEnd: "edge-zero-marker-end",
-            data: {
-                order: 1,
-                length: 1,
-                startValue: "0..1",
-                endValue: "0..1",
-            },
-        },
-        {
-            id: "1->3",
-            source: "1",
-            target: "3",
-            markerStart: "edge-many-marker-start",
-            markerEnd: "edge-many-marker-end",
-            data: {
-                order: 1,
-                length: 1,
-                startValue: "*",
-                endValue: "*",
-            },
-        },
-    ],
+    nodes: [],
+    edges: [],
+    initErd(nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) {
+        set({
+            selectedNodeId: null,
+            nodes,
+            edges,
+        });
+    },
     getMarkersName(startVal: string, endVal: string) {
         let markerStart = "",
             markerEnd = "";
@@ -132,7 +76,9 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         return { markerStart, markerEnd };
     },
     onNodesChange: (changes: NodeChange[]) => {
-        const { selectedNodeId } = get();
+        const { selectedNodeId, nodes } = get();
+        const { savingDiagram } = useDiagramStore.getState();
+
         let selectedId = selectedNodeId;
 
         for (const change of changes) {
@@ -143,14 +89,17 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 break;
             }
         }
+        const newNodes = applyNodeChanges(changes, nodes);
 
         set({
             selectedNodeId: selectedId,
-            nodes: applyNodeChanges(changes, get().nodes),
+            nodes: newNodes,
         });
+        savingDiagram();
     },
     onEdgesChange: (changes: EdgeChange[]) => {
         const { edges, getMarkersName } = get();
+        const { savingDiagram } = useDiagramStore.getState();
         const newEdges = applyEdgeChanges(changes, edges);
         newEdges.forEach((e) => {
             if (e.data) {
@@ -169,6 +118,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         set({
             edges: newEdges,
         });
+        savingDiagram();
     },
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => {
         const { edges, getMarkersName } = get();
@@ -329,7 +279,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         set({
             edges: edges.map((e) => {
                 if (e.id !== id) return e;
-                let markerStart = type === "start" ? marker : String(e.markerStart);
+                let markerStart =
+                    type === "start" ? marker : String(e.markerStart);
                 let markerEnd = type === "end" ? marker : String(e.markerEnd);
                 if (!markerStart.endsWith("-selected")) {
                     markerStart += "-selected";

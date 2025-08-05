@@ -3,6 +3,7 @@ import {
     memo,
     type MouseEvent as RMouseEvent,
     useCallback,
+    useEffect,
     useRef,
 } from "react";
 import {
@@ -22,13 +23,14 @@ import cc from "classcat";
 import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
 import EntityNode from "./EntityNode";
-import ErdEdge, { ErdEdgeData } from "./ErdEdge";
+import ErdEdge from "./ErdEdge";
 import ErdItemsPanel from "./ErdItemsPanel";
 import useErdItemsStore from "@/app/store/erd-items";
 import ErdConnectionLine from "./ErdConnectionLine";
 import Markers from "./Markers";
-import { on } from "events";
-// import DevTools from "../devtools/Devtools";
+import DevTools from "../devtools/Devtools";
+import { ErdEdgeData } from "@/app/type/EdgeType";
+import useDiagramStore from "@/app/store/diagram";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -44,8 +46,10 @@ const edgeTypes = {
 };
 
 const selector = (state: ErdState) => ({
+    selectedNodeId: state.selectedNodeId,
     nodes: state.nodes,
     edges: state.edges,
+    initErd: state.initErd,
     onNodesChange: state.onNodesChange,
     onEdgesChange: state.onEdgesChange,
     onEdgeHover: state.onEdgeHover,
@@ -72,11 +76,22 @@ const defaultEdgeOptions = {
 const ERD = () => {
     const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
     const connectingNodeId = useRef<string | null>(null);
-    const { screenToFlowPosition } = useReactFlow();
+    const {
+        viewportInitialized,
+        screenToFlowPosition,
+        getViewport,
+        setViewport,
+        fitView,
+    } = useReactFlow();
+
+    const { loading, saving, selectedDiagram, currentDiagram, saveDiagram } =
+        useDiagramStore();
 
     const {
+        // selectedNodeId,
         nodes,
         edges,
+        initErd,
         onNodesChange,
         onEdgesChange,
         onEdgeHover,
@@ -160,7 +175,7 @@ const ERD = () => {
         const edgeElem = reactFlowWrapper.current?.querySelector(
             `.react-flow__edge-erd-edge[data-id="${edge.id}"]`
         );
-        if(edgeElem) {
+        if (edgeElem) {
             edgeElem.classList.add("hovered");
         }
         onEdgeHover(edge, true);
@@ -170,11 +185,42 @@ const ERD = () => {
         const edgeElem = reactFlowWrapper.current?.querySelector(
             `.react-flow__edge-erd-edge[data-id="${edge.id}"]`
         );
-        if(edgeElem) {
+        if (edgeElem) {
             edgeElem.classList.remove("hovered");
         }
         onEdgeHover(edge, false);
     }, []);
+
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout | null = null;
+        if (selectedDiagram && saving) {
+            timeoutId = setTimeout(() => {
+                saveDiagram(selectedDiagram, nodes, edges, getViewport());
+            }, 500);
+        }
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        };
+    }, [selectedDiagram, saving]);
+
+    useEffect(() => {
+        if (!viewportInitialized) return;
+        if (currentDiagram) {
+            initErd(currentDiagram.nodes, currentDiagram.edges);
+            if (currentDiagram.viewport) {
+                setViewport(currentDiagram.viewport);
+            } else {
+                fitView({
+                    padding: 0.1,
+                });
+            }
+        } else {
+            initErd([], []);
+        }
+    }, [currentDiagram, viewportInitialized]);
 
     return (
         <div

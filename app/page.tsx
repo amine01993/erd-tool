@@ -57,8 +57,9 @@ export default function ErdPage() {
                         top: false,
                         bottom: false,
                     }}
-                    snapGap={10}
+                    grid={[10, 0]}
                     onResize={handleResize}
+                    handleClasses={{ left: "resize-handle" }}
                 >
                     <div className="bg-[#fefbfb] text-black p-3 pb-0 border-l border-gray-400 h-full">
                         <EntityInfo />

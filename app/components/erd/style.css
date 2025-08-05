@@ -319,3 +319,15 @@
         }
     }
 }
+
+.resize-handle {
+    &::before, &::after {
+        @apply content-[""] absolute top-1/2 -translate-y-1/2 w-[1px] h-15 bg-gray-400;
+    }
+    &::before {
+        @apply right-[2.5px];
+    }
+    &::after {
+        @apply right-[0];
+    }
+}

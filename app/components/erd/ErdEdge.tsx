@@ -18,13 +18,8 @@ import {
 import { Icon } from "@iconify/react";
 import { getEdgeParams, getSelfLoopPath } from "@/app/helper/items";
 import useErdStore from "@/app/store/erd";
+import { ErdEdgeData } from "@/app/type/EdgeType";
 
-export type ErdEdgeData = {
-    startValue: string;
-    endValue: string;
-    order: number;
-    length: number;
-};
 
 const EdgeLabel = memo(
     ({

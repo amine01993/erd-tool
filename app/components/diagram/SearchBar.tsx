@@ -1,13 +1,12 @@
-import { ChangeEvent, memo, useCallback, useState } from "react";
+import { ChangeEvent, memo } from "react";
 import { Icon } from "@iconify/react";
 
-const SearchBar = () => {
-    const [searchTerm, setSearchTerm] = useState("");
+interface SearchBarProps {
+    searchTerm: string;
+    handleSearchChange: (event: ChangeEvent<HTMLInputElement>) => void;
+}
 
-    const handleSearchChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(event.target.value);
-    }, []);
-
+const SearchBar = ({ searchTerm, handleSearchChange }: SearchBarProps) => {
     return (
         <div className="relative mb-2">
             <Icon
