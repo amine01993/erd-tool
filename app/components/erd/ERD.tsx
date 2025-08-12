@@ -17,6 +17,8 @@ import {
     OnConnectStart,
     FinalConnectionState,
     Edge,
+    useOnViewportChange,
+    Viewport,
 } from "@xyflow/react";
 import { shallow } from "zustand/shallow";
 import cc from "classcat";
@@ -84,8 +86,16 @@ const ERD = () => {
         fitView,
     } = useReactFlow();
 
-    const { loading, saving, selectedDiagram, currentDiagram, saveDiagram } =
-        useDiagramStore();
+    const {
+        loading,
+        persisting,
+        persistingViewport,
+        selectedDiagram,
+        getSelectedDiagram,
+        saveViewport,
+        persistDiagram,
+        persistDiagramViewport,
+    } = useDiagramStore();
 
     const {
         // selectedNodeId,
@@ -101,6 +111,15 @@ const ERD = () => {
         addSelfConnection,
     } = useErdStore(selector, shallow);
     const { selectedItem } = useErdItemsStore();
+
+    useOnViewportChange({
+        // onStart: (viewport: Viewport) => console.log("start", viewport),
+        // onChange: (viewport: Viewport) => console.log("change", viewport),
+        onEnd: (viewport: Viewport) => {
+            // console.log("onEnd", {viewport, getSelectedDiagram: getSelectedDiagram()});
+            saveViewport(viewport);
+        },
+    });
 
     const onConnectEnd = useCallback(
         (
@@ -193,9 +212,9 @@ const ERD = () => {
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout | null = null;
-        if (selectedDiagram && saving) {
+        if (selectedDiagram && persisting) {
             timeoutId = setTimeout(() => {
-                saveDiagram(selectedDiagram, nodes, edges, getViewport());
+                persistDiagram();
             }, 500);
         }
         return () => {
@@ -204,23 +223,39 @@ const ERD = () => {
                 timeoutId = null;
             }
         };
-    }, [selectedDiagram, saving]);
+    }, [selectedDiagram, persisting]);
+
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout | null = null;
+        if (selectedDiagram && persistingViewport) {
+            timeoutId = setTimeout(() => {
+                persistDiagramViewport();
+            }, 500);
+        }
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        };
+    }, [selectedDiagram, persistingViewport]);
 
     useEffect(() => {
         if (!viewportInitialized) return;
-        if (currentDiagram) {
-            initErd(currentDiagram.nodes, currentDiagram.edges);
-            if (currentDiagram.viewport) {
-                setViewport(currentDiagram.viewport);
+        if (selectedDiagram) {
+            const currentDiagram = getSelectedDiagram();
+            initErd(currentDiagram!);
+            if (currentDiagram!.viewport) {
+                setViewport(currentDiagram!.viewport);
             } else {
                 fitView({
                     padding: 0.1,
                 });
             }
         } else {
-            initErd([], []);
+            initErd(null);
         }
-    }, [currentDiagram, viewportInitialized]);
+    }, [selectedDiagram, viewportInitialized]);
 
     return (
         <div

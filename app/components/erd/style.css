@@ -5,7 +5,8 @@
 }
 
 .header-btn {
-    @apply p-2 rounded-md hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+    @apply p-2 rounded-md hover:not-disabled:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .react-flow-container {
@@ -110,29 +111,11 @@
         path {
             @apply stroke-(--color-blue-600)!;
         }
-
-        /* .edge-zero-marker-start,
-        .edge-zero-marker-end,
-        .edge-one-marker-start,
-        .edge-one-marker-end,
-        .edge-many-marker-start,
-        .edge-many-marker-end {
-            @apply stroke-(--color-blue-600)!;
-        } */
     }
 
     path {
         @apply stroke-(--color-black) stroke-1;
     }
-
-    /* .edge-zero-marker-start,
-    .edge-zero-marker-end,
-    .edge-one-marker-start,
-    .edge-one-marker-end,
-    .edge-many-marker-start,
-    .edge-many-marker-end {
-        @apply stroke-(--color-black) stroke-[20px] fill-none;
-    } */
 }
 
 .entity-node {

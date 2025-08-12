@@ -10,15 +10,19 @@ import {
     Connection,
     XYPosition,
     NodeSelectionChange,
+    NodePositionChange,
+    NodeDimensionChange,
 } from "@xyflow/react";
 import { createWithEqualityFn } from "zustand/traditional";
 import { nanoid } from "nanoid";
+import { DiagramData } from "../type/DiagramType";
 import { EntityData, AttributeData } from "../type/EntityType";
 import { ErdEdgeData } from "../type/EdgeType";
 import useDiagramStore from "./diagram";
 
 export type ErdState = {
     selectedNodeId: string | null;
+    loaded: boolean;
     nodes: Node<EntityData>[];
     edges: Edge<ErdEdgeData>[];
     getMarkersName: (
@@ -29,7 +33,8 @@ export type ErdState = {
     onEdgesChange: OnEdgesChange;
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => void;
     onConnect: (params: Connection) => void;
-    initErd: (nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) => void;
+    initErd: (diagram: DiagramData | null) => void;
+    setErd: (diagram: DiagramData) => void;
     getName: () => string;
     addConnection: (fromId: string, position: XYPosition) => void;
     addEntity: (position: XYPosition) => void;
@@ -43,11 +48,30 @@ export type ErdState = {
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     selectedNodeId: null,
+    loaded: false,
     nodes: [],
     edges: [],
-    initErd(nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) {
+    initErd(diagram: DiagramData | null) {
+        let nodes: Node<EntityData>[] = [],
+            edges: Edge<ErdEdgeData>[] = [];
+        if (diagram) {
+            const state = diagram.history.states[diagram.history.current];
+            nodes = state.nodes;
+            edges = state.edges;
+        }
         set({
             selectedNodeId: null,
+            loaded: false,
+            nodes,
+            edges,
+        });
+    },
+    setErd(diagram: DiagramData) {
+        const state = diagram.history.states[diagram.history.current];
+        const nodes = state.nodes;
+        const edges = state.edges;
+
+        set({
             nodes,
             edges,
         });
@@ -76,30 +100,60 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         return { markerStart, markerEnd };
     },
     onNodesChange: (changes: NodeChange[]) => {
-        const { selectedNodeId, nodes } = get();
-        const { savingDiagram } = useDiagramStore.getState();
+        const { selectedNodeId, nodes, edges, loaded } = get();
+        const { saveDiagram } = useDiagramStore.getState();
 
-        let selectedId = selectedNodeId;
+        let selectedId = selectedNodeId,
+            saving = false;
 
         for (const change of changes) {
             const selected = (change as NodeSelectionChange).selected;
 
             if (selected) {
                 selectedId = (change as NodeSelectionChange).id;
-                break;
+            }
+
+            if (
+                change.type === "position" &&
+                (change as NodePositionChange).dragging === false
+            ) {
+                saving = true;
+            }
+
+            if (
+                change.type === "dimensions" &&
+                (change as NodeDimensionChange).resizing === false
+            ) {
+                saving = true;
+            }
+
+            if (change.type === "remove") {
+                saving = true;
             }
         }
         const newNodes = applyNodeChanges(changes, nodes);
 
         set({
             selectedNodeId: selectedId,
-            nodes: newNodes,
+            nodes: newNodes as any,
+            loaded: true,
         });
-        savingDiagram();
+
+        if (loaded && saving) {
+            saveDiagram(newNodes as any, edges);
+        }
+        // console.log("onNodesChange", { changes, loaded, saving, newNodes });
     },
     onEdgesChange: (changes: EdgeChange[]) => {
-        const { edges, getMarkersName } = get();
-        const { savingDiagram } = useDiagramStore.getState();
+        const { edges, nodes, getMarkersName } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+        let saving = false;
+        for (const change of changes) {
+            if (change.type === "remove") {
+                saving = true;
+            }
+        }
+
         const newEdges = applyEdgeChanges(changes, edges);
         newEdges.forEach((e) => {
             if (e.data) {
@@ -116,9 +170,12 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             }
         });
         set({
-            edges: newEdges,
+            edges: newEdges as any,
         });
-        savingDiagram();
+        if (saving) {
+            saveDiagram(nodes, newEdges as any);
+        }
+        // console.log("onEdgesChange", { changes, saving, newEdges });
     },
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => {
         const { edges, getMarkersName } = get();
@@ -145,8 +202,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
     },
     onConnect: (params: Connection) => {
+        console.log("onConnect");
         const { source, target } = params;
-        const { edges } = get();
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
 
         const sharedEdges = edges
             .filter(
@@ -168,28 +227,40 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             },
         };
 
-        set((state) => {
-            state.edges.forEach((e) => {
-                if (sharedEdges.includes(e.id) && e.data) {
-                    e.data.length = sharedEdges.length + 1;
-                }
-            });
-            return {
-                edges: state.edges.concat(newEdge),
-            };
+        const newEdges = edges.map((e) => {
+            if (sharedEdges.includes(e.id) && e.data) {
+                return {
+                    ...e,
+                    data: {
+                        ...e.data,
+                        length: sharedEdges.length + 1,
+                    },
+                };
+            }
+            return e;
         });
+        newEdges.push(newEdge)
+
+        set({
+            edges: newEdges,
+            nodes,
+        });
+
+        saveDiagram(nodes, newEdges);
     },
     getName: () => {
         const { nodes } = get();
         let name = "Entity",
             k = 1;
         while (nodes.some((node) => node.data.name === name)) {
-            name = `Entity (${k++})`;
+            name = `Entity_${k++}`;
         }
         return name;
     },
     addEntity(position: XYPosition) {
-        const { getName } = get();
+        console.log("addEntity");
+        const { nodes, edges, getName } = get();
+        const { saveDiagram } = useDiagramStore.getState();
         let name = getName();
 
         const newNode: Node<EntityData> = {
@@ -200,12 +271,18 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             type: "entity",
         };
 
+        const newNodes = [...nodes, newNode];
+
         set((state) => ({
-            nodes: state.nodes.concat(newNode),
+            nodes: newNodes,
         }));
+
+        saveDiagram(newNodes, edges);
     },
     addConnection: (fromId: string, position: XYPosition) => {
-        const { getName } = get();
+        console.log("addConnection");
+        const { nodes, edges, getName } = get();
+        const { saveDiagram } = useDiagramStore.getState();
         let name = getName();
 
         const newNode: Node<EntityData> = {
@@ -222,13 +299,20 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             target: newNode.id,
         };
 
-        set((state) => ({
-            nodes: state.nodes.concat(newNode),
-            edges: state.edges.concat(newEdge),
-        }));
+        const newNodes = [...nodes, newNode];
+        const newEdges = [...edges, newEdge];
+
+        set({
+            nodes: newNodes,
+            edges: newEdges,
+        });
+
+        saveDiagram(newNodes, newEdges);
     },
     addSelfConnection: (nodeId: string) => {
-        const { edges } = get();
+        console.log("addSelfConnection");
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
 
         const sharedEdges = edges
             .filter((e) => e.source === nodeId && e.target === nodeId)
@@ -248,19 +332,31 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             },
         };
 
-        set((state) => {
-            state.edges.forEach((e) => {
-                if (sharedEdges.includes(e.id) && e.data) {
-                    e.data.length = sharedEdges.length + 1;
-                }
-            });
-            return {
-                edges: state.edges.concat(newEdge),
-            };
+        const newEdges = edges.map((e) => {
+            if (sharedEdges.includes(e.id) && e.data) {
+                return {
+                    ...e,
+                    data: {
+                        ...e.data,
+                        length: sharedEdges.length + 1,
+                    },
+                };
+            }
+            return e;
         });
+        newEdges.push(newEdge);
+
+        set({
+            edges: newEdges,
+            nodes,
+        });
+
+        saveDiagram(nodes, newEdges);
     },
     updateEdgeLabel(id: string, type: "start" | "end", label: string) {
-        const { edges } = get();
+        console.log("updateEdgeLabel");
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
 
         let marker;
         switch (label) {
@@ -276,100 +372,129 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
         marker += "-" + type;
 
-        set({
-            edges: edges.map((e) => {
-                if (e.id !== id) return e;
-                let markerStart =
-                    type === "start" ? marker : String(e.markerStart);
-                let markerEnd = type === "end" ? marker : String(e.markerEnd);
-                if (!markerStart.endsWith("-selected")) {
-                    markerStart += "-selected";
-                }
-                if (!markerEnd.endsWith("-selected")) {
-                    markerEnd += "-selected";
-                }
-                return {
-                    ...e,
-                    markerStart,
-                    markerEnd,
-                    data: {
-                        ...e.data!,
-                        startValue:
-                            type === "start" ? label : e.data!.startValue,
-                        endValue: type === "end" ? label : e.data!.endValue,
-                    },
-                };
-            }),
+        const newEdges = edges.map((e) => {
+            if (e.id !== id) return e;
+            let markerStart = type === "start" ? marker : String(e.markerStart);
+            let markerEnd = type === "end" ? marker : String(e.markerEnd);
+            if (!markerStart.endsWith("-selected")) {
+                markerStart += "-selected";
+            }
+            if (!markerEnd.endsWith("-selected")) {
+                markerEnd += "-selected";
+            }
+            return {
+                ...e,
+                markerStart,
+                markerEnd,
+                data: {
+                    ...e.data!,
+                    startValue: type === "start" ? label : e.data!.startValue,
+                    endValue: type === "end" ? label : e.data!.endValue,
+                },
+            };
         });
+
+        set({
+            edges: newEdges,
+        });
+
+        saveDiagram(nodes, newEdges);
     },
     addAttribute(id: string, attribute: AttributeData) {
-        const { nodes } = get();
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+
+        const newNodes = nodes.map((n) => {
+            if (n.id !== id) return n;
+            return {
+                ...n,
+                data: {
+                    ...n.data,
+                    attributes: [...n.data.attributes, attribute],
+                },
+            };
+        });
 
         set({
-            nodes: nodes.map((n) => {
-                if (n.id !== id) return n;
-                return {
-                    ...n,
-                    data: {
-                        ...n.data,
-                        attributes: [...n.data.attributes, attribute],
-                    },
-                };
-            }),
+            nodes: newNodes,
         });
+
+        saveDiagram(newNodes, edges);
     },
     editAttribute(id: string, attribute: AttributeData) {
-        const { nodes } = get();
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+
+        const newNodes = nodes.map((n) => {
+            if (n.id !== id) return n;
+            return {
+                ...n,
+                data: {
+                    ...n.data,
+                    attributes: n.data.attributes.map((a) => {
+                        if (a.id !== attribute.id) return a;
+                        return attribute;
+                    }),
+                },
+            };
+        });
 
         set({
-            nodes: nodes.map((n) => {
-                if (n.id !== id) return n;
-                return {
-                    ...n,
-                    data: {
-                        ...n.data,
-                        attributes: n.data.attributes.map((a) => {
-                            if (a.id !== attribute.id) return a;
-                            return attribute;
-                        }),
-                    },
-                };
-            }),
+            nodes: newNodes,
         });
+
+        saveDiagram(newNodes, edges);
     },
     removeAttribute(id: string, attributeId: string) {
-        const { nodes } = get();
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+
+        const newNodes = nodes.map((n) => {
+            if (n.id !== id) return n;
+            return {
+                ...n,
+                data: {
+                    ...n.data,
+                    attributes: n.data.attributes.filter(
+                        (a) => a.id !== attributeId
+                    ),
+                },
+            };
+        });
 
         set({
-            nodes: nodes.map((n) => {
-                if (n.id !== id) return n;
-                return {
-                    ...n,
-                    data: {
-                        ...n.data,
-                        attributes: n.data.attributes.filter(
-                            (a) => a.id !== attributeId
-                        ),
-                    },
-                };
-            }),
+            nodes: newNodes,
         });
+
+        saveDiagram(newNodes, edges);
     },
     updateEntityName(id: string, newName: string) {
-        const { nodes } = get();
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+
+        let saving = true;
+
+        const newNodes = nodes.map((n) => {
+            if (n.id !== id) return n;
+            if(n.data.name === newName) {
+                saving = false;
+            }
+            return {
+                ...n,
+                data: {
+                    ...n.data,
+                    name: newName,
+                },
+            };
+        });
 
         set({
-            nodes: nodes.map((n) => {
-                if (n.id !== id) return n;
-                return {
-                    ...n,
-                    data: {
-                        ...n.data,
-                        name: newName,
-                    },
-                };
-            }),
+            nodes: newNodes,
         });
+
+        if(saving) {
+            saveDiagram(newNodes, edges);
+        }
     },
 }));
 

@@ -5,8 +5,16 @@ import classNames from "classnames";
 import useDiagramStore from "@/app/store/diagram";
 
 const Header = () => {
-    const { selectedDiagram, createDiagram, duplicateDiagram, deleteDiagram } =
+    const { selectedDiagram, disableUndo, disableRedo, createDiagram, duplicateDiagram, deleteDiagram, undoAction, redoAction } =
         useDiagramStore();
+
+    const handleUndo = useCallback(() => {
+        undoAction();
+    }, [undoAction]);
+
+    const handleRedo = useCallback(() => {
+        redoAction();
+    }, [redoAction]);
 
     const handleNewDiagram = useCallback(() => {
         createDiagram();
@@ -36,6 +44,24 @@ const Header = () => {
                     height={35}
                     priority
                 />
+
+                <button
+                    aria-label="Undo last action"
+                    className="header-btn"
+                    onClick={handleUndo}
+                    disabled={disableUndo}
+                >
+                    <Icon icon="tabler:arrow-back-up" fontSize={21} />
+                </button>
+
+                <button
+                    aria-label="Redo"
+                    className="header-btn"
+                    onClick={handleRedo}
+                    disabled={disableRedo}
+                >
+                    <Icon icon="tabler:arrow-forward-up" fontSize={21} />
+                </button>
 
                 <button
                     aria-label="Create new diagram"

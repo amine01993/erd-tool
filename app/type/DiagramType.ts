@@ -5,10 +5,16 @@ import { ErdEdgeData } from "./EdgeType";
 export interface DiagramData {
     id: string;
     name: string;
-    nodes: Node<EntityData>[];
-    edges: Edge<ErdEdgeData>[];
     viewport?: { x: number; y: number; zoom: number };
     createAt: string;
     lastUpdate: string;
-    loaded: boolean;
+    loaded?: boolean;
+    selected?: boolean;
+    history: {
+        current: number;
+        states: {
+            nodes: Node<EntityData>[];
+            edges: Edge<ErdEdgeData>[];
+        }[];
+    };
 }
