@@ -9,6 +9,41 @@
     @apply disabled:cursor-not-allowed disabled:opacity-50;
 }
 
+/* .theme {
+    @apply flex items-center gap-1;
+    .switch {
+        @apply h-[21px] w-[35px] outline -outline-offset-1 outline-[#640d14] rounded-2xl;
+        @apply flex items-center px-[2.5px] justify-end;
+
+        .toggle {
+            @apply size-4 bg-[#640d14] rounded-full;
+        }
+    }
+} */
+
+.theme-menu {
+    @apply absolute top-full right-0 z-1 transition duration-300 overflow-hidden opacity-0;
+    @apply flex flex-col gap-3 p-2 border border-[#640d14] bg-[#fefbfb];
+
+    &.open {
+        @apply opacity-100;
+    }
+
+    label {
+        @apply flex items-center gap-2 px-2 py-1 rounded-md;
+        @apply hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+
+        &.selected {
+            @apply bg-[#f7dee0];
+        }
+    }
+
+    input[type="radio"] {
+        /* @apply accent-[#640d14]; */
+        @apply hidden
+    }
+}
+
 .react-flow-container {
     &.entity {
         .react-flow__pane {
@@ -55,7 +90,8 @@
 
         .react-flow__edge-erd-edge {
             &:not(.selected) {
-                &:hover, &.hovered {
+                &:hover,
+                &.hovered {
                     path {
                         @apply stroke-(--color-blue-400)!;
                     }
@@ -287,7 +323,7 @@
         .back-btn {
             @apply flex gap-2 py-2 px-2.5 border-1 items-center;
             @apply bg-[#003049] hover:bg-[#000305] text-white font-semibold;
-            
+
             svg {
                 @apply -ml-[7.5px];
             }
@@ -295,7 +331,7 @@
         .submit-btn {
             @apply flex gap-2 py-2 px-2.5 border-1 items-center;
             @apply bg-[#AD2831] hover:bg-[#800E13] text-white font-semibold;
-            
+
             svg {
                 @apply -ml-[3.34px];
             }
@@ -304,7 +340,8 @@
 }
 
 .resize-handle {
-    &::before, &::after {
+    &::before,
+    &::after {
         @apply content-[""] absolute top-1/2 -translate-y-1/2 w-[1px] h-15 bg-gray-400;
     }
     &::before {

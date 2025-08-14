@@ -3,6 +3,7 @@ import { memo, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import classNames from "classnames";
 import useDiagramStore from "@/app/store/diagram";
+import Theme from "../widgets/Theme";
 
 const Header = () => {
     const { selectedDiagram, disableUndo, disableRedo, createDiagram, duplicateDiagram, deleteDiagram, undoAction, redoAction } =
@@ -102,10 +103,7 @@ const Header = () => {
                 </div>
             </div>
             <div className="flex items-center">
-                {/* theme toggle */}
-                <button aria-label="Toggle dark mode" className="">
-                    <Icon icon="tabler:moon" fontSize={21} />
-                </button>
+                <Theme />
             </div>
         </header>
     );
