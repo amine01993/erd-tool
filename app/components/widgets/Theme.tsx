@@ -122,7 +122,7 @@ const Theme = () => {
     return (
         <div className="relative">
             <button
-                aria-label="Toggle dark mode"
+                aria-label="Toggle theme menu"
                 className="header-btn theme"
                 onClick={handleThemeClick}
             >

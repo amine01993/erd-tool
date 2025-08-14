@@ -24,6 +24,7 @@
 .theme-menu {
     @apply absolute top-full right-0 z-1 transition duration-300 overflow-hidden opacity-0;
     @apply flex flex-col gap-3 p-2 border border-[#640d14] bg-[#fefbfb];
+    @apply font-medium;
 
     &.open {
         @apply opacity-100;
@@ -41,6 +42,31 @@
     input[type="radio"] {
         /* @apply accent-[#640d14]; */
         @apply hidden
+    }
+}
+
+.settings-menu {
+    @apply absolute top-full right-0 z-1 transition duration-300 overflow-hidden opacity-0;
+    @apply flex flex-col gap-2 p-2 border border-[#640d14] bg-[#fefbfb];
+    @apply font-medium;
+
+    &.open {
+        @apply opacity-100;
+    }
+
+    .menu-header {
+        @apply flex gap-2 items-center px-2 py-1;
+    }
+
+    hr {
+        @apply w-[calc(100%_+_2_*_8px)] -ml-2;
+    }
+
+    .menu-list {
+        li {
+            @apply flex gap-2 items-center px-2 py-1 rounded-md text-nowrap;
+            @apply hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+        }
     }
 }
 

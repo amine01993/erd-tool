@@ -1,13 +1,9 @@
-import { ChangeEvent, memo, ReactNode } from "react";
+import { ChangeEvent, memo } from "react";
 import cc from "classcat";
 import useUserStore, { AppTheme } from "@/app/store/user";
 import { LightIcon, DarkIcon, OsDefault } from "./Theme";
 
-interface MenuProps {
-    children?: ReactNode;
-}
-
-const ThemeMenu = ({ children }: MenuProps) => {
+const ThemeMenu = () => {
     const { theme, isThemeMenuOpen, setTheme } = useUserStore();
 
     const handleThemeChange = (e: ChangeEvent<HTMLInputElement>) => {

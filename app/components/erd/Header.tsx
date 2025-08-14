@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import classNames from "classnames";
 import useDiagramStore from "@/app/store/diagram";
 import Theme from "../widgets/Theme";
+import Settings from "../widgets/Settings";
 
 const Header = () => {
     const { selectedDiagram, disableUndo, disableRedo, createDiagram, duplicateDiagram, deleteDiagram, undoAction, redoAction } =
@@ -104,6 +105,7 @@ const Header = () => {
             </div>
             <div className="flex items-center">
                 <Theme />
+                <Settings />
             </div>
         </header>
     );
