@@ -7,6 +7,7 @@ import ERD from "./components/erd/ERD";
 import Header from "./components/erd/Header";
 import Sidebar from "./components/diagram/Sidebar";
 import EntityInfo from "./components/erd/EntityInfo";
+import Authentication from "./components/auth/Authentication";
 import "./components/erd/style.css";
 
 export default function ErdPage() {
@@ -66,6 +67,7 @@ export default function ErdPage() {
                     </div>
                 </Resizable>
             </main>
+            <Authentication />
         </div>
     );
 }

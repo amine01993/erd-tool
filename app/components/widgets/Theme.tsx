@@ -74,7 +74,7 @@ export const LightIcon = memo(({ theme, fontSize }: IconProps) => {
             xmlns="http://www.w3.org/2000/svg"
             role="img"
             className="iconify iconify--tabler"
-            font-size={fontSize}
+            fontSize={fontSize}
             width="1em"
             height="1em"
             viewBox="0 0 24 24"
@@ -90,9 +90,7 @@ export const LightIcon = memo(({ theme, fontSize }: IconProps) => {
 const Theme = () => {
     const { theme, toggleThemeMenu } =
         useUserStore();
-    const [isDark, setIsDark] = useState(
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-    );
+    const [isDark, setIsDark] = useState(false);
 
     const computedTheme = useMemo(() => {
         if (theme === "system") {
@@ -118,6 +116,10 @@ const Theme = () => {
                 setIsDark(e.matches);
             });
     }, [computedTheme]);
+
+    useEffect(() => {
+        setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }, [])
 
     return (
         <div className="relative">

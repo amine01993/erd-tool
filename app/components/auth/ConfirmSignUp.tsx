@@ -1,0 +1,94 @@
+import {
+    FormEvent,
+    memo,
+    useCallback,
+    useRef,
+    useState,
+} from "react";
+import useUserStore from "@/app/store/user";
+import { validateCode } from "@/app/helper/auth-validation";
+import ConfirmationInput from "./ConfirmationInput";
+import { Icon } from "@iconify/react";
+
+const ConfirmSignUp = ({ active }: { active: boolean }) => {
+    const { authDetail, confirmSignUp, resendCode } = useUserStore();
+
+    const [serverError, setServerError] = useState<string>("");
+    const [submitted, setSubmitted] = useState<boolean>(false);
+    const codeRef = useRef<string>("");
+    const [error, setError] = useState<string>("");
+
+    const handleSubmit = useCallback(async (event: FormEvent) => {
+        setSubmitted(true);
+        event.preventDefault();
+
+        const validation = validateCode(codeRef.current);
+        if (!validation.valid) {
+            setError(validation.errors[0]);
+            return;
+        }
+
+        try {
+            await confirmSignUp(codeRef.current);
+            setServerError("");
+        } catch (error: any) {
+            setServerError(error.toString());
+        }
+    }, []);
+
+    const handleResend = useCallback(async () => {
+        try {
+            await resendCode();
+            setServerError("");
+        } catch (error: any) {
+            setServerError(error.toString());
+        }
+    }, []);
+
+    return (
+        <form
+            className={`flex-col gap-4 m-4 ${active ? "active" : ""}`}
+            onSubmit={handleSubmit}
+        >
+            {authDetail?.codeDeliveryDetails?.destination && (
+                <p className="confirmation-message">
+                    A confirmation code has been sent to{" "}
+                    <strong>{authDetail.codeDeliveryDetails?.destination}</strong> via{" "}
+                    <strong>{authDetail.codeDeliveryDetails?.attributeName}</strong>.
+                </p>
+            )}
+
+            {serverError && (
+                <div className="server-error-message">
+                    <Icon icon="tabler:alert-circle-filled" fontSize={21} />
+                    {serverError}
+                </div>
+            )}
+
+            <div className="form-group">
+                <ConfirmationInput
+                    length={6}
+                    codeRef={codeRef}
+                    id="user-confirmation-code"
+                    required
+                    submitted={submitted}
+                    error={error}
+                    setError={setError}
+                />
+            </div>
+
+            <div className="mt-5" style={{ textAlign: "center" }}>
+                Didn't get an email?&nbsp;&nbsp;&nbsp;
+                <button className="link" onClick={handleResend}>
+                    Resend
+                </button>
+            </div>
+
+            <button type="submit" className="auth-btn">
+                Confirm
+            </button>
+        </form>
+    );
+};
+
+export default memo(ConfirmSignUp);

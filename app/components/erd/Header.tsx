@@ -1,14 +1,26 @@
 import Image from "next/image";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect } from "react";
+import { Hub } from "@aws-amplify/core";
 import { Icon } from "@iconify/react";
 import classNames from "classnames";
-import useDiagramStore from "@/app/store/diagram";
 import Theme from "../widgets/Theme";
 import Settings from "../widgets/Settings";
+import useDiagramStore from "@/app/store/diagram";
+import useUserStore from "@/app/store/user";
 
 const Header = () => {
-    const { selectedDiagram, disableUndo, disableRedo, createDiagram, duplicateDiagram, deleteDiagram, undoAction, redoAction } =
-        useDiagramStore();
+    const { setAuthData } = useUserStore();
+
+    const {
+        selectedDiagram,
+        disableUndo,
+        disableRedo,
+        createDiagram,
+        duplicateDiagram,
+        deleteDiagram,
+        undoAction,
+        redoAction,
+    } = useDiagramStore();
 
     const handleUndo = useCallback(() => {
         undoAction();
@@ -29,6 +41,32 @@ const Header = () => {
     const handleDeleteDiagram = useCallback(() => {
         deleteDiagram();
     }, [deleteDiagram]);
+
+    useEffect(() => {
+        const unsubscribe = Hub.listen("auth", async ({ payload }) => {
+            console.log("Hub.auth", payload);
+            switch (payload.event) {
+                case "signedIn":
+                    console.log("user have been signedIn successfully.");
+                    setAuthData();
+                    break;
+                case "signedOut":
+                    console.log("user have been signedOut successfully.");
+                    break;
+                case "tokenRefresh":
+                    console.log("auth tokens have been refreshed.");
+                    break;
+                case "tokenRefresh_failure":
+                    console.log("failure while refreshing auth tokens.");
+                    break;
+            }
+        });
+        setAuthData();
+
+        return () => {
+            unsubscribe();
+        };
+    }, []);
 
     return (
         <header
