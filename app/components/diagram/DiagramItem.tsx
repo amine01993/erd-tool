@@ -41,4 +41,11 @@ const DiagramItem = ({ diagram }: DiagramItemProps) => {
     );
 };
 
+export const DiagramItemPlaceHolder = memo(() => {
+    return (
+        <div className="diagram-item-placeholder h-12 rounded-md bg-gray-200 my-1 cursor-wait">
+        </div>
+    );
+});
+
 export default memo(DiagramItem);

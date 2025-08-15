@@ -10,6 +10,7 @@ import {
 } from "@aws-amplify/auth";
 import { create } from "zustand";
 import { DiagramsAuthStack } from "../../outputs.json";
+import useDiagramStore from "./diagram";
 
 Amplify.configure({
     Auth: {
@@ -178,6 +179,7 @@ const useUserStore = create<UserState>((set, get) => ({
         emptyAuthData();
     },
     async setAuthData() {
+        const { loadDiagrams } = useDiagramStore.getState();
         const { authData, emptyAuthData } = get();
         // only retreive session if it's been more than half an hour since authentication
         if (
@@ -188,10 +190,13 @@ const useUserStore = create<UserState>((set, get) => ({
         }
         try {
             const session = await fetchAuthSession({ forceRefresh: true });
+            console.log("Fetched auth session:", session, session.tokens?.idToken?.toString());
             set({
                 authData: session.tokens?.idToken?.payload,
                 jwtToken: session.tokens?.idToken?.toString(),
             });
+
+            await loadDiagrams(session.tokens?.idToken?.toString() ?? "");
         } catch (error) {
             console.error("Error fetching auth session:", error);
             emptyAuthData();

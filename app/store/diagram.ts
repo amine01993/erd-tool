@@ -6,6 +6,9 @@ import { ErdEdgeData } from "../type/EdgeType";
 import { EntityData } from "../type/EntityType";
 import useErdStore from "./erd";
 
+const url =
+    "https://g1z9a9ebrk.execute-api.us-east-1.amazonaws.com/prod/diagrams";
+
 export const mockDiagrams: DiagramData[] = [
     {
         id: "1",
@@ -143,7 +146,7 @@ interface DiagramStoreProps {
     persistDiagram: () => void;
     persistDiagramViewport: () => void;
     loadDiagram: (id: string) => DiagramData | null;
-    loadDiagrams: () => void;
+    loadDiagrams: (token: string) => void;
     cloneDiagram: (d: DiagramData) => DiagramData;
 }
 
@@ -151,11 +154,10 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     persisting: 0,
     persistingViewport: 0,
     loading: false,
-    diagrams: mockDiagrams,
-    selectedDiagram: "1",
+    diagrams: [],
+    selectedDiagram: "",
     disableUndo: true,
     disableRedo: true,
-    // currentDiagram: mockDiagrams[0],
     selectDiagram(id: string) {
         const { selectedDiagram, diagrams, loadDiagram } = get();
         if (selectedDiagram === id) return;
@@ -182,6 +184,26 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const { selectedDiagram, diagrams } = get();
         const diagram = diagrams.find((d) => d.id === selectedDiagram);
         return diagram;
+    },
+    loadDiagram(id: string) {
+        return null;
+    },
+    async loadDiagrams(token: string) {
+        let diagrams: DiagramData[] = [];
+        if (token) {
+            const response = await fetch(url, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `${token}`,
+                },
+            });
+            diagrams = await response.json();
+        }
+        console.log("loadDiagrams", { diagrams });
+        set({
+            diagrams: diagrams.length === 0 ? mockDiagrams : diagrams,
+            selectedDiagram: diagrams.length === 0 ? mockDiagrams[0].id : diagrams[0].id,
+        });
     },
     createDiagram() {
         const { diagrams } = get();
@@ -325,7 +347,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             cd.history.current = cd.history.states.length - 1;
             return cd;
         });
-        console.log("saveDiagram", {diagram})
+        console.log("saveDiagram", { diagram });
 
         set({
             persisting: persisting + 1,
@@ -406,10 +428,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     },
     persistDiagram() {},
     persistDiagramViewport() {},
-    loadDiagram(id: string) {
-        return null;
-    },
-    loadDiagrams() {},
     cloneDiagram(d: DiagramData): DiagramData {
         return {
             ...d,

@@ -1,10 +1,11 @@
-import { ChangeEvent, memo, useCallback, useMemo, useState } from "react";
+import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
 import SearchBar from "./SearchBar";
 import useDiagramStore from "../../store/diagram";
-import DiagramItem from "./DiagramItem";
+import DiagramItem, { DiagramItemPlaceHolder } from "./DiagramItem";
+import { DiagramData } from "@/app/type/DiagramType";
 
 const Sidebar = () => {
-    const diagrams = useDiagramStore((state) => state.diagrams);
+    const {diagrams} = useDiagramStore();
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredDiagrams = useMemo(() => {
@@ -22,6 +23,10 @@ const Sidebar = () => {
         []
     );
 
+    // useEffect(() => {
+        
+    // }, []);
+
     return (
         <>
             <SearchBar
@@ -30,7 +35,16 @@ const Sidebar = () => {
             />
 
             <ul className="flex flex-col gap-1">
-                {filteredDiagrams.map((diagram: any) => (
+                {diagrams.length === 0 && (
+                    <>
+                    <DiagramItemPlaceHolder />
+                    <DiagramItemPlaceHolder />
+                    <DiagramItemPlaceHolder />
+                    <DiagramItemPlaceHolder />
+                    <DiagramItemPlaceHolder />
+                    </>
+                )}
+                {filteredDiagrams.map((diagram: DiagramData) => (
                     <DiagramItem key={diagram.id} diagram={diagram} />
                 ))}
             </ul>
