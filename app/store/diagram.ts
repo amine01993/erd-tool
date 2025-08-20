@@ -136,6 +136,7 @@ interface DiagramStoreProps {
     disableRedo: boolean;
     selectDiagram: (id: string) => void;
     getSelectedDiagram: () => DiagramData | undefined;
+    getName: (prefix?: string, nbr?: number) => string;
     createDiagram: () => void;
     duplicateDiagram: () => void;
     deleteDiagram: () => void;
@@ -169,6 +170,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const { selectedDiagram } = get();
         const { clearSelection } = useErdStore.getState();
         if (selectedDiagram === id) return;
+        console.log("selectDiagram:", id);
 
         set({
             selectedDiagram: id,
@@ -268,16 +270,20 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             selectedDiagram: chosenDiagram.id,
         });
     },
+    getName: (prefix?: string, nbr?: number) => {
+        const { diagrams } = get();
+        prefix = prefix ?? "Erd Diagram";
+        let k = nbr ?? 1, name = "";
+        do {
+            name = `${prefix} (${k++})`;
+        } while (diagrams.some((diagram) => diagram.name === name));
+
+        return name;
+    },
     createDiagram() {
-        const { diagrams, persistingNew } = get();
-        let name = "Erd Diagram",
-            i = 1;
-        for (const d of diagrams) {
-            if (d.name === name) {
-                name = `Erd Diagram (${i})`;
-                i++;
-            }
-        }
+        const { diagrams, persistingNew, getName } = get();
+        let name = getName();
+
         const newDiagram: DiagramData = {
             id: nanoid(7),
             name,
@@ -339,6 +345,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             persistingNew,
             getSelectedDiagram,
             cloneDiagram,
+            getName,
         } = get();
         if (loading) return;
 
@@ -352,13 +359,9 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         let prefix = match
                 ? newDiagram.name.slice(0, match.index)
-                : newDiagram.name,
-            k = 1;
-        let name = prefix + `(${k++})`;
-        while (diagrams.some((d) => d.name === name)) {
-            name = prefix + `(${k++})`;
-        }
-        currentDiagram.name = name;
+                : newDiagram.name
+        let nbr = match ? parseInt(match[1]) : undefined;
+        currentDiagram.name = getName(prefix.trim(), nbr);
 
         currentDiagram.lastUpdate = new Date().toISOString();
         currentDiagram.persisted = false;
@@ -374,14 +377,16 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     deleteDiagram() {
         const { loading, diagrams, selectedDiagram, persistDiagramDelete } =
             get();
+        console.log("deleteDiagram:", selectedDiagram);
         if (loading || selectedDiagram === "") return;
 
         const newDiagrams = diagrams.filter((d) => d.id !== selectedDiagram);
+        let newSelectedDiagram = "";
+
         if (newDiagrams.length === 0) {
             set({
                 persistingDelete: true,
                 diagrams: [],
-                selectedDiagram: "",
                 disableUndo: true,
                 disableRedo: true,
             });
@@ -395,11 +400,13 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             set({
                 persistingDelete: true,
                 diagrams: newDiagrams,
-                selectedDiagram: currentDiagram.id,
             });
+            newSelectedDiagram = currentDiagram.id;
         }
 
-        persistDiagramDelete();
+        persistDiagramDelete().then(() => {
+            set({ selectedDiagram: newSelectedDiagram });
+        });
     },
     saveDiagram(nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) {
         const { persisting, selectedDiagram, diagrams, cloneDiagram } = get();
@@ -624,7 +631,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     async persistDiagramDelete() {
         const { jwtToken } = useUserStore.getState();
         const { selectedDiagram } = get();
-
+        console.log("persistDiagramDelete:", selectedDiagram);
         if (selectedDiagram && jwtToken) {
             const response = await fetch(`${url}?id=${selectedDiagram}`, {
                 method: "DELETE",
