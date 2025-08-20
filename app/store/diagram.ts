@@ -5,9 +5,10 @@ import { DiagramData } from "../type/DiagramType";
 import { ErdEdgeData } from "../type/EdgeType";
 import { EntityData } from "../type/EntityType";
 import useErdStore from "./erd";
+import useUserStore from "./user";
 
 const url =
-    "https://g1z9a9ebrk.execute-api.us-east-1.amazonaws.com/prod/diagrams";
+    "https://9nnhrbiki6.execute-api.us-east-1.amazonaws.com/prod/diagrams";
 
 export const mockDiagrams: DiagramData[] = [
     {
@@ -17,6 +18,7 @@ export const mockDiagrams: DiagramData[] = [
         createAt: new Date().toISOString(),
         lastUpdate: new Date().toISOString(),
         loaded: true,
+        persisted: false,
         history: {
             current: 0,
             states: [
@@ -124,13 +126,14 @@ export const mockDiagrams: DiagramData[] = [
 
 interface DiagramStoreProps {
     persisting: number;
+    persistingNew: number;
     persistingViewport: number;
+    persistingDelete: boolean;
     loading: boolean;
     diagrams: DiagramData[];
     selectedDiagram: string;
     disableUndo: boolean;
     disableRedo: boolean;
-    // currentDiagram: DiagramData | null;
     selectDiagram: (id: string) => void;
     getSelectedDiagram: () => DiagramData | undefined;
     createDiagram: () => void;
@@ -143,53 +146,99 @@ interface DiagramStoreProps {
     saveViewport: (viewport: Viewport) => void;
     undoAction: () => void;
     redoAction: () => void;
-    persistDiagram: () => void;
-    persistDiagramViewport: () => void;
-    loadDiagram: (id: string) => DiagramData | null;
-    loadDiagrams: (token: string) => void;
+    persistDiagram: () => Promise<void>;
+    persistNewDiagram: () => Promise<void>;
+    persistDiagramViewport: () => Promise<void>;
+    persistDiagramDelete: () => Promise<void>;
+    loadDiagram: () => Promise<any>;
+    loadDiagrams: (token: string) => Promise<void>;
     cloneDiagram: (d: DiagramData) => DiagramData;
 }
 
 const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     persisting: 0,
+    persistingNew: 0,
     persistingViewport: 0,
+    persistingDelete: false,
     loading: false,
     diagrams: [],
     selectedDiagram: "",
     disableUndo: true,
     disableRedo: true,
     selectDiagram(id: string) {
-        const { selectedDiagram, diagrams, loadDiagram } = get();
+        const { selectedDiagram } = get();
+        const { clearSelection } = useErdStore.getState();
         if (selectedDiagram === id) return;
-        const diagram = diagrams.find((d) => d.id === id);
-        // if (!diagram) {
-        //     set({
-        //         loading: true,
-        //     });
-        //     loadDiagram(id);
-        // }
 
         set({
             selectedDiagram: id,
-            // currentDiagram: diagram,
-            disableUndo:
-                diagram?.history.current === undefined ||
-                diagram.history.current > 0,
-            disableRedo:
-                diagram?.history.current === undefined ||
-                diagram.history.current < diagram.history.states.length - 1,
         });
+        clearSelection();
     },
     getSelectedDiagram() {
         const { selectedDiagram, diagrams } = get();
         const diagram = diagrams.find((d) => d.id === selectedDiagram);
         return diagram;
     },
-    loadDiagram(id: string) {
-        return null;
+    async loadDiagram() {
+        const { diagrams, getSelectedDiagram } = get();
+        const { jwtToken } = useUserStore.getState();
+        const { setErd } = useErdStore.getState();
+
+        const currentDiagram = getSelectedDiagram();
+        if (!currentDiagram) return;
+        else if (currentDiagram.loaded) {
+            set({
+                disableUndo:
+                    currentDiagram?.history.current === undefined ||
+                    currentDiagram.history.current <= 0,
+                disableRedo:
+                    currentDiagram?.history.current === undefined ||
+                    currentDiagram.history.current >=
+                        currentDiagram.history.states.length - 1,
+            });
+            setErd(currentDiagram);
+            return currentDiagram;
+        }
+
+        if (!currentDiagram.loaded && jwtToken) {
+            set({
+                loading: true,
+            });
+            const response = await fetch(`${url}?id=${currentDiagram.id}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${jwtToken}`,
+                },
+            });
+            const diagram = await response.json();
+            set({
+                loading: false,
+                diagrams: diagrams.map((d) => {
+                    if (d.id === currentDiagram.id) {
+                        return {
+                            ...diagram,
+                            loaded: true,
+                            persisted: true,
+                        };
+                    }
+                    return d;
+                }),
+                disableUndo:
+                    diagram?.history.current === undefined ||
+                    diagram.history.current <= 0,
+                disableRedo:
+                    diagram?.history.current === undefined ||
+                    diagram.history.current >=
+                        diagram.history.states.length - 1,
+            });
+            setErd(diagram);
+            return diagram;
+        }
     },
     async loadDiagrams(token: string) {
         let diagrams: DiagramData[] = [];
+
         if (token) {
             const response = await fetch(url, {
                 headers: {
@@ -198,15 +247,29 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 },
             });
             diagrams = await response.json();
+            diagrams.forEach((d) => {
+                d.loaded = false;
+                d.persisted = true;
+            });
         }
-        console.log("loadDiagrams", { diagrams });
+
+        let chosenDiagram = mockDiagrams[0];
+        if (diagrams.length > 0) {
+            chosenDiagram = diagrams[0];
+            for (const d of diagrams) {
+                if (d.lastUpdate > chosenDiagram.lastUpdate) {
+                    chosenDiagram = d;
+                }
+            }
+        }
+
         set({
             diagrams: diagrams.length === 0 ? mockDiagrams : diagrams,
-            selectedDiagram: diagrams.length === 0 ? mockDiagrams[0].id : diagrams[0].id,
+            selectedDiagram: chosenDiagram.id,
         });
     },
     createDiagram() {
-        const { diagrams } = get();
+        const { diagrams, persistingNew } = get();
         let name = "Erd Diagram",
             i = 1;
         for (const d of diagrams) {
@@ -218,6 +281,11 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const newDiagram: DiagramData = {
             id: nanoid(7),
             name,
+            viewport: {
+                x: 0,
+                y: 0,
+                zoom: 1,
+            },
             createAt: new Date().toISOString(),
             lastUpdate: new Date().toISOString(),
             loaded: true,
@@ -254,53 +322,66 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                     },
                 ],
             },
+            persisted: false,
         };
         set({
+            persistingNew: persistingNew + 1,
             diagrams: [...diagrams, newDiagram],
             selectedDiagram: newDiagram.id,
-            // currentDiagram: newDiagram,
             disableUndo: true,
             disableRedo: true,
         });
     },
     duplicateDiagram() {
-        const { diagrams, selectedDiagram, cloneDiagram } = get();
-        if (selectedDiagram === "") return;
+        const {
+            loading,
+            diagrams,
+            persistingNew,
+            getSelectedDiagram,
+            cloneDiagram,
+        } = get();
+        if (loading) return;
 
-        const newDiagram = diagrams.find((d) => d.id === selectedDiagram);
+        const newDiagram = getSelectedDiagram();
+
         if (!newDiagram) return;
 
         const currentDiagram: DiagramData = cloneDiagram(newDiagram);
         currentDiagram.id = nanoid(7);
-        const match = newDiagram.name.match(/\scopy\s*\((\d+?)\)$/i);
+        const match = newDiagram.name.match(/\((\d+?)\)$/i);
 
-        if (match) {
-            currentDiagram.name =
-                newDiagram.name.slice(0, match.index) +
-                ` copy (${Number(match[1]) + 1})`;
-        } else {
-            currentDiagram.name = newDiagram.name + ` copy (1)`;
+        let prefix = match
+                ? newDiagram.name.slice(0, match.index)
+                : newDiagram.name,
+            k = 1;
+        let name = prefix + `(${k++})`;
+        while (diagrams.some((d) => d.name === name)) {
+            name = prefix + `(${k++})`;
         }
+        currentDiagram.name = name;
+
         currentDiagram.lastUpdate = new Date().toISOString();
+        currentDiagram.persisted = false;
 
         set({
+            persistingNew: persistingNew + 1,
             diagrams: [...diagrams, currentDiagram],
             selectedDiagram: currentDiagram.id,
-            // currentDiagram,
             disableUndo: true,
             disableRedo: true,
         });
     },
     deleteDiagram() {
-        const { diagrams, selectedDiagram, getSelectedDiagram } = get();
-        if (selectedDiagram === "") return;
+        const { loading, diagrams, selectedDiagram, persistDiagramDelete } =
+            get();
+        if (loading || selectedDiagram === "") return;
 
         const newDiagrams = diagrams.filter((d) => d.id !== selectedDiagram);
         if (newDiagrams.length === 0) {
             set({
+                persistingDelete: true,
                 diagrams: [],
                 selectedDiagram: "",
-                // currentDiagram: null,
                 disableUndo: true,
                 disableRedo: true,
             });
@@ -312,15 +393,13 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 }
             }
             set({
+                persistingDelete: true,
                 diagrams: newDiagrams,
                 selectedDiagram: currentDiagram.id,
-                // currentDiagram,
-                disableUndo: currentDiagram.history.current <= 0,
-                disableRedo:
-                    currentDiagram.history.current >=
-                    currentDiagram.history.states.length - 1,
             });
         }
+
+        persistDiagramDelete();
     },
     saveDiagram(nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) {
         const { persisting, selectedDiagram, diagrams, cloneDiagram } = get();
@@ -345,9 +424,9 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 });
             }
             cd.history.current = cd.history.states.length - 1;
+            cd.lastUpdate = new Date().toISOString();
             return cd;
         });
-        console.log("saveDiagram", { diagram });
 
         set({
             persisting: persisting + 1,
@@ -359,11 +438,25 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         });
     },
     saveViewport(viewport: Viewport) {
-        const { persistingViewport, selectedDiagram, diagrams, cloneDiagram } =
-            get();
+        const {
+            persistingViewport,
+            diagrams,
+            getSelectedDiagram,
+            cloneDiagram,
+        } = get();
+
+        const currentDiagram = getSelectedDiagram();
+
+        if (
+            currentDiagram?.viewport.x === viewport.x &&
+            currentDiagram?.viewport.y === viewport.y &&
+            currentDiagram?.viewport.zoom === viewport.zoom
+        ) {
+            return;
+        }
 
         const newDiagrams = diagrams.map((d) => {
-            if (d.id !== selectedDiagram) return d;
+            if (d.id !== currentDiagram?.id) return d;
             const cd = cloneDiagram(d);
             cd.viewport = viewport;
             return cd;
@@ -375,8 +468,17 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         });
     },
     undoAction() {
-        const { selectedDiagram, diagrams, cloneDiagram } = get();
+        const {
+            loading,
+            selectedDiagram,
+            disableUndo,
+            persisting,
+            diagrams,
+            cloneDiagram,
+        } = get();
         const { setErd } = useErdStore.getState();
+
+        if (loading || disableUndo || selectedDiagram === "") return;
 
         let diagram: DiagramData | undefined;
         const newDiagrams = diagrams.map((d) => {
@@ -391,6 +493,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         set({
             diagrams: newDiagrams,
+            persisting: persisting + 1,
             disableUndo: diagram === undefined || diagram.history.current <= 0,
             disableRedo:
                 diagram === undefined ||
@@ -401,8 +504,17 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         }
     },
     redoAction() {
-        const { selectedDiagram, diagrams, cloneDiagram } = get();
+        const {
+            loading,
+            selectedDiagram,
+            disableRedo,
+            persisting,
+            diagrams,
+            cloneDiagram,
+        } = get();
         const { setErd } = useErdStore.getState();
+
+        if (loading || disableRedo || selectedDiagram === "") return;
 
         let diagram: DiagramData | undefined;
         const newDiagrams = diagrams.map((d) => {
@@ -417,6 +529,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         set({
             diagrams: newDiagrams,
+            persisting: persisting + 1,
             disableUndo: diagram === undefined || diagram.history.current <= 0,
             disableRedo:
                 diagram === undefined ||
@@ -426,12 +539,110 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             setErd(diagram);
         }
     },
-    persistDiagram() {},
-    persistDiagramViewport() {},
+    async persistDiagram() {
+        const { jwtToken } = useUserStore.getState();
+        const { getSelectedDiagram } = get();
+
+        const currentDiagram = getSelectedDiagram();
+        if (currentDiagram && jwtToken) {
+            const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `${jwtToken}`,
+                },
+                body: JSON.stringify({
+                    id: currentDiagram.id,
+                    history: currentDiagram.history,
+                }),
+            });
+            // const result = await response.json();
+        }
+
+        set({
+            persisting: 0,
+        });
+    },
+    async persistNewDiagram() {
+        const { jwtToken } = useUserStore.getState();
+        const { diagrams } = get();
+
+        for (const diagram of diagrams) {
+            if (!diagram.persisted && jwtToken) {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `${jwtToken}`,
+                    },
+                    body: JSON.stringify(diagram),
+                });
+                // const result = await response.json();
+
+                set({
+                    diagrams: diagrams.map((d) => {
+                        if (d.id === diagram.id && !d.persisted) {
+                            return {
+                                ...d,
+                                persisted: true,
+                            };
+                        }
+                        return d;
+                    }),
+                });
+            }
+        }
+
+        set({
+            persistingNew: 0,
+        });
+    },
+    async persistDiagramViewport() {
+        const { jwtToken } = useUserStore.getState();
+        const { getSelectedDiagram } = get();
+
+        const currentDiagram = getSelectedDiagram();
+        if (currentDiagram && jwtToken) {
+            const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `${jwtToken}`,
+                },
+                body: JSON.stringify({
+                    id: currentDiagram.id,
+                    viewport: currentDiagram.viewport,
+                }),
+            });
+            // const result = await response.json();
+        }
+
+        set({
+            persistingViewport: 0,
+        });
+    },
+    async persistDiagramDelete() {
+        const { jwtToken } = useUserStore.getState();
+        const { selectedDiagram } = get();
+
+        if (selectedDiagram && jwtToken) {
+            const response = await fetch(`${url}?id=${selectedDiagram}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `${jwtToken}`,
+                },
+            });
+            // const result = await response.json();
+        }
+        set({
+            persistingDelete: false,
+        });
+    },
     cloneDiagram(d: DiagramData): DiagramData {
         return {
             ...d,
-            viewport: d.viewport === undefined ? undefined : { ...d.viewport },
+            viewport: { ...d.viewport },
             history: {
                 ...d.history,
                 states: d.history.states.map((s) => {

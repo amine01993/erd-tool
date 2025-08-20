@@ -33,7 +33,7 @@ export type ErdState = {
     onEdgesChange: OnEdgesChange;
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => void;
     onConnect: (params: Connection) => void;
-    initErd: (diagram: DiagramData | null) => void;
+    clearSelection: () => void;
     setErd: (diagram: DiagramData) => void;
     getName: () => string;
     addConnection: (fromId: string, position: XYPosition) => void;
@@ -51,29 +51,26 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     loaded: false,
     nodes: [],
     edges: [],
-    initErd(diagram: DiagramData | null) {
-        let nodes: Node<EntityData>[] = [],
-            edges: Edge<ErdEdgeData>[] = [];
-        if (diagram) {
-            const state = diagram.history.states[diagram.history.current];
-            nodes = state.nodes;
-            edges = state.edges;
-        }
-        set({
-            selectedNodeId: null,
-            loaded: false,
-            nodes,
-            edges,
-        });
+    clearSelection() {
+        set({ selectedNodeId: null });
     },
     setErd(diagram: DiagramData) {
         const state = diagram.history.states[diagram.history.current];
         const nodes = state.nodes;
         const edges = state.edges;
+        let selectedNodeId = null;
+
+        for (const node of nodes) {
+            if (node.selected) {
+                selectedNodeId = node.id;
+                break;
+            }
+        }
 
         set({
             nodes,
             edges,
+            selectedNodeId,
         });
     },
     getMarkersName(startVal: string, endVal: string) {
@@ -142,7 +139,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         if (loaded && saving) {
             saveDiagram(newNodes as any, edges);
         }
-        // console.log("onNodesChange", { changes, loaded, saving, newNodes });
     },
     onEdgesChange: (changes: EdgeChange[]) => {
         const { edges, nodes, getMarkersName } = get();
@@ -175,7 +171,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         if (saving) {
             saveDiagram(nodes, newEdges as any);
         }
-        // console.log("onEdgesChange", { changes, saving, newEdges });
     },
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => {
         const { edges, getMarkersName } = get();
@@ -202,7 +197,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
     },
     onConnect: (params: Connection) => {
-        console.log("onConnect");
         const { source, target } = params;
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
@@ -258,7 +252,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         return name;
     },
     addEntity(position: XYPosition) {
-        console.log("addEntity");
         const { nodes, edges, getName } = get();
         const { saveDiagram } = useDiagramStore.getState();
         let name = getName();
@@ -280,7 +273,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         saveDiagram(newNodes, edges);
     },
     addConnection: (fromId: string, position: XYPosition) => {
-        console.log("addConnection");
         const { nodes, edges, getName } = get();
         const { saveDiagram } = useDiagramStore.getState();
         let name = getName();
@@ -310,7 +302,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         saveDiagram(newNodes, newEdges);
     },
     addSelfConnection: (nodeId: string) => {
-        console.log("addSelfConnection");
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
 
@@ -354,7 +345,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         saveDiagram(nodes, newEdges);
     },
     updateEdgeLabel(id: string, type: "start" | "end", label: string) {
-        console.log("updateEdgeLabel");
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
 

@@ -30,9 +30,9 @@ import ErdItemsPanel from "./ErdItemsPanel";
 import useErdItemsStore from "@/app/store/erd-items";
 import ErdConnectionLine from "./ErdConnectionLine";
 import Markers from "./Markers";
-import DevTools from "../devtools/Devtools";
 import { ErdEdgeData } from "@/app/type/EdgeType";
 import useDiagramStore from "@/app/store/diagram";
+import Loading from "./Loading";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -51,7 +51,6 @@ const selector = (state: ErdState) => ({
     selectedNodeId: state.selectedNodeId,
     nodes: state.nodes,
     edges: state.edges,
-    initErd: state.initErd,
     onNodesChange: state.onNodesChange,
     onEdgesChange: state.onEdgesChange,
     onEdgeHover: state.onEdgeHover,
@@ -78,30 +77,24 @@ const defaultEdgeOptions = {
 const ERD = () => {
     const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
     const connectingNodeId = useRef<string | null>(null);
-    const {
-        viewportInitialized,
-        screenToFlowPosition,
-        getViewport,
-        setViewport,
-        fitView,
-    } = useReactFlow();
+    const { screenToFlowPosition, setViewport, fitView } = useReactFlow();
 
     const {
         loading,
         persisting,
+        persistingNew,
         persistingViewport,
         selectedDiagram,
-        getSelectedDiagram,
+        loadDiagram,
         saveViewport,
         persistDiagram,
+        persistNewDiagram,
         persistDiagramViewport,
     } = useDiagramStore();
 
     const {
-        // selectedNodeId,
         nodes,
         edges,
-        initErd,
         onNodesChange,
         onEdgesChange,
         onEdgeHover,
@@ -113,10 +106,7 @@ const ERD = () => {
     const { selectedItem } = useErdItemsStore();
 
     useOnViewportChange({
-        // onStart: (viewport: Viewport) => console.log("start", viewport),
-        // onChange: (viewport: Viewport) => console.log("change", viewport),
         onEnd: (viewport: Viewport) => {
-            // console.log("onEnd", {viewport, getSelectedDiagram: getSelectedDiagram()});
             saveViewport(viewport);
         },
     });
@@ -227,6 +217,21 @@ const ERD = () => {
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout | null = null;
+        if (persistingNew) {
+            timeoutId = setTimeout(() => {
+                persistNewDiagram();
+            }, 500);
+        }
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        };
+    }, [persistingNew]);
+
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout | null = null;
         if (selectedDiagram && persistingViewport) {
             timeoutId = setTimeout(() => {
                 persistDiagramViewport();
@@ -241,21 +246,18 @@ const ERD = () => {
     }, [selectedDiagram, persistingViewport]);
 
     useEffect(() => {
-        if (!viewportInitialized) return;
         if (selectedDiagram) {
-            const currentDiagram = getSelectedDiagram();
-            initErd(currentDiagram!);
-            if (currentDiagram!.viewport) {
-                setViewport(currentDiagram!.viewport);
-            } else {
-                fitView({
-                    padding: 0.1,
-                });
-            }
-        } else {
-            initErd(null);
+            loadDiagram().then((diagram) => {
+                if (diagram.viewport.x !== 0) {
+                    setViewport(diagram.viewport);
+                } else {
+                    fitView({
+                        padding: 0.1,
+                    });
+                }
+            });
         }
-    }, [selectedDiagram, viewportInitialized]);
+    }, [selectedDiagram]);
 
     return (
         <div
@@ -285,7 +287,6 @@ const ERD = () => {
                 connectionMode={ConnectionMode.Loose}
                 defaultEdgeOptions={defaultEdgeOptions}
                 connectionLineComponent={ErdConnectionLine}
-                fitView
                 className={cc(["react-flow-container", selectedItem])}
                 onClick={handlePaneClick}
             >
@@ -294,6 +295,7 @@ const ERD = () => {
                 <MiniMap />
                 {/* <DevTools /> */}
                 <ErdItemsPanel />
+                {loading && <Loading />}
             </ReactFlow>
         </div>
     );

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { Hub } from "@aws-amplify/core";
 import { Icon } from "@iconify/react";
 import classNames from "classnames";
@@ -7,11 +7,18 @@ import Theme from "../widgets/Theme";
 import Settings from "../widgets/Settings";
 import useDiagramStore from "@/app/store/diagram";
 import useUserStore from "@/app/store/user";
+import Cloud from "../icons/Cloud";
+import CloudCheck from "../icons/CloudCheck";
 
 const Header = () => {
     const { setAuthData } = useUserStore();
 
     const {
+        loading,
+        persisting,
+        persistingNew,
+        persistingViewport,
+        persistingDelete,
         selectedDiagram,
         disableUndo,
         disableRedo,
@@ -21,6 +28,15 @@ const Header = () => {
         undoAction,
         redoAction,
     } = useDiagramStore();
+
+    const isSaving = useMemo(() => {
+        return (
+            persisting > 0 ||
+            persistingNew > 0 ||
+            persistingViewport > 0 ||
+            persistingDelete
+        );
+    }, [persisting, persistingNew, persistingViewport, persistingDelete]);
 
     const handleUndo = useCallback(() => {
         undoAction();
@@ -89,7 +105,7 @@ const Header = () => {
                     aria-label="Undo last action"
                     className="header-btn"
                     onClick={handleUndo}
-                    disabled={disableUndo}
+                    disabled={disableUndo || loading}
                 >
                     <Icon icon="tabler:arrow-back-up" fontSize={21} />
                 </button>
@@ -98,7 +114,7 @@ const Header = () => {
                     aria-label="Redo"
                     className="header-btn"
                     onClick={handleRedo}
-                    disabled={disableRedo}
+                    disabled={disableRedo || loading}
                 >
                     <Icon icon="tabler:arrow-forward-up" fontSize={21} />
                 </button>
@@ -117,6 +133,7 @@ const Header = () => {
                             aria-label="Duplicate selected diagram"
                             className="header-btn"
                             onClick={handleDuplicateDiagram}
+                            disabled={loading}
                         >
                             <Icon icon="tabler:layers-subtract" fontSize={21} />
                         </button>
@@ -124,21 +141,31 @@ const Header = () => {
                             aria-label="Delete selected diagram"
                             className="header-btn"
                             onClick={handleDeleteDiagram}
+                            disabled={loading}
                         >
                             <Icon icon="tabler:trash" fontSize={21} />
                         </button>
                     </>
                 )}
 
-                <button className="flex items-center gap-2 header-btn">
+                <button className="flex items-center gap-2 header-btn" disabled={loading}>
                     <Icon icon="tabler:database-export" fontSize={21} />
                     Export
                 </button>
 
                 <div className="flex items-center gap-2 p-2">
-                    <Icon icon="tabler:cloud" fontSize={21} />
-                    {/* <Icon icon="tabler:cloud-check" width="24" height="24" /> */}
-                    Saving...
+                    {isSaving && (
+                        <>
+                            <Cloud fontSize={21} />
+                            Saving...
+                        </>
+                    )}
+                    {!isSaving && (
+                        <>
+                            <CloudCheck fontSize={21} />
+                            Saved
+                        </>
+                    )}
                 </div>
             </div>
             <div className="flex items-center">
