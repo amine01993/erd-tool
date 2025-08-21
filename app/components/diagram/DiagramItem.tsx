@@ -29,7 +29,7 @@ const DiagramItem = ({ diagram }: DiagramItemProps) => {
     );
     const showToast = useAlertStore((state) => state.showToast);
 
-    const [editName, setEditName] = useState(true);
+    const [editName, setEditName] = useState(false);
     const [newName, setNewName] = useState(diagram.name);
     const [submitting, setSubmitting] = useState(false);
 

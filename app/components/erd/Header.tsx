@@ -11,7 +11,7 @@ import Cloud from "../icons/Cloud";
 import CloudCheck from "../icons/CloudCheck";
 
 const Header = () => {
-    const { setAuthData } = useUserStore();
+    const { setAuthData, emptyAuthData } = useUserStore();
 
     const {
         loading,
@@ -68,6 +68,8 @@ const Header = () => {
                     break;
                 case "signedOut":
                     console.log("user have been signedOut successfully.");
+                    emptyAuthData();
+                    setAuthData();
                     break;
                 case "tokenRefresh":
                     console.log("auth tokens have been refreshed.");
@@ -148,7 +150,10 @@ const Header = () => {
                     </>
                 )}
 
-                <button className="flex items-center gap-2 header-btn" disabled={loading}>
+                <button
+                    className="flex items-center gap-2 header-btn"
+                    disabled={loading}
+                >
                     <Icon icon="tabler:database-export" fontSize={21} />
                     Export
                 </button>

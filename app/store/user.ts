@@ -1,4 +1,4 @@
-import { Amplify } from "aws-amplify";
+import { Amplify, ResourcesConfig } from "aws-amplify";
 import {
     autoSignIn,
     confirmSignUp,
@@ -8,9 +8,15 @@ import {
     signOut,
     signUp,
 } from "@aws-amplify/auth";
+import { Sha256 } from "@aws-crypto/sha256-js";
+import { SignatureV4 } from "@aws-sdk/signature-v4";
+import { HttpRequest } from "@aws-sdk/protocol-http";
 import { create } from "zustand";
 import { DiagramsAuthStack } from "../../outputs.json";
 import useDiagramStore from "./diagram";
+
+const host = "9nnhrbiki6.execute-api.us-east-1.amazonaws.com";
+const url = `https://${host}/prod/diagrams`;
 
 Amplify.configure({
     Auth: {
@@ -18,10 +24,10 @@ Amplify.configure({
             userPoolId: DiagramsAuthStack.DiagramsUserPoolId,
             userPoolClientId: DiagramsAuthStack.DiagramsUserPoolClientId,
             identityPoolId: DiagramsAuthStack.DiagramsIdentityPoolId,
-            signUpVerificationMethod: "code",
+            allowGuestAccess: true,
         },
     },
-});
+} as ResourcesConfig);
 
 export type AppTheme = "system" | "dark" | "light";
 export type AuthType = "login" | "register" | "confirm_sign_up";
@@ -33,6 +39,8 @@ export interface UserState {
     isAuthModalOpen: boolean;
     authType: AuthType;
     authDetail: any;
+    isGuest: boolean;
+    credentials: any;
     authData: any;
     jwtToken: string | "";
     setTheme: (theme: AppTheme) => void;
@@ -53,9 +61,11 @@ export interface UserState {
     ) => Promise<void>;
     confirmSignUp: (code: string) => void;
     resendCode: () => void;
+    getAuthData: () => { credentials: any; authData: any; jwtToken: string };
     setAuthData: () => void;
     logOut: () => void;
     emptyAuthData: () => void;
+    apiCall: (props: ApiCallProps) => Promise<any>;
 }
 
 const useUserStore = create<UserState>((set, get) => ({
@@ -65,6 +75,8 @@ const useUserStore = create<UserState>((set, get) => ({
     isAuthModalOpen: false,
     authType: "login",
     authDetail: null,
+    isGuest: true,
+    credentials: null,
     authData: null,
     jwtToken: "",
     setTheme(theme: AppTheme) {
@@ -172,31 +184,87 @@ const useUserStore = create<UserState>((set, get) => ({
         });
     },
     async logOut() {
-        const { emptyAuthData } = get();
-
         await signOut();
+    },
+    getAuthData() {
+        const { credentials, authData, jwtToken } = get();
 
-        emptyAuthData();
+        if (!authData) {
+            let creds = localStorage.getItem("credentials");
+            let payload = localStorage.getItem("authData");
+            let token = localStorage.getItem("jwtToken");
+
+            const parsedCredentials = creds ? JSON.parse(creds) : null;
+            const parsedPayload = payload ? JSON.parse(payload) : null;
+
+            set({
+                isGuest: Boolean(!token),
+                credentials: parsedCredentials,
+                authData: parsedPayload,
+                jwtToken: token ?? "",
+            });
+
+            console.log(
+                "getAuthData from localStorage:",
+                parsedCredentials,
+                parsedPayload,
+                token ?? ""
+            );
+            return {
+                credentials: parsedCredentials,
+                authData: parsedPayload,
+                jwtToken: token ?? "",
+            };
+        }
+
+        console.log("getAuthData from store:", credentials, authData, jwtToken);
+        return { credentials, authData, jwtToken };
     },
     async setAuthData() {
         const { loadDiagrams } = useDiagramStore.getState();
-        const { authData, emptyAuthData } = get();
-        // only retreive session if it's been more than half an hour since authentication
-        if (
-            authData &&
-            Date.now() - (authData.auth_time * 1000) / 1000 / 60 > 30
-        ) {
+        const { getAuthData, emptyAuthData } = get();
+
+        const { credentials, authData, jwtToken } = getAuthData();
+
+        // only fetch new session when credentials are expired
+        if (credentials && new Date(credentials.expiration) > new Date()) {
+            await loadDiagrams(jwtToken ?? "", credentials);
             return;
         }
+
         try {
             const session = await fetchAuthSession({ forceRefresh: true });
-            console.log("Fetched auth session:", session, session.tokens?.idToken?.toString());
+
+            console.log(
+                "Fetched auth session:",
+                session,
+                session.tokens?.idToken?.toString()
+            );
+
+            const credentials = {
+                ...session.credentials,
+                expiration: session.credentials?.expiration?.toISOString(),
+            };
+            
+            const payload = session.tokens?.idToken?.payload;
+            const token = session.tokens?.idToken?.toString();
             set({
-                authData: session.tokens?.idToken?.payload,
-                jwtToken: session.tokens?.idToken?.toString(),
+                isGuest: Boolean(!token),
+                credentials: credentials ?? null,
+                authData: payload ?? null,
+                jwtToken: token ?? "",
             });
 
-            await loadDiagrams(session.tokens?.idToken?.toString() ?? "");
+            if (credentials)
+                localStorage.setItem(
+                    "credentials",
+                    JSON.stringify(credentials)
+                );
+            if (payload)
+                localStorage.setItem("authData", JSON.stringify(payload));
+            if (token) localStorage.setItem("jwtToken", token ?? "");
+
+            await loadDiagrams(token ?? "", credentials);
         } catch (error) {
             console.error("Error fetching auth session:", error);
             emptyAuthData();
@@ -206,10 +274,81 @@ const useUserStore = create<UserState>((set, get) => ({
         // when logging out
 
         set({
+            credentials: null,
             authData: null,
             jwtToken: "",
         });
+
+        localStorage.removeItem("credentials");
+        localStorage.removeItem("authData");
+        localStorage.removeItem("jwtToken");
+    },
+    async apiCall({ method = "GET", query, body, token, creds }: ApiCallProps) {
+        const { jwtToken, credentials, isGuest } = get();
+
+        token = token ?? jwtToken;
+        creds = creds ?? credentials;
+
+        let queryString = "";
+        if (query) {
+            const searchParams = new URLSearchParams(query);
+            queryString = `?${searchParams.toString()}`;
+        }
+
+        let response;
+
+        if (isGuest) {
+            const request = new HttpRequest({
+                method,
+                protocol: "https:",
+                path: "/prod/diagramsForGuests",
+                headers: {
+                    host,
+                },
+                hostname: host,
+                query,
+                body: body ? JSON.stringify(body) : undefined,
+            });
+
+            const signer = new SignatureV4({
+                credentials: creds,
+                service: "execute-api",
+                region: "us-east-1",
+                sha256: Sha256,
+            });
+
+            const signedRequest = await signer.sign(request);
+
+            console.log("Signed request:", signedRequest);
+            response = await fetch(
+                `https://${signedRequest.hostname}${signedRequest.path}${queryString}`,
+                {
+                    method: signedRequest.method,
+                    headers: signedRequest.headers,
+                    body: signedRequest.body,
+                }
+            );
+        } else {
+            response = await fetch(`${url}${queryString}`, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: body ? JSON.stringify(body) : undefined,
+            });
+        }
+
+        return response;
     },
 }));
+
+interface ApiCallProps {
+    method?: string;
+    query?: Record<string, string>;
+    body?: Record<string, any>;
+    token?: string;
+    creds?: any;
+}
 
 export default useUserStore;

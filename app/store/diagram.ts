@@ -7,9 +7,6 @@ import { EntityData } from "../type/EntityType";
 import useErdStore from "./erd";
 import useUserStore from "./user";
 
-const url =
-    "https://9nnhrbiki6.execute-api.us-east-1.amazonaws.com/prod/diagrams";
-
 export const mockDiagrams: DiagramData[] = [
     {
         id: "1",
@@ -155,7 +152,7 @@ interface DiagramStoreProps {
     persistDiagramViewport: () => Promise<void>;
     persistDiagramDelete: () => Promise<void>;
     loadDiagram: () => Promise<any>;
-    loadDiagrams: (token: string) => Promise<void>;
+    loadDiagrams: (token: string, credentials: any) => Promise<void>;
     cloneDiagram: (d: DiagramData) => DiagramData;
 }
 
@@ -187,7 +184,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     },
     async loadDiagram() {
         const { diagrams, getSelectedDiagram } = get();
-        const { jwtToken } = useUserStore.getState();
+        const { apiCall } = useUserStore.getState();
         const { setErd } = useErdStore.getState();
 
         const currentDiagram = getSelectedDiagram();
@@ -206,15 +203,13 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             return currentDiagram;
         }
 
-        if (!currentDiagram.loaded && jwtToken) {
+        if (!currentDiagram.loaded) {
             set({
                 loading: true,
             });
-            const response = await fetch(`${url}?id=${currentDiagram.id}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${jwtToken}`,
-                },
+            const response = await apiCall({
+                method: "GET",
+                query: { id: currentDiagram.id },
             });
             const diagram = await response.json();
             set({
@@ -241,15 +236,14 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             return diagram;
         }
     },
-    async loadDiagrams(token: string) {
+    async loadDiagrams(token: string, credentials: any) {
+        const { apiCall } = useUserStore.getState();
         let diagrams: DiagramData[] = [];
 
-        if (token) {
-            const response = await fetch(url, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `${token}`,
-                },
+        if (token || credentials) {
+            const response = await apiCall({
+                token,
+                creds: credentials,
             });
             diagrams = await response.json();
             diagrams.forEach((d) => {
@@ -285,7 +279,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         return name;
     },
     async updateDiagramName(name: string) {
-        const { jwtToken } = useUserStore.getState();
+        const { apiCall } = useUserStore.getState();
         const { selectedDiagram, diagrams } = get();
         if (name === "")
             return { isValid: false, message: "Name cannot be empty" };
@@ -309,20 +303,14 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             }),
         });
 
-        if (jwtToken) {
-            const response = await fetch(url, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `${jwtToken}`,
-                },
-                body: JSON.stringify({
-                    id: selectedDiagram,
-                    name: name,
-                }),
-            });
-            // const result = await response.json();
-        }
+        const response = await apiCall({
+            method: "PUT",
+            body: {
+                id: selectedDiagram,
+                name: name,
+            },
+        });
+        // const result = await response.json();
 
         return { isValid: true, message: "Name updated successfully" };
     },
@@ -593,21 +581,17 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         }
     },
     async persistDiagram() {
-        const { jwtToken } = useUserStore.getState();
+        const { apiCall } = useUserStore.getState();
         const { getSelectedDiagram } = get();
 
         const currentDiagram = getSelectedDiagram();
-        if (currentDiagram && jwtToken) {
-            const response = await fetch(url, {
+        if (currentDiagram) {
+            const response = await apiCall({
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `${jwtToken}`,
-                },
-                body: JSON.stringify({
+                body: {
                     id: currentDiagram.id,
                     history: currentDiagram.history,
-                }),
+                },
             });
             // const result = await response.json();
         }
@@ -617,18 +601,14 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         });
     },
     async persistNewDiagram() {
-        const { jwtToken } = useUserStore.getState();
+        const { apiCall } = useUserStore.getState();
         const { diagrams } = get();
 
         for (const diagram of diagrams) {
-            if (!diagram.persisted && jwtToken) {
-                const response = await fetch(url, {
+            if (!diagram.persisted) {
+                const response = await apiCall({
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `${jwtToken}`,
-                    },
-                    body: JSON.stringify(diagram),
+                    body: diagram,
                 });
                 // const result = await response.json();
 
@@ -651,21 +631,17 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         });
     },
     async persistDiagramViewport() {
-        const { jwtToken } = useUserStore.getState();
+        const { apiCall } = useUserStore.getState();
         const { getSelectedDiagram } = get();
 
         const currentDiagram = getSelectedDiagram();
-        if (currentDiagram && jwtToken) {
-            const response = await fetch(url, {
+        if (currentDiagram) {
+            const response = await apiCall({
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `${jwtToken}`,
-                },
-                body: JSON.stringify({
+                body: {
                     id: currentDiagram.id,
                     viewport: currentDiagram.viewport,
-                }),
+                },
             });
             // const result = await response.json();
         }
@@ -675,16 +651,15 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         });
     },
     async persistDiagramDelete() {
-        const { jwtToken } = useUserStore.getState();
+        const { apiCall } = useUserStore.getState();
         const { selectedDiagram } = get();
 
-        if (selectedDiagram && jwtToken) {
-            const response = await fetch(`${url}?id=${selectedDiagram}`, {
+        if (selectedDiagram) {
+            const response = await apiCall({
                 method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `${jwtToken}`,
-                },
+                query: {
+                    id: selectedDiagram
+                }
             });
             // const result = await response.json();
         }
