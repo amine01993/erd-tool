@@ -27,6 +27,54 @@
     }
 }
 
+.diagram-item {
+    @apply px-2 py-1 text-left rounded-md text-[#640D14] hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+
+    &.selected {
+        @apply bg-[#f7dee0];
+
+        .diagram-name {
+            &:hover, &:focus {
+                @apply border-1 border-[#640d14] px-[1px] -mt-[1px] -ml-[2px] -mb-[1px] rounded-md;
+                @apply outline-none;
+            }
+        }
+    }
+
+    .diagram-name-form {
+        input {
+            @apply border-1 border-[#640D14] rounded-md px-[1px] -mt-[1px] -ml-[2px] -mb-[1px] w-full outline-none bg-[#fefbfb];
+            @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
+        }
+    }
+}
+
+.feedback-toast {
+    @apply fixed px-6 py-3 rounded-full bg-[#640D14] text-white bottom-3;
+    @apply left-1/2 -translate-x-1/2;
+    @apply hidden gap-2 items-center;
+
+    &.show {
+        @apply flex animate-[slideUp_0.3s_linear_forwards];
+    }
+
+    &.hide {
+        @apply flex animate-[slideDown_0.3s_linear_forwards];
+    }
+}
+
+@keyframes slideDown {
+    0% {
+        opacity: 100%;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(20px);
+        display: none;
+    }
+}
+
 .theme-menu {
     @apply absolute top-full right-0 z-1 transition duration-300 overflow-hidden opacity-0;
     @apply hidden flex-col gap-3 p-2 border border-[#640d14] bg-[#fefbfb];

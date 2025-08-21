@@ -137,6 +137,9 @@ interface DiagramStoreProps {
     selectDiagram: (id: string) => void;
     getSelectedDiagram: () => DiagramData | undefined;
     getName: (prefix?: string, nbr?: number) => string;
+    updateDiagramName: (
+        name: string
+    ) => Promise<{ isValid: boolean; message: string }>;
     createDiagram: () => void;
     duplicateDiagram: () => void;
     deleteDiagram: () => void;
@@ -273,12 +276,55 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     getName: (prefix?: string, nbr?: number) => {
         const { diagrams } = get();
         prefix = prefix ?? "Erd Diagram";
-        let k = nbr ?? 1, name = "";
+        let k = nbr ?? 1,
+            name = "";
         do {
             name = `${prefix} (${k++})`;
         } while (diagrams.some((diagram) => diagram.name === name));
 
         return name;
+    },
+    async updateDiagramName(name: string) {
+        const { jwtToken } = useUserStore.getState();
+        const { selectedDiagram, diagrams } = get();
+        if (name === "")
+            return { isValid: false, message: "Name cannot be empty" };
+
+        const diagram = diagrams.find(
+            (d) => selectedDiagram !== d.id && d.name === name
+        );
+        if (diagram) {
+            return { isValid: false, message: "Name already exists" };
+        }
+
+        set({
+            diagrams: diagrams.map((d) => {
+                if (d.id === selectedDiagram) {
+                    return {
+                        ...d,
+                        name,
+                    };
+                }
+                return d;
+            }),
+        });
+
+        if (jwtToken) {
+            const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `${jwtToken}`,
+                },
+                body: JSON.stringify({
+                    id: selectedDiagram,
+                    name: name,
+                }),
+            });
+            // const result = await response.json();
+        }
+
+        return { isValid: true, message: "Name updated successfully" };
     },
     createDiagram() {
         const { diagrams, persistingNew, getName } = get();
@@ -358,8 +404,8 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const match = newDiagram.name.match(/\((\d+?)\)$/i);
 
         let prefix = match
-                ? newDiagram.name.slice(0, match.index)
-                : newDiagram.name
+            ? newDiagram.name.slice(0, match.index)
+            : newDiagram.name;
         let nbr = match ? parseInt(match[1]) : undefined;
         currentDiagram.name = getName(prefix.trim(), nbr);
 
@@ -377,7 +423,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     deleteDiagram() {
         const { loading, diagrams, selectedDiagram, persistDiagramDelete } =
             get();
-        console.log("deleteDiagram:", selectedDiagram);
+
         if (loading || selectedDiagram === "") return;
 
         const newDiagrams = diagrams.filter((d) => d.id !== selectedDiagram);
@@ -631,7 +677,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     async persistDiagramDelete() {
         const { jwtToken } = useUserStore.getState();
         const { selectedDiagram } = get();
-        console.log("persistDiagramDelete:", selectedDiagram);
+
         if (selectedDiagram && jwtToken) {
             const response = await fetch(`${url}?id=${selectedDiagram}`, {
                 method: "DELETE",

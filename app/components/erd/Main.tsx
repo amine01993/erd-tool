@@ -8,6 +8,7 @@ import Sidebar from "../diagram/Sidebar";
 import ERD from "./ERD";
 import EntityInfo from "./EntityInfo";
 import Authentication from "../auth/Authentication";
+import Toast from "./Toast";
 import "./style.css";
 
 
@@ -68,6 +69,7 @@ export default memo(function Main() {
                 </Resizable>
             </main>
             <Authentication />
+            <Toast />
         </div>
     );
 })
