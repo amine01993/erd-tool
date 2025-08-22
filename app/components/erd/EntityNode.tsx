@@ -1,9 +1,49 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
-import { EntityData } from "../../type/EntityType";
+import { AttributeData, EntityData } from "../../type/EntityType";
+
+const AttributeNode = memo(({ data }: { data: AttributeData }) => {
+    const nullable = useMemo(() => {
+        console.log("Checking if attribute is nullable", data);
+        return !data.isPrimaryKey && data.isNullable;
+    }, [data.isPrimaryKey, data.isNullable]);
+
+    return (
+        <div className="flex justify-between items-center">
+            <div className="flex-1 truncate space-x-0.5">
+                <span>
+                    <span
+                        className={cc([
+                            {
+                                "font-bold underline":
+                                    data.isPrimaryKey || data.isForeignKey,
+                            },
+                        ])}
+                    >
+                        {data.name}
+                    </span>
+                {nullable && <span className="italic">?</span>}
+                </span>
+                {data.isPrimaryKey && <span className="">(PK)</span>}
+                {data.isForeignKey && <span className="">(FK)</span>}
+                {data.defaultValue && (
+                    <span className="font-semibold">[{data.defaultValue}]</span>
+                )}
+            </div>
+            <div className="shrink-0">{data.type}</div>
+            {/* {data.isPrimaryKey && <span className="primary-key">PK</span>}
+            {data.isForeignKey && (
+                <span className="foreign-key">
+                    FK to {data.foreignKeyTable}.{data.foreignKeyColumn}
+                </span>
+            )}
+            {data.isUnique && <span className="unique">UNIQUE</span>} */}
+        </div>
+    );
+});
 
 const EntityNode = (props: { data: EntityData }) => {
     const { name, attributes } = props.data;
@@ -39,14 +79,11 @@ const EntityNode = (props: { data: EntityData }) => {
             <ol className="attributes nodrag">
                 {attributes.map((attr, index) => (
                     <li key={index}>
-                        {attr.name}: {attr.type}
+                        <AttributeNode data={attr} />
                     </li>
                 ))}
             </ol>
-            <NodeResizer
-                minWidth={200}
-                minHeight={100}
-            />
+            <NodeResizer minWidth={200} minHeight={100} />
             <Handle id="b" type="target" position={Position.Top} />
             <Handle id="a" type="source" position={Position.Bottom} />
         </div>

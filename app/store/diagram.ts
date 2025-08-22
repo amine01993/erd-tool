@@ -6,6 +6,9 @@ import { ErdEdgeData } from "../type/EdgeType";
 import { EntityData } from "../type/EntityType";
 import useErdStore from "./erd";
 import useUserStore from "./user";
+import { initialAttributeFormState } from "../hooks/AttributeForm";
+
+const defaultAttributeValues = initialAttributeFormState.values;
 
 export const mockDiagrams: DiagramData[] = [
     {
@@ -27,16 +30,19 @@ export const mockDiagrams: DiagramData[] = [
                                 name: "Node_1",
                                 attributes: [
                                     {
+                                        ...defaultAttributeValues,
                                         id: nanoid(5),
                                         name: "Attribute_1",
                                         type: "string",
                                     },
                                     {
+                                        ...defaultAttributeValues,
                                         id: nanoid(5),
                                         name: "Attribute_2",
                                         type: "integer",
                                     },
                                     {
+                                        ...defaultAttributeValues,
                                         id: nanoid(5),
                                         name: "Attribute_3",
                                         type: "boolean",
@@ -52,11 +58,13 @@ export const mockDiagrams: DiagramData[] = [
                                 name: "Node_2",
                                 attributes: [
                                     {
+                                        ...defaultAttributeValues,
                                         id: nanoid(5),
                                         name: "Attribute_4",
                                         type: "string",
                                     },
                                     {
+                                        ...defaultAttributeValues,
                                         id: nanoid(5),
                                         name: "Attribute_5",
                                         type: "integer",
@@ -72,11 +80,13 @@ export const mockDiagrams: DiagramData[] = [
                                 name: "Node_3",
                                 attributes: [
                                     {
+                                        ...defaultAttributeValues,
                                         id: nanoid(5),
                                         name: "Attribute_6",
                                         type: "string",
                                     },
                                     {
+                                        ...defaultAttributeValues,
                                         id: nanoid(5),
                                         name: "Attribute_7",
                                         type: "integer",
@@ -340,6 +350,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                                     name: "Entity",
                                     attributes: [
                                         {
+                                            ...defaultAttributeValues,
                                             id: nanoid(5),
                                             name: "id",
                                             type: "integer",
@@ -347,6 +358,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                                             isAutoIncrement: true,
                                         },
                                         {
+                                            ...defaultAttributeValues,
                                             id: nanoid(5),
                                             name: "name",
                                             type: "string",

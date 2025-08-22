@@ -236,7 +236,7 @@
 }
 
 .entity-node {
-    @apply h-full flex flex-col overflow-hidden min-w-[199px] min-h-[99px];
+    @apply text-[12px] h-full flex flex-col overflow-hidden min-w-[199px] min-h-[99px];
 
     .title {
         @apply font-semibold border-b text-center flex items-center;
@@ -251,7 +251,7 @@
     }
 
     .attributes {
-        @apply text-sm text-gray-600 flex flex-col gap-1 p-2 cursor-default flex-1;
+        @apply text-[12px] text-gray-600 flex flex-col gap-1 p-2 cursor-default flex-1;
     }
 }
 
