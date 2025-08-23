@@ -1,14 +1,9 @@
-import {
-    FormEvent,
-    memo,
-    useCallback,
-    useRef,
-    useState,
-} from "react";
+import { FormEvent, memo, useCallback, useRef, useState } from "react";
+import { Icon } from "@iconify/react";
+import AlertCircleFilledIcon from "@iconify/icons-tabler/alert-circle-filled";
 import useUserStore from "@/app/store/user";
 import { validateCode } from "@/app/helper/auth-validation";
 import ConfirmationInput from "./ConfirmationInput";
-import { Icon } from "@iconify/react";
 
 const ConfirmSignUp = ({ active }: { active: boolean }) => {
     const { authDetail, confirmSignUp, resendCode } = useUserStore();
@@ -53,14 +48,20 @@ const ConfirmSignUp = ({ active }: { active: boolean }) => {
             {authDetail?.codeDeliveryDetails?.destination && (
                 <p className="confirmation-message">
                     A confirmation code has been sent to{" "}
-                    <strong>{authDetail.codeDeliveryDetails?.destination}</strong> via{" "}
-                    <strong>{authDetail.codeDeliveryDetails?.attributeName}</strong>.
+                    <strong>
+                        {authDetail.codeDeliveryDetails?.destination}
+                    </strong>{" "}
+                    via{" "}
+                    <strong>
+                        {authDetail.codeDeliveryDetails?.attributeName}
+                    </strong>
+                    .
                 </p>
             )}
 
             {serverError && (
                 <div className="server-error-message">
-                    <Icon icon="tabler:alert-circle-filled" fontSize={21} />
+                    <Icon icon={AlertCircleFilledIcon} fontSize={21} />
                     {serverError}
                 </div>
             )}

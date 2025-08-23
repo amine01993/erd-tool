@@ -2,19 +2,29 @@ import Image from "next/image";
 import { useCallback } from "react";
 import { Panel } from "@xyflow/react";
 import { Icon } from "@iconify/react";
+import LocationFilledIcon from "@iconify/icons-tabler/location-filled";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
 
 const ErdItemsPanel = () => {
     const { selectedItem, selectItem } = useErdItemsStore();
 
-    const handleSelection = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-        const item = event.currentTarget.dataset.id as "selector" | "entity" | "edge";
-        selectItem(item);
-    }, []);
+    const handleSelection = useCallback(
+        (event: React.MouseEvent<HTMLButtonElement>) => {
+            const item = event.currentTarget.dataset.id as
+                | "selector"
+                | "entity"
+                | "edge";
+            selectItem(item);
+        },
+        []
+    );
 
     return (
-        <Panel position="center-left" className="erd-items-panel bg-white p-1 shadow-md">
+        <Panel
+            position="center-left"
+            className="erd-items-panel bg-white p-1 shadow-md"
+        >
             <ul className="erd-items select-none">
                 <li>
                     <button
@@ -26,7 +36,7 @@ const ErdItemsPanel = () => {
                         ])}
                     >
                         <Icon
-                            icon="tabler:location-filled"
+                            icon={LocationFilledIcon}
                             width={24}
                             height={24}
                         />

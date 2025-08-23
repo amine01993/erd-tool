@@ -1,9 +1,10 @@
 import { memo, useEffect } from "react";
 import cc from "classcat";
+import { Icon } from "@iconify/react";
+import CircleCheckFilledIcon from "@iconify/icons-tabler/circle-check-filled";
+import CircleXFilledIcon from "@iconify/icons-tabler/circle-x-filled";
+import InfoCircleFilledIcon from "@iconify/icons-tabler/info-circle-filled";
 import useAlertStore from "@/app/store/alert";
-import Info from "../icons/Info";
-import Success from "../icons/Success";
-import Error from "../icons/Error";
 
 const Toast = () => {
     const { message, type, isVisible, hideToast } = useAlertStore();
@@ -29,9 +30,15 @@ const Toast = () => {
                 { show: isVisible, hide: isVisible === false },
             ])}
         >
-            {type === "success" && <Success fontSize={21} />}
-            {type === "error" && <Error fontSize={21} />}
-            {type === "info" && <Info fontSize={21} />}
+            {type === "success" && (
+                <Icon icon={CircleCheckFilledIcon} fontSize={21} />
+            )}
+            {type === "error" && (
+                <Icon icon={CircleXFilledIcon} fontSize={21} />
+            )}
+            {type === "info" && (
+                <Icon icon={InfoCircleFilledIcon} fontSize={21} />
+            )}
             {message}
         </div>
     );

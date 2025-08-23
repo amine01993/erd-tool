@@ -2,14 +2,20 @@ import Image from "next/image";
 import { memo, useCallback, useEffect } from "react";
 import { Hub } from "@aws-amplify/core";
 import { Icon } from "@iconify/react";
+import ArrowBackUpIcon from "@iconify/icons-tabler/arrow-back-up";
+import ArrowForwardUpIcon from "@iconify/icons-tabler/arrow-forward-up";
+import LayersSubtractIcon from "@iconify/icons-tabler/layers-subtract";
+import TrashIcon from "@iconify/icons-tabler/trash";
+import DatabaseExportIcon from "@iconify/icons-tabler/database-export";
+import CloudCheckIcon from "@iconify/icons-tabler/cloud-check";
+import CloudIcon from "@iconify/icons-tabler/cloud";
+import CirclePlusIcon from "@iconify/icons-tabler/circle-plus";
+import CloudXIcon from "@iconify/icons-tabler/cloud-x";
 import classNames from "classnames";
 import useDiagramStore from "@/app/store/diagram";
 import useUserStore from "@/app/store/user";
 import Theme from "../widgets/Theme";
 import Settings from "../widgets/Settings";
-import Cloud from "../icons/Cloud";
-import CloudCheck from "../icons/CloudCheck";
-import CloudX from "../icons/CloudX";
 import useDeleteDiagram from "@/app/hooks/DiagramDelete";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import { queryClient } from "@/app/helper/variables";
@@ -115,7 +121,7 @@ const Header = () => {
                     onClick={handleUndo}
                     disabled={disableUndo || loading}
                 >
-                    <Icon icon="tabler:arrow-back-up" fontSize={21} />
+                    <Icon icon={ArrowBackUpIcon} fontSize={21} />
                 </button>
 
                 <button
@@ -124,7 +130,7 @@ const Header = () => {
                     onClick={handleRedo}
                     disabled={disableRedo || loading}
                 >
-                    <Icon icon="tabler:arrow-forward-up" fontSize={21} />
+                    <Icon icon={ArrowForwardUpIcon} fontSize={21} />
                 </button>
 
                 <button
@@ -132,7 +138,7 @@ const Header = () => {
                     className="header-btn"
                     onClick={handleNewDiagram}
                 >
-                    <Icon icon="tabler:circle-plus" fontSize={21} />
+                    <Icon icon={CirclePlusIcon} fontSize={21} />
                 </button>
 
                 {selectedDiagram !== "" && (
@@ -143,7 +149,7 @@ const Header = () => {
                             onClick={handleDuplicateDiagram}
                             disabled={loading}
                         >
-                            <Icon icon="tabler:layers-subtract" fontSize={21} />
+                            <Icon icon={LayersSubtractIcon} fontSize={21} />
                         </button>
                         <button
                             aria-label="Delete selected diagram"
@@ -151,7 +157,7 @@ const Header = () => {
                             onClick={handleDeleteDiagram}
                             disabled={loading}
                         >
-                            <Icon icon="tabler:trash" fontSize={21} />
+                            <Icon icon={TrashIcon} fontSize={21} />
                         </button>
                     </>
                 )}
@@ -160,7 +166,7 @@ const Header = () => {
                     className="flex items-center gap-2 header-btn"
                     disabled={loading}
                 >
-                    <Icon icon="tabler:database-export" fontSize={21} />
+                    <Icon icon={DatabaseExportIcon} fontSize={21} />
                     Export
                 </button>
 
@@ -168,20 +174,20 @@ const Header = () => {
                     {offLine && (
                         <>
                             <span className="opacity-50">
-                                <CloudX fontSize={21} />
+                                <Icon icon={CloudXIcon} fontSize={21} />
                             </span>
                             <span className="opacity-50">Offline</span>
                         </>
                     )}
                     {!offLine && syncing && (
                         <>
-                            <Cloud fontSize={21} />
+                            <Icon icon={CloudIcon} fontSize={21} />
                             Saving...
                         </>
                     )}
                     {!offLine && !syncing && (
                         <>
-                            <CloudCheck fontSize={21} />
+                            <Icon icon={CloudCheckIcon} fontSize={21} />
                             Saved
                         </>
                     )}

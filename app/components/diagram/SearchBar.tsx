@@ -1,5 +1,6 @@
 import { ChangeEvent, memo } from "react";
 import { Icon } from "@iconify/react";
+import SearchIcon from "@iconify/icons-tabler/search";
 
 interface SearchBarProps {
     searchTerm: string;
@@ -10,7 +11,7 @@ const SearchBar = ({ searchTerm, handleSearchChange }: SearchBarProps) => {
     return (
         <div className="relative mb-2">
             <Icon
-                icon="mdi:magnify"
+                icon={SearchIcon}
                 className="text-[#640D14] absolute right-1 top-1/2 -translate-y-1/2"
                 fontSize={18}
             />

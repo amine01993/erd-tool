@@ -16,10 +16,10 @@ import {
     useInternalNode,
 } from "@xyflow/react";
 import { Icon } from "@iconify/react";
+import ChevronDownIcon from "@iconify/icons-tabler/chevron-down";
 import { getEdgeParams, getSelfLoopPath } from "@/app/helper/items";
 import useErdStore from "@/app/store/erd";
 import { ErdEdgeData } from "@/app/type/EdgeType";
-
 
 const EdgeLabel = memo(
     ({
@@ -78,7 +78,7 @@ const EdgeLabel = memo(
                             <option value="*">*</option>
                         </select>
                         <Icon
-                            icon="tabler:chevron-down"
+                            icon={ChevronDownIcon}
                             width="10"
                             height="10"
                             className="absolute right-0.5 top-1/2 -translate-y-1/2"

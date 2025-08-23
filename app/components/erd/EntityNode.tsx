@@ -1,6 +1,7 @@
 import { memo, useMemo } from "react";
 import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react";
+import DotsVerticalIcon from "@iconify/icons-tabler/dots-vertical";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
 import { AttributeData, EntityData } from "../../type/EntityType";
@@ -24,7 +25,7 @@ const AttributeNode = memo(({ data }: { data: AttributeData }) => {
                     >
                         {data.name}
                     </span>
-                {nullable && <span className="italic">?</span>}
+                    {nullable && <span className="italic">?</span>}
                 </span>
                 {data.isPrimaryKey && <span className="">(PK)</span>}
                 {data.isForeignKey && <span className="">(FK)</span>}
@@ -53,13 +54,13 @@ const EntityNode = (props: { data: EntityData }) => {
                     {selectedItem === "selector" && (
                         <>
                             <Icon
-                                icon="tabler:dots-vertical"
+                                icon={DotsVerticalIcon}
                                 width="15"
                                 height="24"
                                 className="-mr-2.5"
                             />
                             <Icon
-                                icon="tabler:dots-vertical"
+                                icon={DotsVerticalIcon}
                                 width="15"
                                 height="24"
                             />

@@ -1,6 +1,7 @@
 import { ChangeEvent, memo, useMemo } from "react";
 import { nanoid } from "nanoid";
 import { Icon } from "@iconify/react";
+import ChevronDownIcon from "@iconify/icons-tabler/chevron-down";
 
 const SelectField = ({
     label,
@@ -29,7 +30,7 @@ const SelectField = ({
                 ))}
             </select>
             <Icon
-                icon="tabler:chevron-down"
+                icon={ChevronDownIcon}
                 width="15"
                 height="15"
                 className="absolute right-2 top-[calc(50%+12px)] -translate-y-1/2"

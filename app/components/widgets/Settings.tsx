@@ -1,5 +1,6 @@
 import { memo, useCallback } from "react";
 import { Icon } from "@iconify/react";
+import UserCircleIcon from "@iconify/icons-tabler/user-circle";
 import SettingsMenu from "./SettingsMenu";
 import useUserStore from "@/app/store/user";
 
@@ -17,7 +18,7 @@ const Settings = () => {
                 className="header-btn"
                 onClick={handleSettingsClick}
             >
-                <Icon icon="tabler:user-circle" fontSize={21} />
+                <Icon icon={UserCircleIcon} fontSize={21} />
             </button>
             <SettingsMenu />
         </div>

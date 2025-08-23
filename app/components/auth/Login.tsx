@@ -1,5 +1,6 @@
 import { FormEvent, memo, useCallback, useReducer } from "react";
 import { Icon } from "@iconify/react";
+import AlertCircleFilledIcon from "@iconify/icons-tabler/alert-circle-filled";
 import InputField from "../widgets/InputField";
 import {
     initialLoginState,
@@ -50,7 +51,7 @@ const Login = ({ active }: { active: boolean }) => {
         >
             {state.serverError && (
                 <div className="server-error-message">
-                    <Icon icon="tabler:alert-circle-filled" fontSize={21} />
+                    <Icon icon={AlertCircleFilledIcon} fontSize={21} />
                     {state.serverError}
                 </div>
             )}

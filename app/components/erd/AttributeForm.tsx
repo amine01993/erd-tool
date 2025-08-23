@@ -9,6 +9,8 @@ import {
 } from "react";
 import { nanoid } from "nanoid";
 import { Icon } from "@iconify/react";
+import ChevronLeftIcon from "@iconify/icons-tabler/chevron-left";
+import DeviceFloppyIcon from "@iconify/icons-tabler/device-floppy";
 import InputField from "../widgets/InputField";
 import SelectField from "../widgets/SelectField";
 import CheckBoxField from "../widgets/CheckBoxField";
@@ -77,7 +79,7 @@ const AttributeForm = ({
         attributesRef,
         state,
         dispatch,
-        editingAttribute ?? undefined,
+        editingAttribute ?? undefined
     );
 
     const handleSubmit = useCallback(
@@ -277,19 +279,11 @@ const AttributeForm = ({
 
                 <div className="actions">
                     <button className="back-btn" onClick={handleBack}>
-                        <Icon
-                            icon="tabler:chevron-left"
-                            width="20"
-                            height="20"
-                        />
+                        <Icon icon={ChevronLeftIcon} width="20" height="20" />
                         Back
                     </button>
                     <button type="submit" className="submit-btn">
-                        <Icon
-                            icon="tabler:device-floppy"
-                            width="20"
-                            height="20"
-                        />
+                        <Icon icon={DeviceFloppyIcon} width="20" height="20" />
                         Save
                     </button>
                 </div>
