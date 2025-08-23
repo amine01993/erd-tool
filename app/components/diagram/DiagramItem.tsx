@@ -15,6 +15,8 @@ import { formatLastUpdate } from "@/app/helper/utils";
 import { DiagramData } from "@/app/type/DiagramType";
 import useDiagramStore from "@/app/store/diagram";
 import useAlertStore from "@/app/store/alert";
+import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
+import useAddDiagram from "@/app/hooks/DiagramAdd";
 
 interface DiagramItemProps {
     diagram: DiagramData;
@@ -28,6 +30,8 @@ const DiagramItem = ({ diagram }: DiagramItemProps) => {
         (state) => state.updateDiagramName
     );
     const showToast = useAlertStore((state) => state.showToast);
+    const mutation = useUpdateDiagram();
+    const mutationAdd = useAddDiagram();
 
     const [editName, setEditName] = useState(false);
     const [newName, setNewName] = useState(diagram.name);
@@ -74,18 +78,22 @@ const DiagramItem = ({ diagram }: DiagramItemProps) => {
             event.preventDefault();
 
             setSubmitting(true);
-            updateDiagramName(newName.trim())
-                .then((data) => {
-                    if (data.isValid) {
-                        setEditName(false);
-                        showToast("Name updated successfully", "success");
-                    } else {
-                        showToast(data.message, "error");
-                    }
-                })
-                .finally(() => {
-                    setSubmitting(false);
-                });
+            updateDiagramName(mutation, mutationAdd, newName.trim()).then((data) => {
+                console.log("Update diagram name response:", data);
+                if (!data) {
+                    setEditName(false);
+                    return;
+                }
+                if (data.isValid) {
+                    setEditName(false);
+                    showToast("Name updated successfully", "success");
+                } else {
+                    showToast(data.message, "error");
+                }
+            });
+            // .finally(() => {
+            // });
+            setSubmitting(false);
         },
         [newName]
     );

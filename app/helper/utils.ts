@@ -1,3 +1,6 @@
+import { DiagramData } from "../type/DiagramType";
+import { defaultDiagramValues } from "./variables";
+
 export function formatLastUpdate(date: Date): string {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -17,4 +20,22 @@ export function formatLastUpdate(date: Date): string {
         month: "short",
         day: "numeric",
     });
+}
+
+/**
+ * Retrieves diagrams from local storage while data is not corrupted.
+ * @returns An array of DiagramData objects.
+ */
+export function getDiagramsFromLocalStorage(): DiagramData[] {
+    const diagrams = localStorage.getItem("diagrams");
+    let parsedDiagrams = diagrams ? JSON.parse(diagrams) : [];
+
+    parsedDiagrams = parsedDiagrams.map((diagram: DiagramData) => {
+        return {
+            ...defaultDiagramValues,
+            ...diagram,
+        };
+    });
+
+    return parsedDiagrams;
 }

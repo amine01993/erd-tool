@@ -9,7 +9,6 @@ export interface DiagramData {
     createAt: string;
     lastUpdate: string;
     loaded: boolean;
-    persisted: boolean;
     history: {
         current: number;
         states: {
@@ -17,4 +16,11 @@ export interface DiagramData {
             edges: Edge<ErdEdgeData>[];
         }[];
     };
+}
+
+export interface DiagramDataUpdate {
+    id: string;
+    name?: string;
+    history?: DiagramData["history"];
+    viewport?: DiagramData["viewport"];
 }

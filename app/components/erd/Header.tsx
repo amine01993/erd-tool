@@ -1,24 +1,27 @@
 import Image from "next/image";
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { Hub } from "@aws-amplify/core";
 import { Icon } from "@iconify/react";
 import classNames from "classnames";
-import Theme from "../widgets/Theme";
-import Settings from "../widgets/Settings";
 import useDiagramStore from "@/app/store/diagram";
 import useUserStore from "@/app/store/user";
+import Theme from "../widgets/Theme";
+import Settings from "../widgets/Settings";
 import Cloud from "../icons/Cloud";
 import CloudCheck from "../icons/CloudCheck";
+import CloudX from "../icons/CloudX";
+import useDeleteDiagram from "@/app/hooks/DiagramDelete";
+import useAddDiagram from "@/app/hooks/DiagramAdd";
+import { queryClient } from "@/app/helper/variables";
 
 const Header = () => {
-    const { setAuthData, emptyAuthData } = useUserStore();
+    const { offLine, retrieveAuthData, emptyAuthData } = useUserStore();
+    const mutationAdd = useAddDiagram();
+    const mutationDelete = useDeleteDiagram();
 
     const {
         loading,
-        persisting,
-        persistingNew,
-        persistingViewport,
-        persistingDelete,
+        syncing,
         selectedDiagram,
         disableUndo,
         disableRedo,
@@ -29,15 +32,6 @@ const Header = () => {
         redoAction,
     } = useDiagramStore();
 
-    const isSaving = useMemo(() => {
-        return (
-            persisting > 0 ||
-            persistingNew > 0 ||
-            persistingViewport > 0 ||
-            persistingDelete
-        );
-    }, [persisting, persistingNew, persistingViewport, persistingDelete]);
-
     const handleUndo = useCallback(() => {
         undoAction();
     }, [undoAction]);
@@ -47,29 +41,40 @@ const Header = () => {
     }, [redoAction]);
 
     const handleNewDiagram = useCallback(() => {
-        createDiagram();
+        createDiagram(mutationAdd);
     }, [createDiagram]);
 
     const handleDuplicateDiagram = useCallback(() => {
-        duplicateDiagram();
+        duplicateDiagram(mutationAdd);
     }, [duplicateDiagram]);
 
     const handleDeleteDiagram = useCallback(() => {
-        deleteDiagram();
+        deleteDiagram(mutationDelete);
     }, [deleteDiagram]);
 
     useEffect(() => {
+        function initAuthData() {
+            retrieveAuthData()
+                .then(() => {
+                    queryClient.invalidateQueries({ queryKey: ["diagrams"] });
+                })
+                .catch((error) => {
+                    console.error("Error retrieving auth data:", error);
+                });
+        }
+
         const unsubscribe = Hub.listen("auth", async ({ payload }) => {
             console.log("Hub.auth", payload);
             switch (payload.event) {
                 case "signedIn":
                     console.log("user have been signedIn successfully.");
-                    setAuthData();
+                    emptyAuthData();
+                    initAuthData();
                     break;
                 case "signedOut":
                     console.log("user have been signedOut successfully.");
                     emptyAuthData();
-                    setAuthData();
+                    initAuthData();
                     break;
                 case "tokenRefresh":
                     console.log("auth tokens have been refreshed.");
@@ -79,7 +84,8 @@ const Header = () => {
                     break;
             }
         });
-        setAuthData();
+
+        initAuthData();
 
         return () => {
             unsubscribe();
@@ -158,14 +164,22 @@ const Header = () => {
                     Export
                 </button>
 
-                <div className="flex items-center gap-2 p-2">
-                    {isSaving && (
+                <div className="flex items-center gap-2 p-2 cursor-default">
+                    {offLine && (
+                        <>
+                            <span className="opacity-50">
+                                <CloudX fontSize={21} />
+                            </span>
+                            <span className="opacity-50">Offline</span>
+                        </>
+                    )}
+                    {!offLine && syncing && (
                         <>
                             <Cloud fontSize={21} />
                             Saving...
                         </>
                     )}
-                    {!isSaving && (
+                    {!offLine && !syncing && (
                         <>
                             <CloudCheck fontSize={21} />
                             Saved

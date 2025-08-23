@@ -1,10 +1,14 @@
 "use client";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { NumberSize, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import useAlertStore from "@/app/store/alert";
+import useUserStore from "@/app/store/user";
+import { queryClient } from "@/app/helper/variables";
 import Header from "./Header";
 import Sidebar from "../diagram/Sidebar";
 import ERD from "./ERD";
@@ -13,9 +17,13 @@ import Authentication from "../auth/Authentication";
 import Toast from "./Toast";
 import "./style.css";
 
-const queryClient = new QueryClient();
+const persister = createAsyncStoragePersister({
+    storage: window.localStorage,
+});
 
 export default memo(function Main() {
+    const { showToast } = useAlertStore();
+    const { offLine, setOffLine } = useUserStore();
     const [entityPanelWidth, setEntityPanelWidth] = useState(300);
 
     const handleResize = useCallback(
@@ -30,8 +38,31 @@ export default memo(function Main() {
         []
     );
 
+    useEffect(() => {
+        function onLineCb() {
+            setOffLine(false);
+            if (!offLine) {
+                showToast("You are back online", "success");
+            }
+        }
+        function offLineCb() {
+            setOffLine(true);
+            showToast("Currently offline", "error");
+        }
+        window.addEventListener("online", onLineCb);
+        window.addEventListener("offline", offLineCb);
+
+        return () => {
+            window.removeEventListener("online", onLineCb);
+            window.removeEventListener("offline", offLineCb);
+        };
+    }, [offLine]);
+
     return (
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{ persister }}
+        >
             <div className="h-screen w-full flex flex-col">
                 <Header />
                 <main
@@ -74,6 +105,6 @@ export default memo(function Main() {
                 <Toast />
             </div>
             <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
     );
 });

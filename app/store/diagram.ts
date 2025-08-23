@@ -1,142 +1,31 @@
 import { create } from "zustand";
 import { Node, Edge, Viewport } from "@xyflow/react";
+import { UseMutationResult } from "@tanstack/react-query";
 import { nanoid } from "nanoid";
-import { DiagramData } from "../type/DiagramType";
+import { DiagramData, DiagramDataUpdate } from "../type/DiagramType";
 import { ErdEdgeData } from "../type/EdgeType";
 import { EntityData } from "../type/EntityType";
 import useErdStore from "./erd";
 import useUserStore from "./user";
-import { initialAttributeFormState } from "../hooks/AttributeForm";
+import {
+    defaultAttributeValues,
+    queryClient,
+} from "../helper/variables";
+import { getDiagramsFromLocalStorage } from "../helper/utils";
 
-const defaultAttributeValues = initialAttributeFormState.values;
-
-export const mockDiagrams: DiagramData[] = [
-    {
-        id: "1",
-        name: "Sample Diagram",
-        viewport: { x: 454, y: 140, zoom: 1.14 },
-        createAt: new Date().toISOString(),
-        lastUpdate: new Date().toISOString(),
-        loaded: true,
-        persisted: false,
-        history: {
-            current: 0,
-            states: [
-                {
-                    nodes: [
-                        {
-                            id: "1",
-                            data: {
-                                name: "Node_1",
-                                attributes: [
-                                    {
-                                        ...defaultAttributeValues,
-                                        id: nanoid(5),
-                                        name: "Attribute_1",
-                                        type: "string",
-                                    },
-                                    {
-                                        ...defaultAttributeValues,
-                                        id: nanoid(5),
-                                        name: "Attribute_2",
-                                        type: "integer",
-                                    },
-                                    {
-                                        ...defaultAttributeValues,
-                                        id: nanoid(5),
-                                        name: "Attribute_3",
-                                        type: "boolean",
-                                    },
-                                ],
-                            },
-                            position: { x: 0, y: 0 },
-                            type: "entity",
-                        },
-                        {
-                            id: "2",
-                            data: {
-                                name: "Node_2",
-                                attributes: [
-                                    {
-                                        ...defaultAttributeValues,
-                                        id: nanoid(5),
-                                        name: "Attribute_4",
-                                        type: "string",
-                                    },
-                                    {
-                                        ...defaultAttributeValues,
-                                        id: nanoid(5),
-                                        name: "Attribute_5",
-                                        type: "integer",
-                                    },
-                                ],
-                            },
-                            position: { x: -200, y: 200 },
-                            type: "entity",
-                        },
-                        {
-                            id: "3",
-                            data: {
-                                name: "Node_3",
-                                attributes: [
-                                    {
-                                        ...defaultAttributeValues,
-                                        id: nanoid(5),
-                                        name: "Attribute_6",
-                                        type: "string",
-                                    },
-                                    {
-                                        ...defaultAttributeValues,
-                                        id: nanoid(5),
-                                        name: "Attribute_7",
-                                        type: "integer",
-                                    },
-                                ],
-                            },
-                            position: { x: 150, y: 300 },
-                            type: "entity",
-                        },
-                    ],
-                    edges: [
-                        {
-                            id: "1->2",
-                            source: "1",
-                            target: "2",
-                            markerStart: "edge-zero-marker-start",
-                            markerEnd: "edge-zero-marker-end",
-                            data: {
-                                order: 1,
-                                length: 1,
-                                startValue: "0..1",
-                                endValue: "0..1",
-                            },
-                        },
-                        {
-                            id: "1->3",
-                            source: "1",
-                            target: "3",
-                            markerStart: "edge-many-marker-start",
-                            markerEnd: "edge-many-marker-end",
-                            data: {
-                                order: 1,
-                                length: 1,
-                                startValue: "*",
-                                endValue: "*",
-                            },
-                        },
-                    ],
-                },
-            ],
-        },
-    },
-];
+type DiagramMutationVariables = UseMutationResult<
+    void,
+    Error,
+    DiagramDataUpdate,
+    unknown
+>;
 
 interface DiagramStoreProps {
+    clientOnly: boolean;
     persisting: number;
-    persistingNew: number;
     persistingViewport: number;
-    persistingDelete: boolean;
     loading: boolean;
+    syncing: boolean;
     diagrams: DiagramData[];
     selectedDiagram: string;
     disableUndo: boolean;
@@ -144,35 +33,72 @@ interface DiagramStoreProps {
     selectDiagram: (id: string) => void;
     getSelectedDiagram: () => DiagramData | undefined;
     getName: (prefix?: string, nbr?: number) => string;
-    updateDiagramName: (
-        name: string
-    ) => Promise<{ isValid: boolean; message: string }>;
-    createDiagram: () => void;
-    duplicateDiagram: () => void;
-    deleteDiagram: () => void;
+    startSyncing: () => void;
+    endSyncing: () => void;
+    loadDiagram: () => Promise<any>;
+    loadDiagrams: (
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>
+    ) => Promise<void>;
+    createDiagram: (
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>
+    ) => void;
+    duplicateDiagram: (
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>
+    ) => void;
     saveDiagram: (
         nodes: Node<EntityData>[],
         edges: Edge<ErdEdgeData>[]
     ) => void;
     saveViewport: (viewport: Viewport) => void;
+    updateDiagramName: (
+        mutation: DiagramMutationVariables,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
+        name: string
+    ) => Promise<{ isValid: boolean; message: string } | void>;
+    deleteDiagram: (
+        mutation: UseMutationResult<void, Error, string, unknown>
+    ) => Promise<void>;
     undoAction: () => void;
     redoAction: () => void;
-    persistDiagram: () => Promise<void>;
-    persistNewDiagram: () => Promise<void>;
-    persistDiagramViewport: () => Promise<void>;
-    persistDiagramDelete: () => Promise<void>;
-    loadDiagram: () => Promise<any>;
-    loadDiagrams: (token: string, credentials: any) => Promise<void>;
+    hasDeleteHaveAddCachedMutation: (id: string) => boolean;
+    hasUpdateHaveAddCachedMutation: (
+        updateData: DiagramDataUpdate
+    ) => DiagramData | null;
+    handleCachedMutations: (updateData: DiagramDataUpdate) => DiagramDataUpdate;
+    persistNewDiagram: (
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>,
+        newDiagram: DiagramData
+    ) => Promise<void>;
+    persistDiagram: (
+        mutation: DiagramMutationVariables,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
+    ) => Promise<void>;
+    persistDiagramViewport: (
+        mutation: DiagramMutationVariables,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
+    ) => Promise<void>;
+    persistDiagramName: (
+        mutation: DiagramMutationVariables,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
+        name: string
+    ) => Promise<{ isValid: boolean; message: string } | void>;
+    persistDiagramDelete: (
+        mutation: UseMutationResult<void, Error, string, unknown>,
+        id: string
+    ) => Promise<void>;
+    emptyDiagrams: () => void;
     cloneDiagram: (d: DiagramData) => DiagramData;
 }
 
 const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
+    // was diagrams data client only or not
+    clientOnly: true,
+    // persisting and persistingViewport are used for throttling API calls
     persisting: 0,
-    persistingNew: 0,
     persistingViewport: 0,
-    persistingDelete: false,
     loading: false,
-    diagrams: [],
+    syncing: false,
+    diagrams: getDiagramsFromLocalStorage(),
     selectedDiagram: "",
     disableUndo: true,
     disableRedo: true,
@@ -192,9 +118,15 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const diagram = diagrams.find((d) => d.id === selectedDiagram);
         return diagram;
     },
+    startSyncing() {
+        set({ syncing: true });
+    },
+    endSyncing() {
+        set({ syncing: false });
+    },
     async loadDiagram() {
         const { diagrams, getSelectedDiagram } = get();
-        const { apiCall } = useUserStore.getState();
+        const { offLine, apiCall } = useUserStore.getState();
         const { setErd } = useErdStore.getState();
 
         const currentDiagram = getSelectedDiagram();
@@ -213,7 +145,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             return currentDiagram;
         }
 
-        if (!currentDiagram.loaded) {
+        if (!offLine && !currentDiagram.loaded) {
             set({
                 loading: true,
             });
@@ -246,36 +178,50 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             return diagram;
         }
     },
-    async loadDiagrams(token: string, credentials: any) {
+    async loadDiagrams(
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>
+    ) {
         const { apiCall } = useUserStore.getState();
-        let diagrams: DiagramData[] = [];
+        const { clientOnly, diagrams, createDiagram } = get();
 
-        if (token || credentials) {
-            const response = await apiCall({
-                token,
-                creds: credentials,
-            });
-            diagrams = await response.json();
-            diagrams.forEach((d) => {
-                d.loaded = false;
-                d.persisted = true;
-            });
-        }
+        if (!clientOnly && diagrams.length > 0) return;
 
-        let chosenDiagram = mockDiagrams[0];
-        if (diagrams.length > 0) {
-            chosenDiagram = diagrams[0];
-            for (const d of diagrams) {
+        let _diagrams: DiagramData[] = [];
+
+        const response = await apiCall({});
+        _diagrams = await response.json();
+        _diagrams.forEach((d) => {
+            d.loaded = false;
+        });
+
+        let chosenDiagram: DiagramData | undefined;
+        if (_diagrams.length > 0) {
+            chosenDiagram = _diagrams[0];
+            for (const d of _diagrams) {
                 if (d.lastUpdate > chosenDiagram.lastUpdate) {
                     chosenDiagram = d;
                 }
             }
         }
 
+        const newDiagrams = _diagrams;
         set({
-            diagrams: diagrams.length === 0 ? mockDiagrams : diagrams,
-            selectedDiagram: chosenDiagram.id,
+            clientOnly: false,
+            diagrams: newDiagrams,
+            selectedDiagram: chosenDiagram?.id ?? "",
         });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+
+        if (newDiagrams.length === 0) {
+            createDiagram(mutation);
+        }
+    },
+    emptyDiagrams() {
+        set({
+            diagrams: [],
+            selectedDiagram: "",
+        });
+        localStorage.removeItem("diagrams");
     },
     getName: (prefix?: string, nbr?: number) => {
         const { diagrams } = get();
@@ -288,44 +234,10 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         return name;
     },
-    async updateDiagramName(name: string) {
-        const { apiCall } = useUserStore.getState();
-        const { selectedDiagram, diagrams } = get();
-        if (name === "")
-            return { isValid: false, message: "Name cannot be empty" };
-
-        const diagram = diagrams.find(
-            (d) => selectedDiagram !== d.id && d.name === name
-        );
-        if (diagram) {
-            return { isValid: false, message: "Name already exists" };
-        }
-
-        set({
-            diagrams: diagrams.map((d) => {
-                if (d.id === selectedDiagram) {
-                    return {
-                        ...d,
-                        name,
-                    };
-                }
-                return d;
-            }),
-        });
-
-        const response = await apiCall({
-            method: "PUT",
-            body: {
-                id: selectedDiagram,
-                name: name,
-            },
-        });
-        // const result = await response.json();
-
-        return { isValid: true, message: "Name updated successfully" };
-    },
-    createDiagram() {
-        const { diagrams, persistingNew, getName } = get();
+    createDiagram(
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>
+    ) {
+        const { diagrams, getName, persistNewDiagram } = get();
         let name = getName();
 
         const newDiagram: DiagramData = {
@@ -374,85 +286,58 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                     },
                 ],
             },
-            persisted: false,
         };
+
+        const newDiagrams = [...diagrams, newDiagram];
         set({
-            persistingNew: persistingNew + 1,
-            diagrams: [...diagrams, newDiagram],
+            diagrams: newDiagrams,
             selectedDiagram: newDiagram.id,
             disableUndo: true,
             disableRedo: true,
         });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+
+        persistNewDiagram(mutation, newDiagram);
     },
-    duplicateDiagram() {
+    duplicateDiagram(
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>
+    ) {
         const {
             loading,
             diagrams,
-            persistingNew,
             getSelectedDiagram,
             cloneDiagram,
             getName,
+            persistNewDiagram,
         } = get();
         if (loading) return;
 
-        const newDiagram = getSelectedDiagram();
+        const currentDiagram = getSelectedDiagram();
 
-        if (!newDiagram) return;
+        if (!currentDiagram || !currentDiagram.loaded) return;
 
-        const currentDiagram: DiagramData = cloneDiagram(newDiagram);
-        currentDiagram.id = nanoid(7);
-        const match = newDiagram.name.match(/\((\d+?)\)$/i);
+        const newDiagram: DiagramData = cloneDiagram(currentDiagram);
+        newDiagram.id = nanoid(7);
+        const match = currentDiagram.name.match(/\((\d+?)\)$/i);
 
         let prefix = match
-            ? newDiagram.name.slice(0, match.index)
-            : newDiagram.name;
+            ? currentDiagram.name.slice(0, match.index)
+            : currentDiagram.name;
         let nbr = match ? parseInt(match[1]) : undefined;
-        currentDiagram.name = getName(prefix.trim(), nbr);
+        newDiagram.name = getName(prefix.trim(), nbr);
 
-        currentDiagram.lastUpdate = new Date().toISOString();
-        currentDiagram.persisted = false;
+        newDiagram.lastUpdate = new Date().toISOString();
 
+        const newDiagrams = [...diagrams, newDiagram];
         set({
-            persistingNew: persistingNew + 1,
-            diagrams: [...diagrams, currentDiagram],
-            selectedDiagram: currentDiagram.id,
+            diagrams: newDiagrams,
+            selectedDiagram: newDiagram.id,
             disableUndo: true,
             disableRedo: true,
         });
-    },
-    deleteDiagram() {
-        const { loading, diagrams, selectedDiagram, persistDiagramDelete } =
-            get();
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
 
-        if (loading || selectedDiagram === "") return;
-
-        const newDiagrams = diagrams.filter((d) => d.id !== selectedDiagram);
-        let newSelectedDiagram = "";
-
-        if (newDiagrams.length === 0) {
-            set({
-                persistingDelete: true,
-                diagrams: [],
-                disableUndo: true,
-                disableRedo: true,
-            });
-        } else {
-            let currentDiagram = newDiagrams[0];
-            for (const d of newDiagrams) {
-                if (currentDiagram.lastUpdate < d.lastUpdate) {
-                    currentDiagram = d;
-                }
-            }
-            set({
-                persistingDelete: true,
-                diagrams: newDiagrams,
-            });
-            newSelectedDiagram = currentDiagram.id;
-        }
-
-        persistDiagramDelete().then(() => {
-            set({ selectedDiagram: newSelectedDiagram });
-        });
+        persistNewDiagram(mutation, newDiagram);
     },
     saveDiagram(nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) {
         const { persisting, selectedDiagram, diagrams, cloneDiagram } = get();
@@ -489,6 +374,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 diagram === undefined ||
                 diagram.history.current >= diagram.history.states.length - 1,
         });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
     },
     saveViewport(viewport: Viewport) {
         const {
@@ -519,6 +405,80 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             persistingViewport: persistingViewport + 1,
             diagrams: newDiagrams,
         });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+    },
+    async updateDiagramName(
+        mutation: DiagramMutationVariables,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
+        name: string
+    ) {
+        const { selectedDiagram, diagrams, persistDiagramName } = get();
+        if (name === "")
+            return { isValid: false, message: "Name cannot be empty" };
+
+        const diagram = diagrams.find(
+            (d) => selectedDiagram !== d.id && d.name === name
+        );
+        if (diagram) {
+            return { isValid: false, message: "Name already exists" };
+        }
+
+        const newDiagrams = diagrams.map((d) => {
+            if (d.id === selectedDiagram) {
+                return {
+                    ...d,
+                    name,
+                    persisted: false,
+                    persistType: "update",
+                };
+            }
+            return d;
+        });
+        set({
+            diagrams: newDiagrams as DiagramData[],
+        });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+
+        persistDiagramName(mutation, mutationAdd, name).then((data) => {
+            if (data) {
+                Promise.resolve(data);
+            }
+        });
+    },
+    async deleteDiagram(
+        mutation: UseMutationResult<void, Error, string, unknown>
+    ) {
+        const { loading, diagrams, selectedDiagram, persistDiagramDelete } =
+            get();
+
+        if (loading || selectedDiagram === "") return;
+
+        const newDiagrams = diagrams.filter((d) => d.id !== selectedDiagram);
+        let newSelectedDiagram = "";
+
+        if (newDiagrams.length === 0) {
+            set({
+                diagrams: [],
+                disableUndo: true,
+                disableRedo: true,
+            });
+            localStorage.removeItem("diagrams");
+        } else {
+            let currentDiagram = newDiagrams[0];
+            for (const d of newDiagrams) {
+                if (currentDiagram.lastUpdate < d.lastUpdate) {
+                    currentDiagram = d;
+                }
+            }
+            newSelectedDiagram = currentDiagram.id;
+            set({
+                selectedDiagram: newSelectedDiagram,
+                diagrams: newDiagrams,
+            });
+            localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+        }
+
+        persistDiagramDelete(mutation, selectedDiagram);
     },
     undoAction() {
         const {
@@ -552,6 +512,8 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 diagram === undefined ||
                 diagram.history.current >= diagram.history.states.length - 1,
         });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+
         if (diagram) {
             setErd(diagram);
         }
@@ -588,96 +550,228 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 diagram === undefined ||
                 diagram.history.current >= diagram.history.states.length - 1,
         });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+
         if (diagram) {
             setErd(diagram);
         }
     },
-    async persistDiagram() {
-        const { apiCall } = useUserStore.getState();
-        const { getSelectedDiagram } = get();
+    hasDeleteHaveAddCachedMutation(id: string) {
+        const mutationCache = queryClient.getMutationCache();
+        const mutations = mutationCache.getAll();
+
+        // when an add-diagram mutation is detected before a delete mutation then they cancel each other out
+        let hasAddMutation = false;
+        mutations.forEach((m) => {
+            const { mutationKey } = m.options;
+            const data = m.state.variables as any;
+            if (mutationKey?.[0] === "add-diagram" && data.id === id) {
+                hasAddMutation = true;
+                mutationCache.remove(m);
+            }
+        });
+
+        return hasAddMutation;
+    },
+    hasUpdateHaveAddCachedMutation(updateData: DiagramDataUpdate) {
+        const mutationCache = queryClient.getMutationCache();
+        const mutations = mutationCache.getAll();
+
+        const addMutation = mutations.find((m) => {
+            const { mutationKey } = m.options;
+            const data = m.state.variables as any;
+            return (
+                mutationKey?.[0] === "add-diagram" && data.id === updateData.id
+            );
+        });
+
+        if (addMutation) {
+            mutationCache.remove(addMutation);
+            let newData = addMutation.state.variables as DiagramData;
+            const newUpdateData = {
+                ...updateData,
+            };
+            mutations.forEach((m) => {
+                const { mutationKey } = m.options;
+                const data = m.state.variables as any;
+                if (
+                    data.id === updateData.id &&
+                    mutationKey?.[0] === "update-diagram"
+                ) {
+                    mutationCache.remove(m);
+                    if (newUpdateData.name === undefined)
+                        newUpdateData.name = data.name;
+                    if (newUpdateData.history === undefined)
+                        newUpdateData.history = data.history;
+                    if (newUpdateData.viewport === undefined)
+                        newUpdateData.viewport = data.viewport;
+                }
+            });
+
+            newData = {
+                ...newData,
+                ...newUpdateData,
+            };
+            return newData;
+        }
+
+        return null;
+    },
+    handleCachedMutations(updateData: DiagramDataUpdate) {
+        const mutationCache = queryClient.getMutationCache();
+        // Inspect queued mutations
+        const mutations = mutationCache.getAll();
+
+        // Cancel update mutations for the selected diagram and merge its data
+        const newUpdateData = {
+            ...updateData,
+        };
+        mutations.forEach((m) => {
+            const { mutationKey } = m.options;
+            const data = m.state.variables as any;
+            if (
+                mutationKey?.[0] === "update-diagram" &&
+                data.id === updateData.id
+            ) {
+                mutationCache.remove(m);
+                if (newUpdateData.name === undefined)
+                    newUpdateData.name = data.name;
+                if (newUpdateData.history === undefined)
+                    newUpdateData.history = data.history;
+                if (newUpdateData.viewport === undefined)
+                    newUpdateData.viewport = data.viewport;
+            }
+        });
+
+        return newUpdateData;
+    },
+    async persistNewDiagram(
+        mutation: UseMutationResult<void, Error, DiagramData, unknown>,
+        newDiagram: DiagramData
+    ) {
+        mutation.mutate(newDiagram);
+    },
+    async persistDiagram(
+        mutation: DiagramMutationVariables,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
+    ) {
+        const {
+            getSelectedDiagram,
+            hasUpdateHaveAddCachedMutation,
+            handleCachedMutations,
+        } = get();
 
         const currentDiagram = getSelectedDiagram();
         if (currentDiagram) {
-            const response = await apiCall({
-                method: "PUT",
-                body: {
+            const result = hasUpdateHaveAddCachedMutation({
+                id: currentDiagram.id,
+                history: currentDiagram.history,
+            });
+
+            if (result) {
+                mutationAdd.mutate(result);
+            } else {
+                const updatedData = handleCachedMutations({
                     id: currentDiagram.id,
                     history: currentDiagram.history,
-                },
-            });
-            // const result = await response.json();
+                });
+                mutation.mutate(updatedData);
+            }
         }
 
         set({
             persisting: 0,
         });
     },
-    async persistNewDiagram() {
-        const { apiCall } = useUserStore.getState();
-        const { diagrams } = get();
-
-        for (const diagram of diagrams) {
-            if (!diagram.persisted) {
-                const response = await apiCall({
-                    method: "POST",
-                    body: diagram,
-                });
-                // const result = await response.json();
-
-                set({
-                    diagrams: diagrams.map((d) => {
-                        if (d.id === diagram.id && !d.persisted) {
-                            return {
-                                ...d,
-                                persisted: true,
-                            };
-                        }
-                        return d;
-                    }),
-                });
-            }
-        }
-
-        set({
-            persistingNew: 0,
-        });
-    },
-    async persistDiagramViewport() {
-        const { apiCall } = useUserStore.getState();
-        const { getSelectedDiagram } = get();
+    async persistDiagramViewport(
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; viewport?: DiagramData["viewport"] },
+            unknown
+        >,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
+    ) {
+        const {
+            getSelectedDiagram,
+            hasUpdateHaveAddCachedMutation,
+            handleCachedMutations,
+        } = get();
 
         const currentDiagram = getSelectedDiagram();
         if (currentDiagram) {
-            const response = await apiCall({
-                method: "PUT",
-                body: {
+            const result = hasUpdateHaveAddCachedMutation({
+                id: currentDiagram.id,
+                viewport: currentDiagram.viewport,
+            });
+
+            if (result) {
+                mutationAdd.mutate(result);
+            } else {
+                const updatedData = handleCachedMutations({
                     id: currentDiagram.id,
                     viewport: currentDiagram.viewport,
-                },
-            });
-            // const result = await response.json();
+                });
+                mutation.mutate(updatedData);
+            }
         }
 
         set({
             persistingViewport: 0,
         });
     },
-    async persistDiagramDelete() {
-        const { apiCall } = useUserStore.getState();
-        const { selectedDiagram } = get();
+    async persistDiagramName(
+        mutation: UseMutationResult<
+            void,
+            Error,
+            {
+                id: string;
+                name?: string;
+            },
+            unknown
+        >,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
+        name: string
+    ): Promise<{ isValid: boolean; message: string } | void> {
+        const {
+            selectedDiagram,
+            hasUpdateHaveAddCachedMutation,
+            handleCachedMutations,
+        } = get();
 
-        if (selectedDiagram) {
-            const response = await apiCall({
-                method: "DELETE",
-                query: {
-                    id: selectedDiagram
-                }
-            });
-            // const result = await response.json();
-        }
-        set({
-            persistingDelete: false,
+        const result = hasUpdateHaveAddCachedMutation({
+            id: selectedDiagram,
+            name: name,
         });
+
+        if (result) {
+            mutationAdd.mutateAsync(result).then(() => {
+                Promise.resolve({
+                    isValid: true,
+                    message: "Name updated successfully",
+                });
+            });
+        } else {
+            const updatedData = handleCachedMutations({
+                id: selectedDiagram,
+                name: name,
+            });
+            mutation.mutateAsync(updatedData).then(() => {
+                Promise.resolve({
+                    isValid: true,
+                    message: "Name updated successfully",
+                });
+            });
+        }
+    },
+    async persistDiagramDelete(
+        mutation: UseMutationResult<void, Error, string, unknown>,
+        id: string
+    ) {
+        const { hasDeleteHaveAddCachedMutation } = get();
+        if (!hasDeleteHaveAddCachedMutation(id)) {
+            mutation.mutate(id);
+        }
     },
     cloneDiagram(d: DiagramData): DiagramData {
         return {

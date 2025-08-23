@@ -21,18 +21,21 @@ import {
     Viewport,
 } from "@xyflow/react";
 import { shallow } from "zustand/shallow";
+import { useQuery } from "@tanstack/react-query";
 import cc from "classcat";
 import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
+import useErdItemsStore from "@/app/store/erd-items";
+import useDiagramStore from "@/app/store/diagram";
 import EntityNode from "./EntityNode";
 import ErdEdge from "./ErdEdge";
 import ErdItemsPanel from "./ErdItemsPanel";
-import useErdItemsStore from "@/app/store/erd-items";
 import ErdConnectionLine from "./ErdConnectionLine";
 import Markers from "./Markers";
 import { ErdEdgeData } from "@/app/type/EdgeType";
-import useDiagramStore from "@/app/store/diagram";
 import Loading from "./Loading";
+import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
+import useAddDiagram from "@/app/hooks/DiagramAdd";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -82,13 +85,12 @@ const ERD = () => {
     const {
         loading,
         persisting,
-        persistingNew,
         persistingViewport,
         selectedDiagram,
+        loadDiagrams,
         loadDiagram,
         saveViewport,
         persistDiagram,
-        persistNewDiagram,
         persistDiagramViewport,
     } = useDiagramStore();
 
@@ -109,6 +111,37 @@ const ERD = () => {
         onEnd: (viewport: Viewport) => {
             saveViewport(viewport);
         },
+    });
+
+    const mutation = useUpdateDiagram();
+    const mutationAdd = useAddDiagram();
+
+    const { isSuccess, isError, isPending, error } = useQuery({
+        queryKey: ["diagrams"],
+        queryFn: async () => {
+            await loadDiagrams(mutationAdd);
+            return Promise.resolve(0);
+        },
+    });
+
+    const { isError: isErrorDiagram, error: errorDiagram } = useQuery({
+        queryKey: ["diagram", { selectedDiagram }],
+        queryFn: async () => {
+            const diagram = await loadDiagram();
+            if (diagram) {
+                if (diagram.viewport.x !== 0) {
+                    setViewport(diagram.viewport);
+                } else {
+                    fitView({
+                        padding: 0.1,
+                    });
+                }
+            }
+
+            return Promise.resolve(0);
+        },
+        enabled: selectedDiagram !== "",
+        networkMode: "always"
     });
 
     const onConnectEnd = useCallback(
@@ -204,7 +237,7 @@ const ERD = () => {
         let timeoutId: NodeJS.Timeout | null = null;
         if (selectedDiagram && persisting) {
             timeoutId = setTimeout(() => {
-                persistDiagram();
+                persistDiagram(mutation, mutationAdd);
             }, 500);
         }
         return () => {
@@ -217,24 +250,9 @@ const ERD = () => {
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout | null = null;
-        if (persistingNew) {
-            timeoutId = setTimeout(() => {
-                persistNewDiagram();
-            }, 500);
-        }
-        return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
-        };
-    }, [persistingNew]);
-
-    useEffect(() => {
-        let timeoutId: NodeJS.Timeout | null = null;
         if (selectedDiagram && persistingViewport) {
             timeoutId = setTimeout(() => {
-                persistDiagramViewport();
+                persistDiagramViewport(mutation, mutationAdd);
             }, 500);
         }
         return () => {
@@ -245,19 +263,6 @@ const ERD = () => {
         };
     }, [selectedDiagram, persistingViewport]);
 
-    useEffect(() => {
-        if (selectedDiagram) {
-            loadDiagram().then((diagram) => {
-                if (diagram.viewport.x !== 0) {
-                    setViewport(diagram.viewport);
-                } else {
-                    fitView({
-                        padding: 0.1,
-                    });
-                }
-            });
-        }
-    }, [selectedDiagram]);
 
     return (
         <div

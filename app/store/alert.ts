@@ -3,7 +3,7 @@ import { create } from "zustand";
 interface AlertState {
     message: string;
     type: "success" | "error" | "info";
-    isVisible: boolean;
+    isVisible?: boolean;
     showToast: (message: string, type: AlertState["type"]) => void;
     hideToast: () => void;
 }
@@ -11,7 +11,7 @@ interface AlertState {
 const useAlertStore = create<AlertState>((set, get) => ({
     message: "",
     type: "error",
-    isVisible: false,
+    isVisible: undefined,
     showToast: (message, type) => set({ message, type, isVisible: true }),
     hideToast: () => set({ isVisible: false }),
 }));

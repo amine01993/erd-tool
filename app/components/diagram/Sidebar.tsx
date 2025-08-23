@@ -1,17 +1,19 @@
-import { ChangeEvent, memo, useCallback, useEffect, useMemo, useState } from "react";
-import SearchBar from "./SearchBar";
+import { ChangeEvent, memo, useCallback, useMemo, useState } from "react";
 import useDiagramStore from "../../store/diagram";
+import SearchBar from "./SearchBar";
 import DiagramItem, { DiagramItemPlaceHolder } from "./DiagramItem";
 import { DiagramData } from "@/app/type/DiagramType";
 
 const Sidebar = () => {
-    const {diagrams} = useDiagramStore();
+    const { diagrams } = useDiagramStore();
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredDiagrams = useMemo(() => {
-        const filtered = diagrams.filter((diagram) =>
-            diagram.name.toLowerCase().includes(searchTerm.toLowerCase())
-        ).slice();
+        const filtered = diagrams
+            .filter((diagram) =>
+                diagram.name.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .slice();
         filtered.sort((a, b) => b.lastUpdate.localeCompare(a.lastUpdate));
         return filtered;
     }, [diagrams, searchTerm]);
@@ -23,10 +25,6 @@ const Sidebar = () => {
         []
     );
 
-    // useEffect(() => {
-        
-    // }, []);
-
     return (
         <>
             <SearchBar
@@ -37,11 +35,11 @@ const Sidebar = () => {
             <ul className="flex flex-col gap-1">
                 {diagrams.length === 0 && (
                     <>
-                    <DiagramItemPlaceHolder />
-                    <DiagramItemPlaceHolder />
-                    <DiagramItemPlaceHolder />
-                    <DiagramItemPlaceHolder />
-                    <DiagramItemPlaceHolder />
+                        <DiagramItemPlaceHolder />
+                        <DiagramItemPlaceHolder />
+                        <DiagramItemPlaceHolder />
+                        <DiagramItemPlaceHolder />
+                        <DiagramItemPlaceHolder />
                     </>
                 )}
                 {filteredDiagrams.map((diagram: DiagramData) => (

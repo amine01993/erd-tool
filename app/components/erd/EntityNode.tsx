@@ -7,7 +7,6 @@ import { AttributeData, EntityData } from "../../type/EntityType";
 
 const AttributeNode = memo(({ data }: { data: AttributeData }) => {
     const nullable = useMemo(() => {
-        console.log("Checking if attribute is nullable", data);
         return !data.isPrimaryKey && data.isNullable;
     }, [data.isPrimaryKey, data.isNullable]);
 
@@ -34,13 +33,6 @@ const AttributeNode = memo(({ data }: { data: AttributeData }) => {
                 )}
             </div>
             <div className="shrink-0">{data.type}</div>
-            {/* {data.isPrimaryKey && <span className="primary-key">PK</span>}
-            {data.isForeignKey && (
-                <span className="foreign-key">
-                    FK to {data.foreignKeyTable}.{data.foreignKeyColumn}
-                </span>
-            )}
-            {data.isUnique && <span className="unique">UNIQUE</span>} */}
         </div>
     );
 });

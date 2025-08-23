@@ -33,6 +33,7 @@ export type AppTheme = "system" | "dark" | "light";
 export type AuthType = "login" | "register" | "confirm_sign_up";
 
 export interface UserState {
+    offLine: boolean;
     theme: AppTheme;
     isThemeMenuOpen: boolean;
     isSettingsMenuOpen: boolean;
@@ -43,6 +44,7 @@ export interface UserState {
     credentials: any;
     authData: any;
     jwtToken: string | "";
+    setOffLine: (offline: boolean) => void;
     setTheme: (theme: AppTheme) => void;
     toggleThemeMenu: () => void;
     openThemeMenu: () => void;
@@ -62,7 +64,11 @@ export interface UserState {
     confirmSignUp: (code: string) => void;
     resendCode: () => void;
     getAuthData: () => { credentials: any; authData: any; jwtToken: string };
-    setAuthData: () => void;
+    retrieveAuthData: () => Promise<{
+        credentials: any;
+        authData: any;
+        jwtToken: string;
+    }>;
     logOut: () => void;
     emptyAuthData: () => void;
     apiCall: (props: ApiCallProps) => Promise<any>;
@@ -70,6 +76,7 @@ export interface UserState {
 
 const useUserStore = create<UserState>((set, get) => ({
     theme: "system",
+    offLine: false,
     isThemeMenuOpen: false,
     isSettingsMenuOpen: false,
     isAuthModalOpen: false,
@@ -79,6 +86,9 @@ const useUserStore = create<UserState>((set, get) => ({
     credentials: null,
     authData: null,
     jwtToken: "",
+    setOffLine: (offline: boolean) => {
+        set({ offLine: offline });
+    },
     setTheme(theme: AppTheme) {
         set({ theme });
     },
@@ -187,9 +197,9 @@ const useUserStore = create<UserState>((set, get) => ({
         await signOut();
     },
     getAuthData() {
-        const { credentials, authData, jwtToken } = get();
+        const { isGuest, credentials, authData, jwtToken } = get();
 
-        if (!authData) {
+        if (isGuest && !credentials || !isGuest && !authData) {
             let creds = localStorage.getItem("credentials");
             let payload = localStorage.getItem("authData");
             let token = localStorage.getItem("jwtToken");
@@ -204,12 +214,6 @@ const useUserStore = create<UserState>((set, get) => ({
                 jwtToken: token ?? "",
             });
 
-            console.log(
-                "getAuthData from localStorage:",
-                parsedCredentials,
-                parsedPayload,
-                token ?? ""
-            );
             return {
                 credentials: parsedCredentials,
                 authData: parsedPayload,
@@ -217,77 +221,68 @@ const useUserStore = create<UserState>((set, get) => ({
             };
         }
 
-        console.log("getAuthData from store:", credentials, authData, jwtToken);
         return { credentials, authData, jwtToken };
     },
-    async setAuthData() {
-        const { loadDiagrams } = useDiagramStore.getState();
-        const { getAuthData, emptyAuthData } = get();
+    /**
+     * Gets auth data from the store,
+     * if not present, it tries to fetch it from localStorage.
+     * If localStorage is empty or auth data is expired, it fetches a new session.
+     */
+    async retrieveAuthData() {
+        const { getAuthData } = get();
 
         const { credentials, authData, jwtToken } = getAuthData();
 
         // only fetch new session when credentials are expired
         if (credentials && new Date(credentials.expiration) > new Date()) {
-            await loadDiagrams(jwtToken ?? "", credentials);
-            return;
+            return { credentials, authData, jwtToken };
         }
 
-        try {
-            const session = await fetchAuthSession({ forceRefresh: true });
+        const session = await fetchAuthSession({ forceRefresh: true });
 
-            console.log(
-                "Fetched auth session:",
-                session,
-                session.tokens?.idToken?.toString()
-            );
 
-            const credentials = {
-                ...session.credentials,
-                expiration: session.credentials?.expiration?.toISOString(),
-            };
-            
-            const payload = session.tokens?.idToken?.payload;
-            const token = session.tokens?.idToken?.toString();
-            set({
-                isGuest: Boolean(!token),
-                credentials: credentials ?? null,
-                authData: payload ?? null,
-                jwtToken: token ?? "",
-            });
+        const sessionCreds = {
+            ...session.credentials,
+            expiration: session.credentials?.expiration?.toISOString(),
+        };
 
-            if (credentials)
-                localStorage.setItem(
-                    "credentials",
-                    JSON.stringify(credentials)
-                );
-            if (payload)
-                localStorage.setItem("authData", JSON.stringify(payload));
-            if (token) localStorage.setItem("jwtToken", token ?? "");
+        const payload = session.tokens?.idToken?.payload;
+        const token = session.tokens?.idToken?.toString();
+        set({
+            isGuest: Boolean(!token),
+            credentials: credentials ?? null,
+            authData: payload ?? null,
+            jwtToken: token ?? "",
+        });
 
-            await loadDiagrams(token ?? "", credentials);
-        } catch (error) {
-            console.error("Error fetching auth session:", error);
-            emptyAuthData();
-        }
+        if (sessionCreds)
+            localStorage.setItem("credentials", JSON.stringify(sessionCreds));
+        if (payload) localStorage.setItem("authData", JSON.stringify(payload));
+        if (token) localStorage.setItem("jwtToken", token ?? "");
+
+        return {
+            credentials: sessionCreds,
+            authData: payload ?? null,
+            jwtToken: token ?? "",
+        };
     },
     async emptyAuthData() {
-        // when logging out
-
+        const { emptyDiagrams } = useDiagramStore.getState();
         set({
             credentials: null,
             authData: null,
             jwtToken: "",
         });
+        emptyDiagrams();
 
         localStorage.removeItem("credentials");
         localStorage.removeItem("authData");
         localStorage.removeItem("jwtToken");
     },
-    async apiCall({ method = "GET", query, body, token, creds }: ApiCallProps) {
-        const { jwtToken, credentials, isGuest } = get();
+    async apiCall({ method = "GET", query, body }: ApiCallProps) {
+        const { isGuest, retrieveAuthData } = get();
 
-        token = token ?? jwtToken;
-        creds = creds ?? credentials;
+        const { jwtToken, credentials } = await retrieveAuthData();
 
         let queryString = "";
         if (query) {
@@ -311,7 +306,7 @@ const useUserStore = create<UserState>((set, get) => ({
             });
 
             const signer = new SignatureV4({
-                credentials: creds,
+                credentials: credentials,
                 service: "execute-api",
                 region: "us-east-1",
                 sha256: Sha256,
@@ -319,7 +314,6 @@ const useUserStore = create<UserState>((set, get) => ({
 
             const signedRequest = await signer.sign(request);
 
-            console.log("Signed request:", signedRequest);
             response = await fetch(
                 `https://${signedRequest.hostname}${signedRequest.path}${queryString}`,
                 {
@@ -333,7 +327,7 @@ const useUserStore = create<UserState>((set, get) => ({
                 method,
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${jwtToken}`,
                 },
                 body: body ? JSON.stringify(body) : undefined,
             });
