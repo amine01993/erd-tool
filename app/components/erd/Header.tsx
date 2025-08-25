@@ -2,6 +2,7 @@ import Image from "next/image";
 import { memo, useCallback, useEffect } from "react";
 import { Hub } from "@aws-amplify/core";
 import { Icon } from "@iconify/react";
+import cc from "classcat";
 import ArrowBackUpIcon from "@iconify/icons-tabler/arrow-back-up";
 import ArrowForwardUpIcon from "@iconify/icons-tabler/arrow-forward-up";
 import LayersSubtractIcon from "@iconify/icons-tabler/layers-subtract";
@@ -11,7 +12,7 @@ import CloudCheckIcon from "@iconify/icons-tabler/cloud-check";
 import CloudIcon from "@iconify/icons-tabler/cloud";
 import CirclePlusIcon from "@iconify/icons-tabler/circle-plus";
 import CloudXIcon from "@iconify/icons-tabler/cloud-x";
-import classNames from "classnames";
+import RefreshIcon from "@iconify/icons-tabler/refresh";
 import useDiagramStore from "@/app/store/diagram";
 import useUserStore from "@/app/store/user";
 import Theme from "../widgets/Theme";
@@ -31,12 +32,14 @@ const Header = () => {
         selectedDiagram,
         disableUndo,
         disableRedo,
+        emptyDiagrams,
         createDiagram,
         duplicateDiagram,
         deleteDiagram,
         undoAction,
         redoAction,
     } = useDiagramStore();
+    const diagramsLength = useDiagramStore((state) => state.diagrams.length);
 
     const handleUndo = useCallback(() => {
         undoAction();
@@ -45,6 +48,11 @@ const Header = () => {
     const handleRedo = useCallback(() => {
         redoAction();
     }, [redoAction]);
+
+    const handleDiagramsRefresh = useCallback(() => {
+        emptyDiagrams();
+        queryClient.invalidateQueries({ queryKey: ["diagrams"] });
+    }, []);
 
     const handleNewDiagram = useCallback(() => {
         createDiagram(mutationAdd);
@@ -99,12 +107,7 @@ const Header = () => {
     }, []);
 
     return (
-        <header
-            className={classNames(
-                "flex items-center justify-between px-3 py-2 bg-[#fefbfb] text-[#640D14]",
-                "border-b border-[#640D14]"
-            )}
-        >
+        <header className="flex items-center justify-between px-3 py-2 bg-[#fefbfb] text-[#640D14] border-b border-[#640D14]">
             <div className="flex items-center gap-1">
                 <Image
                     className="mr-1"
@@ -131,6 +134,18 @@ const Header = () => {
                     disabled={disableRedo || loading}
                 >
                     <Icon icon={ArrowForwardUpIcon} fontSize={21} />
+                </button>
+
+                <button
+                    aria-label="Refresh diagrams' list"
+                    className={cc([
+                        "header-btn",
+                        { "animate-spin": diagramsLength === 0 },
+                    ])}
+                    onClick={handleDiagramsRefresh}
+                    disabled={diagramsLength === 0}
+                >
+                    <Icon icon={RefreshIcon} fontSize={21} />
                 </button>
 
                 <button

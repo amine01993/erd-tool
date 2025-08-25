@@ -20,7 +20,6 @@
         "@xyflow/react": "^12.8.2",
         "aws-amplify": "^6.15.5",
         "classcat": "^5.0.5",
-        "classnames": "^2.5.1",
         "nanoid": "^5.1.5",
         "next": "15.4.1",
         "re-resizable": "^6.11.2",

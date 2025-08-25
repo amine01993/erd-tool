@@ -10,19 +10,43 @@ import {
     useRef,
     useState,
 } from "react";
-import classNames from "classnames";
 import { formatLastUpdate } from "@/app/helper/utils";
 import { DiagramData } from "@/app/type/DiagramType";
 import useDiagramStore from "@/app/store/diagram";
 import useAlertStore from "@/app/store/alert";
 import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
+import cc from "classcat";
 
 interface DiagramItemProps {
+    searchTerm: string;
     diagram: DiagramData;
 }
 
-const DiagramItem = ({ diagram }: DiagramItemProps) => {
+const HighlightedName = memo(
+    ({ name, searchTerm }: { name: string; searchTerm: string }) => {
+        const startIndex = name.toLowerCase().indexOf(searchTerm.toLowerCase());
+        const endIndex = startIndex + searchTerm.length;
+        return (
+            <>
+                {startIndex === -1 && name}
+                {startIndex > -1 && (
+                    <>
+                        {name.slice(0, startIndex)}
+                        {endIndex > startIndex && (
+                            <span className="bg-[#640d14] text-white">
+                                {name.slice(startIndex, endIndex)}
+                            </span>
+                        )}
+                        {name.slice(endIndex)}
+                    </>
+                )}
+            </>
+        );
+    }
+);
+
+const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const selectedDiagram = useDiagramStore((state) => state.selectedDiagram);
     const selectDiagram = useDiagramStore((state) => state.selectDiagram);
@@ -78,19 +102,21 @@ const DiagramItem = ({ diagram }: DiagramItemProps) => {
             event.preventDefault();
 
             setSubmitting(true);
-            updateDiagramName(mutation, mutationAdd, newName.trim()).then((data) => {
-                console.log("Update diagram name response:", data);
-                if (!data) {
-                    setEditName(false);
-                    return;
+            updateDiagramName(mutation, mutationAdd, newName.trim()).then(
+                (data) => {
+                    console.log("Update diagram name response:", data);
+                    if (!data) {
+                        setEditName(false);
+                        return;
+                    }
+                    if (data.isValid) {
+                        setEditName(false);
+                        showToast("Name updated successfully", "success");
+                    } else {
+                        showToast(data.message, "error");
+                    }
                 }
-                if (data.isValid) {
-                    setEditName(false);
-                    showToast("Name updated successfully", "success");
-                } else {
-                    showToast(data.message, "error");
-                }
-            });
+            );
             // .finally(() => {
             // });
             setSubmitting(false);
@@ -115,9 +141,12 @@ const DiagramItem = ({ diagram }: DiagramItemProps) => {
 
     return (
         <button
-            className={classNames("diagram-item", {
-                selected: selectedDiagram === diagram.id,
-            })}
+            className={cc([
+                "diagram-item",
+                {
+                    selected: selectedDiagram === diagram.id,
+                },
+            ])}
             data-id={diagram.id}
             onClick={handleDiagramSelection}
         >
@@ -130,7 +159,10 @@ const DiagramItem = ({ diagram }: DiagramItemProps) => {
                     onKeyDown={handleEditName}
                     onClick={handleEditName}
                 >
-                    {diagram.name}
+                    <HighlightedName
+                        name={diagram.name}
+                        searchTerm={searchTerm}
+                    />
                 </p>
             )}
             {editName && (

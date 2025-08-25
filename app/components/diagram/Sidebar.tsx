@@ -43,7 +43,11 @@ const Sidebar = () => {
                     </>
                 )}
                 {filteredDiagrams.map((diagram: DiagramData) => (
-                    <DiagramItem key={diagram.id} diagram={diagram} />
+                    <DiagramItem
+                        key={diagram.id}
+                        searchTerm={searchTerm}
+                        diagram={diagram}
+                    />
                 ))}
             </ul>
         </>
