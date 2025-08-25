@@ -8,14 +8,12 @@ import Login2Icon from "@iconify/icons-tabler/login-2";
 import useUserStore from "@/app/store/user";
 
 const SettingsMenu = () => {
-    const {
-        isSettingsMenuOpen,
-        authData,
-        closeSettingsMenu,
-        openAuthModal,
-        setAuthType,
-        logOut,
-    } = useUserStore();
+    const isSettingsMenuOpen = useUserStore(state => state.isSettingsMenuOpen);
+    const authData = useUserStore(state => state.authData);
+    const closeSettingsMenu = useUserStore(state => state.closeSettingsMenu);
+    const openAuthModal = useUserStore(state => state.openAuthModal);
+    const setAuthType = useUserStore(state => state.setAuthType);
+    const logOut = useUserStore(state => state.logOut);
 
     const handleSignUp = () => {
         setAuthType("register");

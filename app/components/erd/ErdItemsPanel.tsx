@@ -7,7 +7,8 @@ import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
 
 const ErdItemsPanel = () => {
-    const { selectedItem, selectItem } = useErdItemsStore();
+    const selectedItem = useErdItemsStore(state => state.selectedItem);
+    const selectItem = useErdItemsStore(state => state.selectItem);
 
     const handleSelection = useCallback(
         (event: React.MouseEvent<HTMLButtonElement>) => {

@@ -26,7 +26,8 @@ export function useAttributeForm(
     dispatch: ActionDispatch<[action: AttributeFormAction]>,
     attributeId?: string
 ) {
-    const { selectedNodeId, nodes } = useErdStore();
+    const selectedNodeId = useErdStore(state => state.selectedNodeId);
+    const nodes = useErdStore(state => state.nodes);
 
     const attributeNames = useMemo(() => {
         const names = new Set<string>();

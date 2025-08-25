@@ -4,7 +4,9 @@ import useUserStore, { AppTheme } from "@/app/store/user";
 import { LightIcon, DarkIcon, OsDefault } from "./Theme";
 
 const ThemeMenu = () => {
-    const { theme, isThemeMenuOpen, setTheme } = useUserStore();
+    const theme = useUserStore(state => state.theme);
+    const isThemeMenuOpen = useUserStore(state => state.isThemeMenuOpen);
+    const setTheme = useUserStore(state => state.setTheme);
 
     const handleThemeChange = (e: ChangeEvent<HTMLInputElement>) => {
         console.log("handleThemeChange", e.target.value);

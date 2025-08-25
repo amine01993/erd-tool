@@ -37,7 +37,9 @@ const AttributeForm = ({
     setSelectedData,
 }: AttributeFormProps) => {
     const attributesRef = useRef<HTMLDivElement>(null);
-    const { selectedNodeId, addAttribute, editAttribute } = useErdStore();
+    const selectedNodeId = useErdStore(state => state.selectedNodeId);
+    const addAttribute = useErdStore(state => state.addAttribute);
+    const editAttribute = useErdStore(state => state.editAttribute);
 
     const [state, dispatch] = useReducer(
         attributeFormReducer,

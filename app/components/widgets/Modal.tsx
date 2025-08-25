@@ -8,7 +8,7 @@ interface ModalProps {
 }
 
 const Modal = ({ isOpen, children }: ModalProps) => {
-    const { closeAuthModal } = useUserStore();
+    const closeAuthModal = useUserStore(state => state.closeAuthModal);
 
     const handleClose = useCallback(() => {
         closeAuthModal();

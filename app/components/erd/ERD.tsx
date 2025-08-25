@@ -82,17 +82,15 @@ const ERD = () => {
     const connectingNodeId = useRef<string | null>(null);
     const { screenToFlowPosition, setViewport, fitView } = useReactFlow();
 
-    const {
-        loading,
-        persisting,
-        persistingViewport,
-        selectedDiagram,
-        loadDiagrams,
-        loadDiagram,
-        saveViewport,
-        persistDiagram,
-        persistDiagramViewport,
-    } = useDiagramStore();
+    const loading = useDiagramStore(state => state.loading);
+    const persisting = useDiagramStore(state => state.persisting);
+    const persistingViewport = useDiagramStore(state => state.persistingViewport);
+    const selectedDiagram = useDiagramStore(state => state.selectedDiagram);
+    const loadDiagrams = useDiagramStore(state => state.loadDiagrams);
+    const loadDiagram = useDiagramStore(state => state.loadDiagram);
+    const saveViewport = useDiagramStore(state => state.saveViewport);
+    const persistDiagram = useDiagramStore(state => state.persistDiagram);
+    const persistDiagramViewport = useDiagramStore(state => state.persistDiagramViewport);
 
     const {
         nodes,
@@ -105,7 +103,8 @@ const ERD = () => {
         addEntity,
         addSelfConnection,
     } = useErdStore(selector, shallow);
-    const { selectedItem } = useErdItemsStore();
+    
+    const selectedItem = useErdItemsStore(state => state.selectedItem);
 
     useOnViewportChange({
         onEnd: (viewport: Viewport) => {

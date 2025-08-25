@@ -6,7 +6,9 @@ import { validateCode } from "@/app/helper/auth-validation";
 import ConfirmationInput from "./ConfirmationInput";
 
 const ConfirmSignUp = ({ active }: { active: boolean }) => {
-    const { authDetail, confirmSignUp, resendCode } = useUserStore();
+    const authDetail = useUserStore(state => state.authDetail);
+    const confirmSignUp = useUserStore(state => state.confirmSignUp);
+    const resendCode = useUserStore(state => state.resendCode);
 
     const [serverError, setServerError] = useState<string>("");
     const [submitted, setSubmitted] = useState<boolean>(false);

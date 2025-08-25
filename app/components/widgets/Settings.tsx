@@ -5,7 +5,7 @@ import SettingsMenu from "./SettingsMenu";
 import useUserStore from "@/app/store/user";
 
 const Settings = () => {
-    const { toggleSettingsMenu } = useUserStore();
+    const toggleSettingsMenu = useUserStore(state => state.toggleSettingsMenu);
 
     const handleSettingsClick = useCallback(() => {
         toggleSettingsMenu();

@@ -3,8 +3,9 @@ import useUserStore from "../store/user";
 import useDiagramStore from "../store/diagram";
 
 const useDeleteDiagram = () => {
-    const { apiCall } = useUserStore();
-    const { startSyncing, endSyncing } = useDiagramStore();
+    const apiCall = useUserStore(state => state.apiCall);
+    const startSyncing = useDiagramStore(state => state.startSyncing);
+    const endSyncing = useDiagramStore(state => state.endSyncing);
 
     return useMutation({
         mutationKey: ["delete-diagram"],

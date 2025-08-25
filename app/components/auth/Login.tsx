@@ -10,7 +10,7 @@ import {
 import useUserStore from "@/app/store/user";
 
 const Login = ({ active }: { active: boolean }) => {
-    const { login } = useUserStore();
+    const login = useUserStore(state => state.login);
     const [state, dispatch] = useReducer(loginReducer, initialLoginState);
     const {
         handleEmailUpdate,

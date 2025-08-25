@@ -1,6 +1,5 @@
 import {
     ConnectionLineComponentProps,
-    Edge,
     getStraightPath,
 } from "@xyflow/react";
 import {
@@ -9,8 +8,6 @@ import {
     getSelfLoopPath,
 } from "@/app/helper/items";
 import useErdStore from "@/app/store/erd";
-import { ErdEdgeData } from "./ErdEdge";
-import { useMemo } from "react";
 
 const ErdConnectionLine = ({
     toX,

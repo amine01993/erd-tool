@@ -40,7 +40,7 @@ const AttributeNode = memo(({ data }: { data: AttributeData }) => {
 
 const EntityNode = (props: { data: EntityData }) => {
     const { name, attributes } = props.data;
-    const { selectedItem } = useErdItemsStore();
+    const selectedItem = useErdItemsStore(state => state.selectedItem);
 
     return (
         <div className="entity-node">

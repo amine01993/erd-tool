@@ -6,7 +6,9 @@ import Login from "./Login";
 import ConfirmSignUp from "./ConfirmSignUp";
 
 const Authentication = () => {
-    const { isAuthModalOpen, authType, setAuthType } = useUserStore();
+    const isAuthModalOpen = useUserStore(state => state.isAuthModalOpen);
+    const authType = useUserStore(state => state.authType);
+    const setAuthType = useUserStore(state => state.setAuthType);
 
     return (
         <Modal isOpen={isAuthModalOpen}>

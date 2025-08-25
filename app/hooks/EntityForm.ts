@@ -6,7 +6,8 @@ import useErdStore from "../store/erd";
 export function useEntityForm(
     dispatch: ActionDispatch<[action: EntityFormAction]>
 ) {
-    const { selectedNodeId, nodes } = useErdStore();
+    const selectedNodeId = useErdStore(state => state.selectedNodeId);
+    const nodes = useErdStore(state => state.nodes);
 
     const entityNames = useMemo(() => {
         return new Set(

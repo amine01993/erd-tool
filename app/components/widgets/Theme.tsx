@@ -88,8 +88,8 @@ export const LightIcon = memo(({ theme, fontSize }: IconProps) => {
 });
 
 const Theme = () => {
-    const { theme, toggleThemeMenu } =
-        useUserStore();
+    const theme = useUserStore(state => state.theme);
+    const toggleThemeMenu = useUserStore(state => state.toggleThemeMenu);
     const [isDark, setIsDark] = useState(false);
 
     const computedTheme = useMemo(() => {

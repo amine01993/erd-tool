@@ -22,8 +22,9 @@ const persister = createAsyncStoragePersister({
 });
 
 export default memo(function Main() {
-    const { showToast } = useAlertStore();
-    const { offLine, setOffLine } = useUserStore();
+    const showToast = useAlertStore(state => state.showToast);
+    const offLine = useUserStore(state => state.offLine);
+    const setOffLine = useUserStore(state => state.setOffLine);
     const [entityPanelWidth, setEntityPanelWidth] = useState(300);
 
     const handleResize = useCallback(

@@ -22,24 +22,24 @@ import useAddDiagram from "@/app/hooks/DiagramAdd";
 import { queryClient } from "@/app/helper/variables";
 
 const Header = () => {
-    const { offLine, retrieveAuthData, emptyAuthData } = useUserStore();
+    const offLine = useUserStore(state => state.offLine);
+    const retrieveAuthData = useUserStore(state => state.retrieveAuthData);
+    const emptyAuthData = useUserStore(state => state.emptyAuthData);
     const mutationAdd = useAddDiagram();
     const mutationDelete = useDeleteDiagram();
 
-    const {
-        loading,
-        syncing,
-        selectedDiagram,
-        disableUndo,
-        disableRedo,
-        emptyDiagrams,
-        createDiagram,
-        duplicateDiagram,
-        deleteDiagram,
-        undoAction,
-        redoAction,
-    } = useDiagramStore();
+    const loading = useDiagramStore(state => state.loading);
+    const syncing = useDiagramStore(state => state.syncing);
+    const selectedDiagram = useDiagramStore(state => state.selectedDiagram);
+    const disableUndo = useDiagramStore(state => state.disableUndo);
+    const disableRedo = useDiagramStore(state => state.disableRedo);
     const diagramsLength = useDiagramStore((state) => state.diagrams.length);
+    const emptyDiagrams = useDiagramStore(state => state.emptyDiagrams);
+    const createDiagram = useDiagramStore(state => state.createDiagram);
+    const duplicateDiagram = useDiagramStore(state => state.duplicateDiagram);
+    const deleteDiagram = useDiagramStore(state => state.deleteDiagram);
+    const undoAction = useDiagramStore(state => state.undoAction);
+    const redoAction = useDiagramStore(state => state.redoAction);
 
     const handleUndo = useCallback(() => {
         undoAction();

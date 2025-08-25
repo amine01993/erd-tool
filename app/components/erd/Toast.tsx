@@ -7,7 +7,10 @@ import InfoCircleFilledIcon from "@iconify/icons-tabler/info-circle-filled";
 import useAlertStore from "@/app/store/alert";
 
 const Toast = () => {
-    const { message, type, isVisible, hideToast } = useAlertStore();
+    const message = useAlertStore(state => state.message);
+    const type = useAlertStore(state => state.type);
+    const isVisible = useAlertStore(state => state.isVisible);
+    const hideToast = useAlertStore(state => state.hideToast);
 
     useEffect(() => {
         let timer: NodeJS.Timeout | undefined;

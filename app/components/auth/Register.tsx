@@ -10,7 +10,7 @@ import {
 import useUserStore from "@/app/store/user";
 
 const Register = ({ active }: { active: boolean }) => {
-    const { signup } = useUserStore();
+    const signup = useUserStore(state => state.signup);
     const [state, dispatch] = useReducer(registerReducer, initialRegisterState);
     const {
         handleEmailUpdate,

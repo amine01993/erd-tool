@@ -5,7 +5,7 @@ import DiagramItem, { DiagramItemPlaceHolder } from "./DiagramItem";
 import { DiagramData } from "@/app/type/DiagramType";
 
 const Sidebar = () => {
-    const { diagrams } = useDiagramStore();
+    const diagrams = useDiagramStore(state => state.diagrams);
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredDiagrams = useMemo(() => {

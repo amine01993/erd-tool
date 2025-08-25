@@ -14,8 +14,10 @@ import AttributeForm from "./AttributeForm";
 import { entityFormReducer, initialEntityState, useEntityForm } from "@/app/hooks/EntityForm";
 
 const EntityInfo = () => {
-    const { selectedNodeId, nodes, removeAttribute, updateEntityName } =
-        useErdStore();
+    const selectedNodeId = useErdStore(state => state.selectedNodeId);
+    const nodes = useErdStore(state => state.nodes);
+    const removeAttribute = useErdStore(state => state.removeAttribute);
+    const updateEntityName = useErdStore(state => state.updateEntityName);
     const [selectedData, setSelectedData] = useState<EntityData>();
     const [editingAttribute, setEditingAttribute] = useState<string | null>(
         null

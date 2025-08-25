@@ -4,8 +4,9 @@ import useDiagramStore from "../store/diagram";
 import { DiagramData } from "../type/DiagramType";
 
 const useAddDiagram = () => {
-    const { apiCall } = useUserStore();
-    const { startSyncing, endSyncing } = useDiagramStore();
+    const apiCall = useUserStore(state => state.apiCall);
+    const startSyncing = useDiagramStore(state => state.startSyncing);
+    const endSyncing = useDiagramStore(state => state.endSyncing);
 
     return useMutation({
         mutationKey: ["add-diagram"],
