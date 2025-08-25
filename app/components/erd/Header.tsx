@@ -63,7 +63,7 @@ const Header = () => {
     }, [duplicateDiagram]);
 
     const handleDeleteDiagram = useCallback(() => {
-        deleteDiagram(mutationDelete);
+        deleteDiagram(mutationDelete, mutationAdd);
     }, [deleteDiagram]);
 
     useEffect(() => {

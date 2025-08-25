@@ -16,6 +16,7 @@ export interface DiagramData {
             edges: Edge<ErdEdgeData>[];
         }[];
     };
+    deletedAt?: string;
 }
 
 export interface DiagramDataUpdate {

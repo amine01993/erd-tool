@@ -56,11 +56,12 @@ interface DiagramStoreProps {
         name: string
     ) => Promise<{ isValid: boolean; message: string } | void>;
     deleteDiagram: (
-        mutation: UseMutationResult<void, Error, string, unknown>
+        mutation: UseMutationResult<void, Error, string, unknown>,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
     ) => Promise<void>;
     undoAction: () => void;
     redoAction: () => void;
-    hasDeleteHaveAddCachedMutation: (id: string) => boolean;
+    hasDeleteHaveAddCachedMutation: (id: string) => DiagramData | null;
     hasUpdateHaveAddCachedMutation: (
         updateData: DiagramDataUpdate
     ) => DiagramData | null;
@@ -84,6 +85,7 @@ interface DiagramStoreProps {
     ) => Promise<{ isValid: boolean; message: string } | void>;
     persistDiagramDelete: (
         mutation: UseMutationResult<void, Error, string, unknown>,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
         id: string
     ) => Promise<void>;
     emptyDiagrams: () => void;
@@ -446,7 +448,8 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         });
     },
     async deleteDiagram(
-        mutation: UseMutationResult<void, Error, string, unknown>
+        mutation: UseMutationResult<void, Error, string, unknown>,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
     ) {
         const { loading, diagrams, selectedDiagram, persistDiagramDelete } =
             get();
@@ -478,7 +481,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
         }
 
-        persistDiagramDelete(mutation, selectedDiagram);
+        persistDiagramDelete(mutation, mutationAdd, selectedDiagram);
     },
     undoAction() {
         const {
@@ -560,18 +563,19 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const mutationCache = queryClient.getMutationCache();
         const mutations = mutationCache.getAll();
 
-        // when an add-diagram mutation is detected before a delete mutation then they cancel each other out
-        let hasAddMutation = false;
-        mutations.forEach((m) => {
+        // when an add-diagram mutation is detected before a delete mutation then set the deleteAt Attribute
+        // let hasAddMutation = false;
+        for(const m of mutations) {
             const { mutationKey } = m.options;
             const data = m.state.variables as any;
             if (mutationKey?.[0] === "add-diagram" && data.id === id) {
-                hasAddMutation = true;
+                // hasAddMutation = true;
                 mutationCache.remove(m);
+                return data;
             }
-        });
+        }
 
-        return hasAddMutation;
+        return null;
     },
     hasUpdateHaveAddCachedMutation(updateData: DiagramDataUpdate) {
         const mutationCache = queryClient.getMutationCache();
@@ -766,10 +770,19 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     },
     async persistDiagramDelete(
         mutation: UseMutationResult<void, Error, string, unknown>,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
         id: string
     ) {
         const { hasDeleteHaveAddCachedMutation } = get();
-        if (!hasDeleteHaveAddCachedMutation(id)) {
+        const data = hasDeleteHaveAddCachedMutation(id);
+
+        if(data) {
+            mutationAdd.mutate({
+                ...data,
+                deletedAt: new Date().toISOString(),
+            });
+        }
+        else {
             mutation.mutate(id);
         }
     },
