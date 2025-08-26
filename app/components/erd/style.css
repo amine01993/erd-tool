@@ -27,6 +27,38 @@
     }
 }
 
+.sidebar {
+    @apply bg-[#fefbfb] text-[#640D14] p-3 border-r border-[#640D14] h-[calc(100vh-57px)];
+    @apply flex flex-col;
+}
+
+.diagram-categories {
+    @apply flex flex-col gap-2 mt-0.5;
+    li {
+        @apply text-center;
+    }
+    button {
+        @apply p-2 text-left rounded-md text-[#640D14] cursor-pointer transition-colors duration-200;
+        @apply disabled:cursor-not-allowed disabled:opacity-50;
+        &:hover {
+            @apply not-disabled:bg-[#f7dee0];
+        }
+        &.active {
+            @apply bg-[#f7dee0];
+        }
+    }
+}
+
+.diagram-list {
+    @apply flex flex-col gap-1 overflow-auto -mb-3 pb-3;
+    scrollbar-width: thin;
+    scrollbar-color: #640D14 #fefbfb;
+
+    &.has-scrollbar {
+        @apply -mr-2.5;
+    }
+}
+
 .diagram-item {
     @apply px-2 py-1 text-left rounded-md text-[#640D14] hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
 
@@ -195,7 +227,8 @@
     @apply flex flex-col gap-2 cursor-default;
 
     button {
-        @apply p-1 rounded-sm cursor-pointer hover:bg-gray-100 transition-colors duration-300;
+        @apply p-1 rounded-sm cursor-pointer hover:not-disabled:bg-gray-100 transition-colors duration-300;
+        @apply disabled:cursor-not-allowed disabled:opacity-50;
     }
 }
 

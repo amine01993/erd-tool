@@ -15,6 +15,7 @@ import ERD from "./ERD";
 import EntityInfo from "./EntityInfo";
 import Authentication from "../auth/Authentication";
 import Toast from "./Toast";
+import DiagramCategories from "../diagram/DiagramCategories";
 import "./style.css";
 
 const persister = createAsyncStoragePersister({
@@ -69,10 +70,13 @@ export default memo(function Main() {
                 <main
                     className={`grid flex-1 h-[calc(100vh-57px)]`}
                     style={{
-                        gridTemplateColumns: `250px 1fr ${entityPanelWidth}px`,
+                        gridTemplateColumns: `50px 250px 1fr ${entityPanelWidth}px`,
                     }}
                 >
-                    <div className="bg-[#fefbfb] text-[#640D14] p-3 border-r border-[#640D14] h-[calc(100vh-57px)]">
+                    <div className="bg-[#fefbfb] text-[#640D14] p-0.5 border-r border-[#640D14] h-[calc(100vh-57px)]">
+                        <DiagramCategories />
+                    </div>
+                    <div className="sidebar">
                         <Sidebar />
                     </div>
 

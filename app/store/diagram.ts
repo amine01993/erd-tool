@@ -2,16 +2,20 @@ import { create } from "zustand";
 import { Node, Edge, Viewport } from "@xyflow/react";
 import { UseMutationResult } from "@tanstack/react-query";
 import { nanoid } from "nanoid";
-import { DiagramData, DiagramDataUpdate } from "../type/DiagramType";
-import { ErdEdgeData } from "../type/EdgeType";
-import { EntityData } from "../type/EntityType";
 import useErdStore from "./erd";
 import useUserStore from "./user";
 import {
-    defaultAttributeValues,
-    queryClient,
-} from "../helper/variables";
-import { getDiagramsFromLocalStorage } from "../helper/utils";
+    DiagramCategory,
+    DiagramData,
+    DiagramDataUpdate,
+} from "../type/DiagramType";
+import { ErdEdgeData } from "../type/EdgeType";
+import { EntityData } from "../type/EntityType";
+import { defaultAttributeValues, queryClient } from "../helper/variables";
+import {
+    getDiagramsCategoryFromLocalStorage,
+    getDiagramsFromLocalStorage,
+} from "../helper/utils";
 
 type DiagramMutationVariables = UseMutationResult<
     void,
@@ -21,9 +25,11 @@ type DiagramMutationVariables = UseMutationResult<
 >;
 
 interface DiagramStoreProps {
+    category: DiagramCategory;
     clientOnly: boolean;
     persisting: number;
     persistingViewport: number;
+    refreshing: boolean;
     loading: boolean;
     syncing: boolean;
     diagrams: DiagramData[];
@@ -35,6 +41,9 @@ interface DiagramStoreProps {
     getName: (prefix?: string, nbr?: number) => string;
     startSyncing: () => void;
     endSyncing: () => void;
+    startRefreshing: () => void;
+    endRefreshing: () => void;
+    setCategory: (category: DiagramCategory) => void;
     loadDiagram: () => Promise<any>;
     loadDiagrams: (
         mutation: UseMutationResult<void, Error, DiagramData, unknown>
@@ -57,7 +66,10 @@ interface DiagramStoreProps {
     ) => Promise<{ isValid: boolean; message: string } | void>;
     deleteDiagram: (
         mutation: UseMutationResult<void, Error, string, unknown>,
-        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
+        mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
+    ) => Promise<void>;
+    recoverDiagram: (
+        mutation: UseMutationResult<void, Error, string, unknown>
     ) => Promise<void>;
     undoAction: () => void;
     redoAction: () => void;
@@ -88,16 +100,23 @@ interface DiagramStoreProps {
         mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
         id: string
     ) => Promise<void>;
+    persistDiagramRecover: (
+        mutation: UseMutationResult<void, Error, string, unknown>,
+        id: string
+    ) => Promise<void>;
     emptyDiagrams: () => void;
     cloneDiagram: (d: DiagramData) => DiagramData;
 }
 
 const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
+    // current category of diagrams being viewed
+    category: getDiagramsCategoryFromLocalStorage(),
     // was diagrams data client only or not
     clientOnly: true,
     // persisting and persistingViewport are used for throttling API calls
     persisting: 0,
     persistingViewport: 0,
+    refreshing: false,
     loading: false,
     syncing: false,
     diagrams: getDiagramsFromLocalStorage(),
@@ -120,11 +139,21 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const diagram = diagrams.find((d) => d.id === selectedDiagram);
         return diagram;
     },
+    startRefreshing() {
+        set({ refreshing: true });
+    },
+    endRefreshing() {
+        set({ refreshing: false });
+    },
     startSyncing() {
         set({ syncing: true });
     },
     endSyncing() {
         set({ syncing: false });
+    },
+    setCategory(category: DiagramCategory) {
+        set({ category });
+        localStorage.setItem("diagrams-category", category);
     },
     async loadDiagram() {
         const { diagrams, getSelectedDiagram } = get();
@@ -184,13 +213,15 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         mutation: UseMutationResult<void, Error, DiagramData, unknown>
     ) {
         const { apiCall } = useUserStore.getState();
-        const { clientOnly, diagrams, createDiagram } = get();
+        const { category, clientOnly, diagrams, createDiagram } = get();
 
         if (!clientOnly && diagrams.length > 0) return;
 
         let _diagrams: DiagramData[] = [];
 
-        const response = await apiCall({});
+        const response = await apiCall({
+            query: category === "deleted" ? { deleted: "1" } : {},
+        });
         _diagrams = await response.json();
         _diagrams.forEach((d) => {
             d.loaded = false;
@@ -209,10 +240,12 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const newDiagrams = _diagrams;
         set({
             clientOnly: false,
+            refreshing: false,
             diagrams: newDiagrams,
             selectedDiagram: chosenDiagram?.id ?? "",
         });
         localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+        localStorage.setItem("diagrams-category", category);
 
         if (newDiagrams.length === 0) {
             createDiagram(mutation);
@@ -224,6 +257,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             selectedDiagram: "",
         });
         localStorage.removeItem("diagrams");
+        localStorage.removeItem("diagrams-category");
     },
     getName: (prefix?: string, nbr?: number) => {
         const { diagrams } = get();
@@ -236,10 +270,88 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         return name;
     },
+
+    undoAction() {
+        const {
+            selectedDiagram,
+            disableUndo,
+            persisting,
+            diagrams,
+            cloneDiagram,
+        } = get();
+        const { setErd } = useErdStore.getState();
+
+        if (disableUndo) return;
+
+        let diagram: DiagramData | undefined;
+        const newDiagrams = diagrams.map((d) => {
+            if (d.id !== selectedDiagram) return d;
+            const cd = cloneDiagram(d);
+            diagram = cd;
+            if (cd.history.current > 0) {
+                cd.history.current--;
+            }
+            return cd;
+        });
+
+        set({
+            diagrams: newDiagrams,
+            persisting: persisting + 1,
+            disableUndo: diagram === undefined || diagram.history.current <= 0,
+            disableRedo:
+                diagram === undefined ||
+                diagram.history.current >= diagram.history.states.length - 1,
+        });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+
+        if (diagram) {
+            setErd(diagram);
+        }
+    },
+    redoAction() {
+        const {
+            selectedDiagram,
+            disableRedo,
+            persisting,
+            diagrams,
+            cloneDiagram,
+        } = get();
+        const { setErd } = useErdStore.getState();
+
+        if (disableRedo) return;
+
+        let diagram: DiagramData | undefined;
+        const newDiagrams = diagrams.map((d) => {
+            if (d.id !== selectedDiagram) return d;
+            const cd = cloneDiagram(d);
+            diagram = cd;
+            if (cd.history.current < cd.history.states.length - 1) {
+                cd.history.current++;
+            }
+            return cd;
+        });
+
+        set({
+            diagrams: newDiagrams,
+            persisting: persisting + 1,
+            disableUndo: diagram === undefined || diagram.history.current <= 0,
+            disableRedo:
+                diagram === undefined ||
+                diagram.history.current >= diagram.history.states.length - 1,
+        });
+        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+
+        if (diagram) {
+            setErd(diagram);
+        }
+    },
     createDiagram(
         mutation: UseMutationResult<void, Error, DiagramData, unknown>
     ) {
-        const { diagrams, getName, persistNewDiagram } = get();
+        const { category, diagrams, getName, persistNewDiagram } = get();
+
+        if (category === "deleted") return;
+
         let name = getName();
 
         const newDiagram: DiagramData = {
@@ -305,6 +417,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         mutation: UseMutationResult<void, Error, DiagramData, unknown>
     ) {
         const {
+            category,
             loading,
             diagrams,
             getSelectedDiagram,
@@ -312,7 +425,8 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             getName,
             persistNewDiagram,
         } = get();
-        if (loading) return;
+
+        if (loading || category === "deleted") return;
 
         const currentDiagram = getSelectedDiagram();
 
@@ -385,13 +499,15 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
             getSelectedDiagram,
             cloneDiagram,
         } = get();
+        const isReadOnly = isReadOnlySelector(get());
 
         const currentDiagram = getSelectedDiagram();
 
         if (
-            currentDiagram?.viewport.x === viewport.x &&
-            currentDiagram?.viewport.y === viewport.y &&
-            currentDiagram?.viewport.zoom === viewport.zoom
+            (currentDiagram?.viewport.x === viewport.x &&
+                currentDiagram?.viewport.y === viewport.y &&
+                currentDiagram?.viewport.zoom === viewport.zoom) ||
+            isReadOnly
         ) {
             return;
         }
@@ -483,81 +599,51 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         persistDiagramDelete(mutation, mutationAdd, selectedDiagram);
     },
-    undoAction() {
+    async recoverDiagram(
+        mutation: UseMutationResult<void, Error, string, unknown>
+    ) {
         const {
+            category,
             loading,
-            selectedDiagram,
-            disableUndo,
-            persisting,
             diagrams,
-            cloneDiagram,
-        } = get();
-        const { setErd } = useErdStore.getState();
-
-        if (loading || disableUndo || selectedDiagram === "") return;
-
-        let diagram: DiagramData | undefined;
-        const newDiagrams = diagrams.map((d) => {
-            if (d.id !== selectedDiagram) return d;
-            const cd = cloneDiagram(d);
-            diagram = cd;
-            if (cd.history.current > 0) {
-                cd.history.current--;
-            }
-            return cd;
-        });
-
-        set({
-            diagrams: newDiagrams,
-            persisting: persisting + 1,
-            disableUndo: diagram === undefined || diagram.history.current <= 0,
-            disableRedo:
-                diagram === undefined ||
-                diagram.history.current >= diagram.history.states.length - 1,
-        });
-        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
-
-        if (diagram) {
-            setErd(diagram);
-        }
-    },
-    redoAction() {
-        const {
-            loading,
             selectedDiagram,
-            disableRedo,
-            persisting,
-            diagrams,
-            cloneDiagram,
+            persistDiagramRecover,
         } = get();
-        const { setErd } = useErdStore.getState();
 
-        if (loading || disableRedo || selectedDiagram === "") return;
+        if (category === "all" || loading || selectedDiagram === "") return;
 
-        let diagram: DiagramData | undefined;
-        const newDiagrams = diagrams.map((d) => {
-            if (d.id !== selectedDiagram) return d;
-            const cd = cloneDiagram(d);
-            diagram = cd;
-            if (cd.history.current < cd.history.states.length - 1) {
-                cd.history.current++;
+        const newDiagrams = diagrams.filter((d) => d.id !== selectedDiagram);
+        let newSelectedDiagram = "";
+
+        if (newDiagrams.length === 0) {
+            set({
+                diagrams: [],
+                disableUndo: true,
+                disableRedo: true,
+            });
+            localStorage.removeItem("diagrams");
+        } else {
+            let currentDiagram = newDiagrams[0];
+            for (const d of newDiagrams) {
+                if (
+                    ((!currentDiagram.deletedAt || !d.deletedAt) &&
+                        currentDiagram.lastUpdate < d.lastUpdate) ||
+                    (currentDiagram.deletedAt &&
+                        d.deletedAt &&
+                        currentDiagram.deletedAt < d.deletedAt)
+                ) {
+                    currentDiagram = d;
+                }
             }
-            return cd;
-        });
-
-        set({
-            diagrams: newDiagrams,
-            persisting: persisting + 1,
-            disableUndo: diagram === undefined || diagram.history.current <= 0,
-            disableRedo:
-                diagram === undefined ||
-                diagram.history.current >= diagram.history.states.length - 1,
-        });
-        localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
-
-        if (diagram) {
-            setErd(diagram);
+            newSelectedDiagram = currentDiagram.id;
+            set({
+                selectedDiagram: newSelectedDiagram,
+                diagrams: newDiagrams,
+            });
+            localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
         }
+
+        persistDiagramRecover(mutation, selectedDiagram);
     },
     hasDeleteHaveAddCachedMutation(id: string) {
         const mutationCache = queryClient.getMutationCache();
@@ -565,7 +651,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         // when an add-diagram mutation is detected before a delete mutation then set the deleteAt Attribute
         // let hasAddMutation = false;
-        for(const m of mutations) {
+        for (const m of mutations) {
             const { mutationKey } = m.options;
             const data = m.state.variables as any;
             if (mutationKey?.[0] === "add-diagram" && data.id === id) {
@@ -776,15 +862,20 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const { hasDeleteHaveAddCachedMutation } = get();
         const data = hasDeleteHaveAddCachedMutation(id);
 
-        if(data) {
+        if (data) {
             mutationAdd.mutate({
                 ...data,
                 deletedAt: new Date().toISOString(),
             });
-        }
-        else {
+        } else {
             mutation.mutate(id);
         }
+    },
+    async persistDiagramRecover(
+        mutation: UseMutationResult<void, Error, string, unknown>,
+        id: string
+    ) {
+        mutation.mutate(id);
     },
     cloneDiagram(d: DiagramData): DiagramData {
         return {
@@ -823,3 +914,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 }));
 
 export default useDiagramStore;
+
+export const isReadOnlySelector = (state: DiagramStoreProps) => {
+    return state.category === "deleted";
+};

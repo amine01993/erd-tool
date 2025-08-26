@@ -7,6 +7,7 @@ import {
     useState,
 } from "react";
 import useErdStore from "@/app/store/erd";
+import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
 import InputField from "../widgets/InputField";
 import { EntityData } from "../../type/EntityType";
 import AttributeList from "./AttributeList";
@@ -18,6 +19,7 @@ const EntityInfo = () => {
     const nodes = useErdStore(state => state.nodes);
     const removeAttribute = useErdStore(state => state.removeAttribute);
     const updateEntityName = useErdStore(state => state.updateEntityName);
+    const isReadOnly = useDiagramStore(isReadOnlySelector);
     const [selectedData, setSelectedData] = useState<EntityData>();
     const [editingAttribute, setEditingAttribute] = useState<string | null>(
         null
@@ -59,7 +61,7 @@ const EntityInfo = () => {
     );
 
     useEffect(() => {
-        if (selectedNodeId) {
+        if (selectedNodeId && !isReadOnly) {
             const selectedData = nodes.find(
                 (node) => node.id === selectedNodeId
             )?.data;
@@ -72,7 +74,7 @@ const EntityInfo = () => {
             }
             setEditingAttribute(null);
         }
-    }, [selectedNodeId]);
+    }, [selectedNodeId, isReadOnly]);
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout | null = null;
@@ -91,7 +93,7 @@ const EntityInfo = () => {
 
     return (
         <div className="entity-info">
-            {selectedNodeId && (
+            {selectedNodeId && !isReadOnly && (
                 <>
                     <div className="details">
                         <InputField

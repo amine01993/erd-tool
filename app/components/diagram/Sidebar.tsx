@@ -1,12 +1,24 @@
-import { ChangeEvent, memo, useCallback, useMemo, useState } from "react";
+import {
+    ChangeEvent,
+    memo,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import useDiagramStore from "../../store/diagram";
 import SearchBar from "./SearchBar";
 import DiagramItem, { DiagramItemPlaceHolder } from "./DiagramItem";
 import { DiagramData } from "@/app/type/DiagramType";
+import cc from "classcat";
 
 const Sidebar = () => {
-    const diagrams = useDiagramStore(state => state.diagrams);
+    const listRef = useRef<HTMLUListElement>(null);
+    const category = useDiagramStore((state) => state.category);
+    const diagrams = useDiagramStore((state) => state.diagrams);
     const [searchTerm, setSearchTerm] = useState("");
+    const [hasScrollbar, setHasScrollbar] = useState(false);
 
     const filteredDiagrams = useMemo(() => {
         const filtered = diagrams
@@ -14,9 +26,19 @@ const Sidebar = () => {
                 diagram.name.toLowerCase().includes(searchTerm.toLowerCase())
             )
             .slice();
-        filtered.sort((a, b) => b.lastUpdate.localeCompare(a.lastUpdate));
+        if(category === "all") {
+            filtered.sort((a, b) => b.lastUpdate.localeCompare(a.lastUpdate));
+        }
+        else {
+            filtered.sort((a, b) => {
+                if(!a.deletedAt || !b.deletedAt) {
+                    return b.lastUpdate.localeCompare(a.lastUpdate);
+                }
+                return b.deletedAt.localeCompare(a.deletedAt);
+            });
+        }
         return filtered;
-    }, [diagrams, searchTerm]);
+    }, [diagrams, searchTerm, category]);
 
     const handleSearchChange = useCallback(
         (event: ChangeEvent<HTMLInputElement>) => {
@@ -25,6 +47,15 @@ const Sidebar = () => {
         []
     );
 
+    useEffect(() => {
+        function hasScrollbar() {
+            if (!listRef.current) return false;
+            return listRef.current.scrollHeight > listRef.current.clientHeight;
+        }
+
+        setHasScrollbar(hasScrollbar());
+    }, [filteredDiagrams.length]);
+
     return (
         <>
             <SearchBar
@@ -32,7 +63,13 @@ const Sidebar = () => {
                 handleSearchChange={handleSearchChange}
             />
 
-            <ul className="flex flex-col gap-1">
+            <ul
+                className={cc([
+                    "diagram-list",
+                    { "has-scrollbar": hasScrollbar },
+                ])}
+                ref={listRef}
+            >
                 {diagrams.length === 0 && (
                     <>
                         <DiagramItemPlaceHolder />

@@ -18,28 +18,34 @@ import useUserStore from "@/app/store/user";
 import Theme from "../widgets/Theme";
 import Settings from "../widgets/Settings";
 import useDeleteDiagram from "@/app/hooks/DiagramDelete";
+import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import { queryClient } from "@/app/helper/variables";
+import TrashOffIcon from "@iconify/icons-tabler/trash-off";
 
 const Header = () => {
-    const offLine = useUserStore(state => state.offLine);
-    const retrieveAuthData = useUserStore(state => state.retrieveAuthData);
-    const emptyAuthData = useUserStore(state => state.emptyAuthData);
+    const offLine = useUserStore((state) => state.offLine);
+    const retrieveAuthData = useUserStore((state) => state.retrieveAuthData);
+    const emptyAuthData = useUserStore((state) => state.emptyAuthData);
     const mutationAdd = useAddDiagram();
     const mutationDelete = useDeleteDiagram();
+    const mutationRecover = useRecoverDiagram();
 
-    const loading = useDiagramStore(state => state.loading);
-    const syncing = useDiagramStore(state => state.syncing);
-    const selectedDiagram = useDiagramStore(state => state.selectedDiagram);
-    const disableUndo = useDiagramStore(state => state.disableUndo);
-    const disableRedo = useDiagramStore(state => state.disableRedo);
-    const diagramsLength = useDiagramStore((state) => state.diagrams.length);
-    const emptyDiagrams = useDiagramStore(state => state.emptyDiagrams);
-    const createDiagram = useDiagramStore(state => state.createDiagram);
-    const duplicateDiagram = useDiagramStore(state => state.duplicateDiagram);
-    const deleteDiagram = useDiagramStore(state => state.deleteDiagram);
-    const undoAction = useDiagramStore(state => state.undoAction);
-    const redoAction = useDiagramStore(state => state.redoAction);
+    const category = useDiagramStore((state) => state.category);
+    const loading = useDiagramStore((state) => state.loading);
+    const syncing = useDiagramStore((state) => state.syncing);
+    const selectedDiagram = useDiagramStore((state) => state.selectedDiagram);
+    const disableUndo = useDiagramStore((state) => state.disableUndo);
+    const disableRedo = useDiagramStore((state) => state.disableRedo);
+    const refreshing = useDiagramStore((state) => state.refreshing);
+    const startRefreshing = useDiagramStore((state) => state.startRefreshing);
+    const emptyDiagrams = useDiagramStore((state) => state.emptyDiagrams);
+    const createDiagram = useDiagramStore((state) => state.createDiagram);
+    const duplicateDiagram = useDiagramStore((state) => state.duplicateDiagram);
+    const deleteDiagram = useDiagramStore((state) => state.deleteDiagram);
+    const recoverDiagram = useDiagramStore((state) => state.recoverDiagram);
+    const undoAction = useDiagramStore((state) => state.undoAction);
+    const redoAction = useDiagramStore((state) => state.redoAction);
 
     const handleUndo = useCallback(() => {
         undoAction();
@@ -50,9 +56,11 @@ const Header = () => {
     }, [redoAction]);
 
     const handleDiagramsRefresh = useCallback(() => {
+        if (offLine || refreshing) return;
+        startRefreshing();
         emptyDiagrams();
         queryClient.invalidateQueries({ queryKey: ["diagrams"] });
-    }, []);
+    }, [offLine, refreshing, emptyDiagrams]);
 
     const handleNewDiagram = useCallback(() => {
         createDiagram(mutationAdd);
@@ -65,6 +73,10 @@ const Header = () => {
     const handleDeleteDiagram = useCallback(() => {
         deleteDiagram(mutationDelete, mutationAdd);
     }, [deleteDiagram]);
+
+    const handleRecoverDiagram = useCallback(() => {
+        recoverDiagram(mutationRecover);
+    }, [recoverDiagram]);
 
     useEffect(() => {
         function initAuthData() {
@@ -118,72 +130,89 @@ const Header = () => {
                     priority
                 />
 
-                <button
-                    aria-label="Undo last action"
-                    className="header-btn"
-                    onClick={handleUndo}
-                    disabled={disableUndo || loading}
-                >
-                    <Icon icon={ArrowBackUpIcon} fontSize={21} />
-                </button>
-
-                <button
-                    aria-label="Redo"
-                    className="header-btn"
-                    onClick={handleRedo}
-                    disabled={disableRedo || loading}
-                >
-                    <Icon icon={ArrowForwardUpIcon} fontSize={21} />
-                </button>
-
-                <button
-                    aria-label="Refresh diagrams' list"
-                    className={cc([
-                        "header-btn",
-                        { "animate-spin": diagramsLength === 0 },
-                    ])}
-                    onClick={handleDiagramsRefresh}
-                    disabled={diagramsLength === 0}
-                >
-                    <Icon icon={RefreshIcon} fontSize={21} />
-                </button>
-
-                <button
-                    aria-label="Create new diagram"
-                    className="header-btn"
-                    onClick={handleNewDiagram}
-                >
-                    <Icon icon={CirclePlusIcon} fontSize={21} />
-                </button>
-
-                {selectedDiagram !== "" && (
+                {category === "all" && (
                     <>
                         <button
-                            aria-label="Duplicate selected diagram"
+                            aria-label="Undo last action"
                             className="header-btn"
-                            onClick={handleDuplicateDiagram}
-                            disabled={loading}
+                            onClick={handleUndo}
+                            disabled={disableUndo}
                         >
-                            <Icon icon={LayersSubtractIcon} fontSize={21} />
+                            <Icon icon={ArrowBackUpIcon} fontSize={21} />
                         </button>
+
                         <button
-                            aria-label="Delete selected diagram"
+                            aria-label="Redo"
                             className="header-btn"
-                            onClick={handleDeleteDiagram}
-                            disabled={loading}
+                            onClick={handleRedo}
+                            disabled={disableRedo}
                         >
-                            <Icon icon={TrashIcon} fontSize={21} />
+                            <Icon icon={ArrowForwardUpIcon} fontSize={21} />
                         </button>
                     </>
                 )}
 
                 <button
-                    className="flex items-center gap-2 header-btn"
-                    disabled={loading}
+                    aria-label="Refresh diagrams' list"
+                    className={cc([
+                        "header-btn",
+                        { "animate-spin": refreshing },
+                    ])}
+                    onClick={handleDiagramsRefresh}
+                    disabled={offLine || refreshing}
                 >
-                    <Icon icon={DatabaseExportIcon} fontSize={21} />
-                    Export
+                    <Icon icon={RefreshIcon} fontSize={21} />
                 </button>
+
+                {category === "all" && (
+                    <>
+                        <button
+                            aria-label="Create new diagram"
+                            className="header-btn"
+                            onClick={handleNewDiagram}
+                        >
+                            <Icon icon={CirclePlusIcon} fontSize={21} />
+                        </button>
+                        <button
+                            aria-label="Duplicate selected diagram"
+                            className="header-btn"
+                            onClick={handleDuplicateDiagram}
+                            disabled={selectedDiagram === "" || loading}
+                        >
+                            <Icon icon={LayersSubtractIcon} fontSize={21} />
+                        </button>
+                    </>
+                )}
+
+                <button
+                    aria-label="Delete selected diagram"
+                    className="header-btn"
+                    onClick={handleDeleteDiagram}
+                    disabled={selectedDiagram === "" || loading}
+                >
+                    <Icon icon={TrashIcon} fontSize={21} />
+                </button>
+
+                {category === "deleted" && (
+                    <button
+                        aria-label="Recover selected diagram"
+                        className="header-btn"
+                        onClick={handleRecoverDiagram}
+                        disabled={selectedDiagram === "" || loading}
+                    >
+                        <Icon icon={TrashOffIcon} fontSize={21} />
+                    </button>
+                )}
+
+                {category === "all" && (
+                    <button
+                        className="flex items-center gap-2 header-btn"
+                        disabled={selectedDiagram === "" || loading}
+                    >
+                        <Icon icon={DatabaseExportIcon} fontSize={21} />
+                        Export
+                    </button>
+                )}
 
                 <div className="flex items-center gap-2 p-2 cursor-default">
                     {offLine && (

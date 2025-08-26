@@ -10,13 +10,13 @@ import {
     useRef,
     useState,
 } from "react";
+import cc from "classcat";
+import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
+import useAlertStore from "@/app/store/alert";
 import { formatLastUpdate } from "@/app/helper/utils";
 import { DiagramData } from "@/app/type/DiagramType";
-import useDiagramStore from "@/app/store/diagram";
-import useAlertStore from "@/app/store/alert";
 import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
-import cc from "classcat";
 
 interface DiagramItemProps {
     searchTerm: string;
@@ -53,6 +53,7 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
     const updateDiagramName = useDiagramStore(
         (state) => state.updateDiagramName
     );
+    const isReadOnly = useDiagramStore(isReadOnlySelector);
     const showToast = useAlertStore((state) => state.showToast);
     const mutation = useUpdateDiagram();
     const mutationAdd = useAddDiagram();
@@ -72,7 +73,7 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
                 | MouseEvent<HTMLParagraphElement>
                 | KeyboardEvent<HTMLParagraphElement>
         ) => {
-            if (selectedDiagram !== diagram.id) return;
+            if (selectedDiagram !== diagram.id || isReadOnly) return;
 
             const isKeyEvent = (event as KeyboardEvent).key !== undefined;
             if (
@@ -82,7 +83,7 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
                 setEditName(true);
             }
         },
-        [selectedDiagram]
+        [selectedDiagram, isReadOnly]
     );
 
     const handleNameChange = useCallback(

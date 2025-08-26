@@ -56,13 +56,13 @@ const EntityNode = (props: { data: EntityData }) => {
                             <Icon
                                 icon={DotsVerticalIcon}
                                 width="15"
-                                height="24"
+                                height="15"
                                 className="-mr-2.5"
                             />
                             <Icon
                                 icon={DotsVerticalIcon}
                                 width="15"
-                                height="24"
+                                height="15"
                             />
                         </>
                     )}

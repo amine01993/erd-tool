@@ -19,6 +19,7 @@ import { Icon } from "@iconify/react";
 import ChevronDownIcon from "@iconify/icons-tabler/chevron-down";
 import { getEdgeParams, getSelfLoopPath } from "@/app/helper/items";
 import useErdStore from "@/app/store/erd";
+import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
 import { ErdEdgeData } from "@/app/type/EdgeType";
 
 const EdgeLabel = memo(
@@ -34,13 +35,15 @@ const EdgeLabel = memo(
         type: "start" | "end";
     }) => {
         const selectElem = useRef<HTMLSelectElement>(null);
+        const isReadOnly = useDiagramStore(isReadOnlySelector);
         const updateEdgeLabel = useErdStore((state) => state.updateEdgeLabel);
         const [editing, setEditing] = useState(false);
         const [label, setLabel] = useState(value);
 
         const toggleEdit = useCallback(() => {
+            if (isReadOnly) return;
             setEditing((prev) => !prev);
-        }, [setEditing]);
+        }, [isReadOnly, setEditing]);
 
         const handleChange = useCallback(
             (e: ChangeEvent<HTMLSelectElement>) => {

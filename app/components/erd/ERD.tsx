@@ -51,7 +51,6 @@ const edgeTypes = {
 };
 
 const selector = (state: ErdState) => ({
-    selectedNodeId: state.selectedNodeId,
     nodes: state.nodes,
     edges: state.edges,
     onNodesChange: state.onNodesChange,

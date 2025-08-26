@@ -25,3 +25,6 @@ export interface DiagramDataUpdate {
     history?: DiagramData["history"];
     viewport?: DiagramData["viewport"];
 }
+
+export type DiagramCategory = "all" | "deleted";
+

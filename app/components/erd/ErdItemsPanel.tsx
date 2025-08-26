@@ -1,25 +1,34 @@
 import Image from "next/image";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { Panel } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import LocationFilledIcon from "@iconify/icons-tabler/location-filled";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
+import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
 
 const ErdItemsPanel = () => {
     const selectedItem = useErdItemsStore(state => state.selectedItem);
     const selectItem = useErdItemsStore(state => state.selectItem);
+    const isReadOnly = useDiagramStore(isReadOnlySelector);
 
     const handleSelection = useCallback(
         (event: React.MouseEvent<HTMLButtonElement>) => {
+            if (isReadOnly) return;
             const item = event.currentTarget.dataset.id as
                 | "selector"
                 | "entity"
                 | "edge";
             selectItem(item);
         },
-        []
+        [isReadOnly]
     );
+
+    useEffect(() => {
+        if(isReadOnly) {
+            selectItem("selector");
+        }
+    }, [isReadOnly]);
 
     return (
         <Panel
@@ -35,6 +44,7 @@ const ErdItemsPanel = () => {
                         className={cc([
                             { "inset-shadow-md": selectedItem === "selector" },
                         ])}
+                        disabled={isReadOnly}
                     >
                         <Icon
                             icon={LocationFilledIcon}
@@ -51,6 +61,7 @@ const ErdItemsPanel = () => {
                         className={cc([
                             { "inset-shadow-md": selectedItem === "entity" },
                         ])}
+                        disabled={isReadOnly}
                     >
                         <Image
                             src="/entity-icon.svg"
@@ -68,6 +79,7 @@ const ErdItemsPanel = () => {
                         className={cc([
                             { "inset-shadow-md": selectedItem === "edge" },
                         ])}
+                        disabled={isReadOnly}
                     >
                         <Image
                             src="/edge-icon.svg"

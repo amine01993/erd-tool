@@ -1,4 +1,4 @@
-import { DiagramData } from "../type/DiagramType";
+import { DiagramCategory, DiagramData } from "../type/DiagramType";
 import { defaultDiagramValues } from "./variables";
 
 export function formatLastUpdate(date: Date): string {
@@ -38,4 +38,13 @@ export function getDiagramsFromLocalStorage(): DiagramData[] {
     });
 
     return parsedDiagrams;
+}
+
+export function getDiagramsCategoryFromLocalStorage(): DiagramCategory {
+    const category = localStorage.getItem("diagrams-category");
+
+    if (["all", "deleted"].includes(category || ""))
+        return category as DiagramCategory;
+
+    return "all";
 }
