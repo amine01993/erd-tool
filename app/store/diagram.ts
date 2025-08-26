@@ -63,8 +63,21 @@ interface DiagramStoreProps {
         name: string
     ) => Promise<{ isValid: boolean; message: string } | void>;
     deleteDiagram: (
-        mutation: UseMutationResult<void, Error, string, unknown>,
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >,
         mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
+    ) => Promise<void>;
+    deleteDiagramPermanently: (
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >
     ) => Promise<void>;
     recoverDiagram: (
         mutation: UseMutationResult<void, Error, string, unknown>
@@ -94,8 +107,22 @@ interface DiagramStoreProps {
         name: string
     ) => Promise<{ isValid: boolean; message: string } | void>;
     persistDiagramDelete: (
-        mutation: UseMutationResult<void, Error, string, unknown>,
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >,
         mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
+        id: string
+    ) => Promise<void>;
+    persistDiagramDeletePermanently: (
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >,
         id: string
     ) => Promise<void>;
     persistDiagramRecover: (
@@ -522,7 +549,12 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         });
     },
     async deleteDiagram(
-        mutation: UseMutationResult<void, Error, string, unknown>,
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >,
         mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>
     ) {
         const { loading, diagrams, selectedDiagram, persistDiagramDelete } =
@@ -554,6 +586,54 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         }
 
         persistDiagramDelete(mutation, mutationAdd, selectedDiagram);
+    },
+    async deleteDiagramPermanently(
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >
+    ) {
+        const {
+            loading,
+            diagrams,
+            selectedDiagram,
+            persistDiagramDeletePermanently,
+        } = get();
+
+        if (loading || selectedDiagram === "") return;
+
+        const newDiagrams = diagrams.filter((d) => d.id !== selectedDiagram);
+        let newSelectedDiagram = "";
+
+        if (newDiagrams.length === 0) {
+            set({
+                diagrams: [],
+            });
+            localStorage.removeItem("diagrams");
+        } else {
+            let currentDiagram = newDiagrams[0];
+            for (const d of newDiagrams) {
+                if (
+                    ((!currentDiagram.deletedAt || !d.deletedAt) &&
+                        currentDiagram.lastUpdate < d.lastUpdate) ||
+                    (currentDiagram.deletedAt &&
+                        d.deletedAt &&
+                        currentDiagram.deletedAt < d.deletedAt)
+                ) {
+                    currentDiagram = d;
+                }
+            }
+            newSelectedDiagram = currentDiagram.id;
+            set({
+                selectedDiagram: newSelectedDiagram,
+                diagrams: newDiagrams,
+            });
+            localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
+        }
+
+        await persistDiagramDeletePermanently(mutation, selectedDiagram);
     },
     async recoverDiagram(
         mutation: UseMutationResult<void, Error, string, unknown>
@@ -809,7 +889,12 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         }
     },
     async persistDiagramDelete(
-        mutation: UseMutationResult<void, Error, string, unknown>,
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >,
         mutationAdd: UseMutationResult<void, Error, DiagramData, unknown>,
         id: string
     ) {
@@ -822,8 +907,19 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 deletedAt: new Date().toISOString(),
             });
         } else {
-            mutation.mutate(id);
+            mutation.mutate({ id });
         }
+    },
+    async persistDiagramDeletePermanently(
+        mutation: UseMutationResult<
+            void,
+            Error,
+            { id: string; perma?: boolean },
+            unknown
+        >,
+        id: string
+    ) {
+        mutation.mutate({ id, perma: true });
     },
     async persistDiagramRecover(
         mutation: UseMutationResult<void, Error, string, unknown>,
@@ -871,6 +967,10 @@ export default useDiagramStore;
 
 export const isReadOnlySelector = (state: DiagramStoreProps) => {
     return state.category === "deleted";
+};
+
+export const currentDiagramSelector = (state: DiagramStoreProps) => {
+    return state.diagrams.find((d) => d.id === state.selectedDiagram);
 };
 
 export const disableUndoSelector = (state: DiagramStoreProps) => {

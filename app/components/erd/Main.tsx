@@ -22,6 +22,7 @@ import EntityInfo from "./EntityInfo";
 import Authentication from "../auth/Authentication";
 import Toast from "./Toast";
 import DiagramCategories from "../diagram/DiagramCategories";
+import ConfirmationPermanentDelete from "../diagram/ConfirmationPermanentDelete";
 import "./style.css";
 
 const persister = createAsyncStoragePersister({
@@ -141,6 +142,7 @@ export default memo(function Main() {
                     </Resizable>
                 </main>
                 <Authentication />
+                <ConfirmationPermanentDelete />
                 <Toast />
             </div>
             <ReactQueryDevtools initialIsOpen={false} />

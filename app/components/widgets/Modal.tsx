@@ -1,18 +1,13 @@
 import { memo, MouseEvent, ReactNode, useCallback } from "react";
 import cc from "classcat";
-import useUserStore from "@/app/store/user";
 
 interface ModalProps {
     isOpen: boolean;
     children?: ReactNode;
+    handleClose: () => void;
 }
 
-const Modal = ({ isOpen, children }: ModalProps) => {
-    const closeAuthModal = useUserStore(state => state.closeAuthModal);
-
-    const handleClose = useCallback(() => {
-        closeAuthModal();
-    }, [closeAuthModal]);
+const Modal = ({ isOpen, children, handleClose }: ModalProps) => {
 
     const stopPropagation = useCallback((e: MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();

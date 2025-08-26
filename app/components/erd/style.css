@@ -52,7 +52,7 @@
 .diagram-list {
     @apply flex flex-col gap-1 overflow-auto -mb-3 pb-3;
     scrollbar-width: thin;
-    scrollbar-color: #640D14 #fefbfb;
+    scrollbar-color: #640d14 #fefbfb;
 
     &.has-scrollbar {
         @apply -mr-2.5;
@@ -66,7 +66,8 @@
         @apply bg-[#f7dee0];
 
         .diagram-name {
-            &:hover, &:focus {
+            &:hover,
+            &:focus {
                 @apply border-1 border-[#640d14] px-[1px] -mt-[1px] -ml-[2px] -mb-[1px] rounded-md;
                 @apply outline-none;
             }
@@ -514,9 +515,42 @@
         }
     }
 
+    .action-btns {
+        @apply flex justify-around w-full mt-4;
+    }
+
     button {
         &.link {
             @apply underline cursor-pointer hover:text-[#44090e];
+        }
+
+        &.close-modal {
+            @apply absolute top-2 right-2;
+
+            @apply p-2 rounded-md text-[#640D14] cursor-pointer transition-colors duration-200;
+            &:hover {
+                @apply not-disabled:bg-[#f7dee0];
+            }
+        }
+
+        &.cancel-btn,
+        &.confirm-btn {
+            @apply px-5 py-2 rounded-md font-semibold cursor-pointer transition-colors duration-200;
+            @apply disabled:opacity-50 disabled:cursor-not-allowed;
+        }
+
+        &.cancel-btn {
+            @apply text-[#44090e] bg-[#f7dee0];
+            &:hover {
+                @apply not-disabled:bg-[#fbeff0];
+            }
+        }
+
+        &.confirm-btn {
+            @apply text-white bg-[#640D14];
+            &:hover {
+                @apply not-disabled:bg-[#44090e];
+            }
         }
     }
 

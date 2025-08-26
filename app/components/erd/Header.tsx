@@ -13,6 +13,7 @@ import CloudIcon from "@iconify/icons-tabler/cloud";
 import CirclePlusIcon from "@iconify/icons-tabler/circle-plus";
 import CloudXIcon from "@iconify/icons-tabler/cloud-x";
 import RefreshIcon from "@iconify/icons-tabler/refresh";
+import TrashOffIcon from "@iconify/icons-tabler/trash-off";
 import useDiagramStore, {
     disableRedoSelector,
     disableUndoSelector,
@@ -24,12 +25,12 @@ import useDeleteDiagram from "@/app/hooks/DiagramDelete";
 import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import { queryClient } from "@/app/helper/variables";
-import TrashOffIcon from "@iconify/icons-tabler/trash-off";
 
 const Header = () => {
     const offLine = useUserStore((state) => state.offLine);
     const retrieveAuthData = useUserStore((state) => state.retrieveAuthData);
     const emptyAuthData = useUserStore((state) => state.emptyAuthData);
+    const openConfirmModal = useUserStore((state) => state.openConfirmModal);
     const mutationAdd = useAddDiagram();
     const mutationDelete = useDeleteDiagram();
     const mutationRecover = useRecoverDiagram();
@@ -46,6 +47,7 @@ const Header = () => {
     const createDiagram = useDiagramStore((state) => state.createDiagram);
     const duplicateDiagram = useDiagramStore((state) => state.duplicateDiagram);
     const deleteDiagram = useDiagramStore((state) => state.deleteDiagram);
+    // const deleteDiagramPermanently = useDiagramStore((state) => state.deleteDiagramPermanently);
     const recoverDiagram = useDiagramStore((state) => state.recoverDiagram);
     const undoAction = useDiagramStore((state) => state.undoAction);
     const redoAction = useDiagramStore((state) => state.redoAction);
@@ -74,8 +76,13 @@ const Header = () => {
     }, [duplicateDiagram]);
 
     const handleDeleteDiagram = useCallback(() => {
-        deleteDiagram(mutationDelete, mutationAdd);
-    }, [deleteDiagram]);
+        if(category === "deleted") {
+            openConfirmModal();
+        }
+        else {
+            deleteDiagram(mutationDelete, mutationAdd);
+        }
+    }, [deleteDiagram, openConfirmModal, category]);
 
     const handleRecoverDiagram = useCallback(() => {
         recoverDiagram(mutationRecover);

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import useUserStore from "@/app/store/user";
 import Modal from "../widgets/Modal";
 import Register from "./Register";
@@ -6,12 +6,17 @@ import Login from "./Login";
 import ConfirmSignUp from "./ConfirmSignUp";
 
 const Authentication = () => {
-    const isAuthModalOpen = useUserStore(state => state.isAuthModalOpen);
-    const authType = useUserStore(state => state.authType);
-    const setAuthType = useUserStore(state => state.setAuthType);
+    const isAuthModalOpen = useUserStore((state) => state.isAuthModalOpen);
+    const authType = useUserStore((state) => state.authType);
+    const setAuthType = useUserStore((state) => state.setAuthType);
+    const closeAuthModal = useUserStore((state) => state.closeAuthModal);
 
+    const handleClose = useCallback(() => {
+        closeAuthModal();
+    }, [closeAuthModal]);
+    
     return (
-        <Modal isOpen={isAuthModalOpen}>
+        <Modal isOpen={isAuthModalOpen} handleClose={handleClose}>
             <ul className="auth-header">
                 <li className={authType === "login" ? "active" : ""}>
                     <button onClick={() => setAuthType("login")}>
