@@ -23,6 +23,7 @@ import Authentication from "../auth/Authentication";
 import Toast from "./Toast";
 import DiagramCategories from "../diagram/DiagramCategories";
 import ConfirmationPermanentDelete from "../diagram/ConfirmationPermanentDelete";
+import ReadOnlyMode from "../diagram/ReadOnlyMode";
 import "./style.css";
 
 const persister = createAsyncStoragePersister({
@@ -143,6 +144,7 @@ export default memo(function Main() {
                 </main>
                 <Authentication />
                 <ConfirmationPermanentDelete />
+                <ReadOnlyMode />
                 <Toast />
             </div>
             <ReactQueryDevtools initialIsOpen={false} />

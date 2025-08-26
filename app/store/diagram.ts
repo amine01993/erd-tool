@@ -490,11 +490,14 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         const currentDiagram = getSelectedDiagram();
 
+        if(isReadOnly) {
+            return;
+        }
+
         if (
-            (currentDiagram?.viewport.x === viewport.x &&
+            currentDiagram?.viewport.x === viewport.x &&
                 currentDiagram?.viewport.y === viewport.y &&
-                currentDiagram?.viewport.zoom === viewport.zoom) ||
-            isReadOnly
+                currentDiagram?.viewport.zoom === viewport.zoom
         ) {
             return;
         }

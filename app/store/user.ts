@@ -39,6 +39,7 @@ export interface UserState {
     isSettingsMenuOpen: boolean;
     isAuthModalOpen: boolean;
     isConfirmModalOpen: boolean;
+    isReadOnlyModalOpen: boolean;
     authType: AuthType;
     authDetail: any;
     isGuest: boolean;
@@ -57,6 +58,8 @@ export interface UserState {
     closeAuthModal: () => void;
     openConfirmModal: () => void;
     closeConfirmModal: () => void;
+    openReadOnlyModal: () => void;
+    closeReadOnlyModal: () => void;
     setAuthType: (authType: AuthType) => void;
     login: (userName: string, password: string) => Promise<void>;
     signup: (
@@ -84,6 +87,7 @@ const useUserStore = create<UserState>((set, get) => ({
     isSettingsMenuOpen: false,
     isAuthModalOpen: false,
     isConfirmModalOpen: false,
+    isReadOnlyModalOpen: false,
     authType: "login",
     authDetail: null,
     isGuest: true,
@@ -144,6 +148,16 @@ const useUserStore = create<UserState>((set, get) => ({
     closeConfirmModal() {
         set({
             isConfirmModalOpen: false,
+        });
+    },
+    openReadOnlyModal() {
+        set({
+            isReadOnlyModalOpen: true,
+        });
+    },
+    closeReadOnlyModal() {
+        set({
+            isReadOnlyModalOpen: false,
         });
     },
     setAuthType(authType: AuthType) {

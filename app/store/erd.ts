@@ -16,6 +16,7 @@ import {
 import { createWithEqualityFn } from "zustand/traditional";
 import { nanoid } from "nanoid";
 import useDiagramStore, { isReadOnlySelector } from "./diagram";
+import useUserStore from "./user";
 import { DiagramData } from "../type/DiagramType";
 import { EntityData, AttributeData } from "../type/EntityType";
 import { ErdEdgeData } from "../type/EdgeType";
@@ -99,6 +100,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     onNodesChange: (changes: NodeChange[]) => {
         const { selectedNodeId, nodes, edges, loaded } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
         let selectedId = selectedNodeId,
             saving = false,
@@ -114,13 +116,15 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             if (change.type === "position") {
                 if ((change as NodePositionChange).dragging === false)
                     saving = true;
-                update = true;
+                if ((change as NodePositionChange).dragging !== undefined)
+                    update = true;
             }
 
             if (change.type === "dimensions") {
                 if ((change as NodeDimensionChange).resizing === false)
                     saving = true;
-                update = true;
+                if ((change as NodeDimensionChange).resizing !== undefined)
+                    update = true;
             }
 
             if (change.type === "remove") {
@@ -128,7 +132,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             }
         }
 
-        if (update && isReadOnly) return;
+        if (update && isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         const newNodes = applyNodeChanges(changes, nodes);
 
@@ -145,6 +152,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     onEdgesChange: (changes: EdgeChange[]) => {
         const { edges, nodes, getMarkersName } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
         let saving = false;
         for (const change of changes) {
@@ -153,7 +161,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             }
         }
 
-        if (saving && isReadOnly) return;
+        if (saving && isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         const newEdges = applyEdgeChanges(changes, edges);
         newEdges.forEach((e) => {
@@ -205,9 +216,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         const { source, target } = params;
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         const sharedEdges = edges
             .filter(
@@ -262,9 +277,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     addEntity(position: XYPosition) {
         const { nodes, edges, getName } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         let name = getName();
         const newNode: Node<EntityData> = {
@@ -286,9 +305,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     addConnection: (fromId: string, position: XYPosition) => {
         const { nodes, edges, getName } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         let name = getName();
 
@@ -319,9 +342,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     addSelfConnection: (nodeId: string) => {
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         const sharedEdges = edges
             .filter((e) => e.source === nodeId && e.target === nodeId)
@@ -365,9 +392,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     updateEdgeLabel(id: string, type: "start" | "end", label: string) {
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         let marker;
         switch (label) {
@@ -414,9 +445,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     addAttribute(id: string, attribute: AttributeData) {
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         const newNodes = nodes.map((n) => {
             if (n.id !== id) return n;
@@ -438,9 +473,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     editAttribute(id: string, attribute: AttributeData) {
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         const newNodes = nodes.map((n) => {
             if (n.id !== id) return n;
@@ -465,9 +504,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     removeAttribute(id: string, attributeId: string) {
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
-        if (isReadOnly) return;
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         const newNodes = nodes.map((n) => {
             if (n.id !== id) return n;
@@ -491,6 +534,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     updateEntityName(id: string, newName: string) {
         const { nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
         let saving = true;
@@ -509,7 +553,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             };
         });
 
-        if (saving && isReadOnly) return;
+        if (saving && isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
 
         set({
             nodes: newNodes,

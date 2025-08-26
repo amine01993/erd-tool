@@ -5,30 +5,30 @@ import XIcon from "@iconify/icons-tabler/x";
 import useUserStore from "@/app/store/user";
 import useDiagramStore, { currentDiagramSelector } from "@/app/store/diagram";
 import Modal from "../widgets/Modal";
-import useDeleteDiagram from "@/app/hooks/DiagramDelete";
+import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 
-const ConfirmationPermanentDelete = () => {
-    const isConfirmModalOpen = useUserStore(
-        (state) => state.isConfirmModalOpen
+const ReadOnlyMode = () => {
+    const isReadOnlyModalOpen = useUserStore(
+        (state) => state.isReadOnlyModalOpen
     );
-    const closeConfirmModal = useUserStore((state) => state.closeConfirmModal);
+    const closeReadOnlyModal = useUserStore((state) => state.closeReadOnlyModal);
     const currentDiagram = useDiagramStore(currentDiagramSelector);
-    const deleteDiagramPermanently = useDiagramStore(
-        (state) => state.deleteDiagramPermanently
+    const recoverDiagram = useDiagramStore(
+        (state) => state.recoverDiagram
     );
-    const mutationDelete = useDeleteDiagram();
+    const mutationRecover = useRecoverDiagram();
 
     const handleClose = useCallback(() => {
-        closeConfirmModal();
-    }, [closeConfirmModal]);
+        closeReadOnlyModal();
+    }, [closeReadOnlyModal]);
 
-    const handleConfirm = useCallback(() => {
-        deleteDiagramPermanently(mutationDelete);
-        closeConfirmModal()
-    }, [deleteDiagramPermanently, closeConfirmModal]);
+    const handleRecovery = useCallback(() => {
+        recoverDiagram(mutationRecover);
+        closeReadOnlyModal();
+    }, [recoverDiagram, closeReadOnlyModal]);
 
     return (
-        <Modal isOpen={isConfirmModalOpen} handleClose={handleClose}>
+        <Modal isOpen={isReadOnlyModalOpen} handleClose={handleClose}>
             <div className="flex flex-col items-center gap-4 p-4">
                 <Icon
                     icon={CloudIcon}
@@ -37,11 +37,10 @@ const ConfirmationPermanentDelete = () => {
                     className="-mb-4"
                 />
                 <h1 className="text-xl font-semibold">
-                    Delete Items Cannot Be Recovered
+                    Recently deleted diagrams can’t be edited.
                 </h1>
                 <p className="text-center">
-                    Are you sure you want to permanently delete this diagram "
-                    {currentDiagram?.name}"?
+                    To edit this diagram "{currentDiagram?.name}", you’ll need to recover it.
                 </p>
 
                 <div className="action-btns">
@@ -53,9 +52,9 @@ const ConfirmationPermanentDelete = () => {
                     </button>
                     <button
                         className="confirm-btn"
-                        onClick={handleConfirm}
+                        onClick={handleRecovery}
                     >
-                        Confirm
+                        Recover
                     </button>
                 </div>
             </div>
@@ -66,4 +65,4 @@ const ConfirmationPermanentDelete = () => {
     );
 };
 
-export default memo(ConfirmationPermanentDelete);
+export default memo(ReadOnlyMode);
