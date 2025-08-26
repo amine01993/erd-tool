@@ -1,5 +1,11 @@
 "use client";
-import { memo, useCallback, useEffect, useState } from "react";
+import {
+    memo,
+    MouseEvent as RMouseEvent,
+    useCallback,
+    useEffect,
+    useState,
+} from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { NumberSize, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
@@ -23,9 +29,15 @@ const persister = createAsyncStoragePersister({
 });
 
 export default memo(function Main() {
-    const showToast = useAlertStore(state => state.showToast);
-    const offLine = useUserStore(state => state.offLine);
-    const setOffLine = useUserStore(state => state.setOffLine);
+    const showToast = useAlertStore((state) => state.showToast);
+    const offLine = useUserStore((state) => state.offLine);
+    const setOffLine = useUserStore((state) => state.setOffLine);
+    const isThemeMenuOpen = useUserStore((state) => state.isThemeMenuOpen);
+    const isSettingsMenuOpen = useUserStore(
+        (state) => state.isSettingsMenuOpen
+    );
+    const closeThemeMenu = useUserStore((state) => state.closeThemeMenu);
+    const closeSettingsMenu = useUserStore((state) => state.closeSettingsMenu);
     const [entityPanelWidth, setEntityPanelWidth] = useState(300);
 
     const handleResize = useCallback(
@@ -38,6 +50,25 @@ export default memo(function Main() {
             setEntityPanelWidth(ref.clientWidth);
         },
         []
+    );
+
+    const handleOutsideClick = useCallback(
+        (event: RMouseEvent<HTMLDivElement>) => {
+            if (
+                isThemeMenuOpen &&
+                !(event.target as HTMLElement).closest(".theme-menu")
+            ) {
+                closeThemeMenu();
+            }
+
+            if (
+                isSettingsMenuOpen &&
+                !(event.target as HTMLElement).closest(".settings-menu")
+            ) {
+                closeSettingsMenu();
+            }
+        },
+        [isThemeMenuOpen, isSettingsMenuOpen]
     );
 
     useEffect(() => {
@@ -65,7 +96,10 @@ export default memo(function Main() {
             client={queryClient}
             persistOptions={{ persister }}
         >
-            <div className="h-screen w-full flex flex-col">
+            <div
+                className="h-screen w-full flex flex-col"
+                onClick={handleOutsideClick}
+            >
                 <Header />
                 <main
                     className={`grid flex-1 h-[calc(100vh-57px)]`}

@@ -13,7 +13,10 @@ import CloudIcon from "@iconify/icons-tabler/cloud";
 import CirclePlusIcon from "@iconify/icons-tabler/circle-plus";
 import CloudXIcon from "@iconify/icons-tabler/cloud-x";
 import RefreshIcon from "@iconify/icons-tabler/refresh";
-import useDiagramStore from "@/app/store/diagram";
+import useDiagramStore, {
+    disableRedoSelector,
+    disableUndoSelector,
+} from "@/app/store/diagram";
 import useUserStore from "@/app/store/user";
 import Theme from "../widgets/Theme";
 import Settings from "../widgets/Settings";
@@ -35,8 +38,8 @@ const Header = () => {
     const loading = useDiagramStore((state) => state.loading);
     const syncing = useDiagramStore((state) => state.syncing);
     const selectedDiagram = useDiagramStore((state) => state.selectedDiagram);
-    const disableUndo = useDiagramStore((state) => state.disableUndo);
-    const disableRedo = useDiagramStore((state) => state.disableRedo);
+    const disableUndo = useDiagramStore(disableUndoSelector);
+    const disableRedo = useDiagramStore(disableRedoSelector);
     const refreshing = useDiagramStore((state) => state.refreshing);
     const startRefreshing = useDiagramStore((state) => state.startRefreshing);
     const emptyDiagrams = useDiagramStore((state) => state.emptyDiagrams);

@@ -34,8 +34,6 @@ interface DiagramStoreProps {
     syncing: boolean;
     diagrams: DiagramData[];
     selectedDiagram: string;
-    disableUndo: boolean;
-    disableRedo: boolean;
     selectDiagram: (id: string) => void;
     getSelectedDiagram: () => DiagramData | undefined;
     getName: (prefix?: string, nbr?: number) => string;
@@ -121,8 +119,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     syncing: false,
     diagrams: getDiagramsFromLocalStorage(),
     selectedDiagram: "",
-    disableUndo: true,
-    disableRedo: true,
     selectDiagram(id: string) {
         const { selectedDiagram } = get();
         const { clearSelection } = useErdStore.getState();
@@ -163,15 +159,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         const currentDiagram = getSelectedDiagram();
         if (!currentDiagram) return;
         else if (currentDiagram.loaded) {
-            set({
-                disableUndo:
-                    currentDiagram?.history.current === undefined ||
-                    currentDiagram.history.current <= 0,
-                disableRedo:
-                    currentDiagram?.history.current === undefined ||
-                    currentDiagram.history.current >=
-                        currentDiagram.history.states.length - 1,
-            });
             setErd(currentDiagram);
             return currentDiagram;
         }
@@ -192,18 +179,10 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                         return {
                             ...diagram,
                             loaded: true,
-                            persisted: true,
                         };
                     }
                     return d;
                 }),
-                disableUndo:
-                    diagram?.history.current === undefined ||
-                    diagram.history.current <= 0,
-                disableRedo:
-                    diagram?.history.current === undefined ||
-                    diagram.history.current >=
-                        diagram.history.states.length - 1,
             });
             setErd(diagram);
             return diagram;
@@ -214,6 +193,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     ) {
         const { apiCall } = useUserStore.getState();
         const { category, clientOnly, diagrams, createDiagram } = get();
+        console.log("loadDiagrams called", { clientOnly, diagrams });
 
         if (!clientOnly && diagrams.length > 0) return;
 
@@ -274,11 +254,12 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     undoAction() {
         const {
             selectedDiagram,
-            disableUndo,
+
             persisting,
             diagrams,
             cloneDiagram,
         } = get();
+        const disableUndo = disableUndoSelector(get());
         const { setErd } = useErdStore.getState();
 
         if (disableUndo) return;
@@ -297,10 +278,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         set({
             diagrams: newDiagrams,
             persisting: persisting + 1,
-            disableUndo: diagram === undefined || diagram.history.current <= 0,
-            disableRedo:
-                diagram === undefined ||
-                diagram.history.current >= diagram.history.states.length - 1,
         });
         localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
 
@@ -309,13 +286,8 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         }
     },
     redoAction() {
-        const {
-            selectedDiagram,
-            disableRedo,
-            persisting,
-            diagrams,
-            cloneDiagram,
-        } = get();
+        const { selectedDiagram, persisting, diagrams, cloneDiagram } = get();
+        const disableRedo = disableRedoSelector(get());
         const { setErd } = useErdStore.getState();
 
         if (disableRedo) return;
@@ -334,10 +306,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         set({
             diagrams: newDiagrams,
             persisting: persisting + 1,
-            disableUndo: diagram === undefined || diagram.history.current <= 0,
-            disableRedo:
-                diagram === undefined ||
-                diagram.history.current >= diagram.history.states.length - 1,
         });
         localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
 
@@ -406,8 +374,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         set({
             diagrams: newDiagrams,
             selectedDiagram: newDiagram.id,
-            disableUndo: true,
-            disableRedo: true,
         });
         localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
 
@@ -448,8 +414,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         set({
             diagrams: newDiagrams,
             selectedDiagram: newDiagram.id,
-            disableUndo: true,
-            disableRedo: true,
         });
         localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
 
@@ -485,10 +449,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         set({
             persisting: persisting + 1,
             diagrams: newDiagrams,
-            disableUndo: diagram === undefined || diagram.history.current <= 0,
-            disableRedo:
-                diagram === undefined ||
-                diagram.history.current >= diagram.history.states.length - 1,
         });
         localStorage.setItem("diagrams", JSON.stringify(newDiagrams));
     },
@@ -546,8 +506,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 return {
                     ...d,
                     name,
-                    persisted: false,
-                    persistType: "update",
                 };
             }
             return d;
@@ -578,8 +536,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         if (newDiagrams.length === 0) {
             set({
                 diagrams: [],
-                disableUndo: true,
-                disableRedo: true,
             });
             localStorage.removeItem("diagrams");
         } else {
@@ -618,8 +574,6 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         if (newDiagrams.length === 0) {
             set({
                 diagrams: [],
-                disableUndo: true,
-                disableRedo: true,
             });
             localStorage.removeItem("diagrams");
         } else {
@@ -917,4 +871,25 @@ export default useDiagramStore;
 
 export const isReadOnlySelector = (state: DiagramStoreProps) => {
     return state.category === "deleted";
+};
+
+export const disableUndoSelector = (state: DiagramStoreProps) => {
+    if (state.loading || state.selectedDiagram === "") return true;
+    const currentDiagram = state.diagrams.find(
+        (d) => d.id === state.selectedDiagram
+    );
+    if (!currentDiagram || !currentDiagram.loaded) return true;
+    return currentDiagram.history.current <= 0;
+};
+
+export const disableRedoSelector = (state: DiagramStoreProps) => {
+    if (state.loading || state.selectedDiagram === "") return true;
+    const currentDiagram = state.diagrams.find(
+        (d) => d.id === state.selectedDiagram
+    );
+    if (!currentDiagram || !currentDiagram.loaded) return true;
+    return (
+        currentDiagram.history.current >=
+        currentDiagram.history.states.length - 1
+    );
 };

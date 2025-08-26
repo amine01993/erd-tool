@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { initialAttributeFormState } from "../hooks/AttributeForm";
+import { DiagramData } from "../type/DiagramType";
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -11,15 +12,13 @@ export const queryClient = new QueryClient({
 
 export const defaultAttributeValues = initialAttributeFormState.values;
 
-export const defaultDiagramValues = {
+export const defaultDiagramValues: DiagramData = {
     id: "",
     name: "",
     viewport: { x: 0, y: 0, zoom: 1 },
     createAt: new Date().toISOString(),
     lastUpdate: new Date().toISOString(),
     loaded: false,
-    persisted: false,
-    persistType: null,
     history: {
         current: 0,
         states: [],
