@@ -14,6 +14,7 @@ import CirclePlusIcon from "@iconify/icons-tabler/circle-plus";
 import CloudXIcon from "@iconify/icons-tabler/cloud-x";
 import RefreshIcon from "@iconify/icons-tabler/refresh";
 import TrashOffIcon from "@iconify/icons-tabler/trash-off";
+import { useQueryClient } from "@tanstack/react-query";
 import useDiagramStore, {
     disableRedoSelector,
     disableUndoSelector,
@@ -24,7 +25,6 @@ import Settings from "../widgets/Settings";
 import useDeleteDiagram from "@/app/hooks/DiagramDelete";
 import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
-import { queryClient } from "@/app/helper/variables";
 
 const Header = () => {
     const offLine = useUserStore((state) => state.offLine);
@@ -34,6 +34,7 @@ const Header = () => {
     const mutationAdd = useAddDiagram();
     const mutationDelete = useDeleteDiagram();
     const mutationRecover = useRecoverDiagram();
+    const queryClient = useQueryClient();
 
     const category = useDiagramStore((state) => state.category);
     const loading = useDiagramStore((state) => state.loading);
@@ -80,7 +81,7 @@ const Header = () => {
             openConfirmModal();
         }
         else {
-            deleteDiagram(mutationDelete, mutationAdd);
+            deleteDiagram(queryClient, mutationDelete, mutationAdd);
         }
     }, [deleteDiagram, openConfirmModal, category]);
 

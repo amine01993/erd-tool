@@ -26,12 +26,11 @@ const Sidebar = () => {
                 diagram.name.toLowerCase().includes(searchTerm.toLowerCase())
             )
             .slice();
-        if(category === "all") {
+        if (category === "all") {
             filtered.sort((a, b) => b.lastUpdate.localeCompare(a.lastUpdate));
-        }
-        else {
+        } else {
             filtered.sort((a, b) => {
-                if(!a.deletedAt || !b.deletedAt) {
+                if (!a.deletedAt || !b.deletedAt) {
                     return b.lastUpdate.localeCompare(a.lastUpdate);
                 }
                 return b.deletedAt.localeCompare(a.deletedAt);
@@ -63,6 +62,11 @@ const Sidebar = () => {
                 handleSearchChange={handleSearchChange}
             />
 
+            {category === "deleted" && diagrams.length > 0 && (
+                <div className="text-sm opacity-90 mb-2">
+                    Diagrams are available here for 30 days. After that time, they will be permanently deleted.
+                </div>
+            )}
             <ul
                 className={cc([
                     "diagram-list",

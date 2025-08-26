@@ -21,7 +21,7 @@ import {
     Viewport,
 } from "@xyflow/react";
 import { shallow } from "zustand/shallow";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import cc from "classcat";
 import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
@@ -113,6 +113,7 @@ const ERD = () => {
 
     const mutation = useUpdateDiagram();
     const mutationAdd = useAddDiagram();
+    const queryClient = useQueryClient();
 
     const { isSuccess, isError, isPending, error } = useQuery({
         queryKey: ["diagrams"],
@@ -235,7 +236,7 @@ const ERD = () => {
         let timeoutId: NodeJS.Timeout | null = null;
         if (selectedDiagram && persisting) {
             timeoutId = setTimeout(() => {
-                persistDiagram(mutation, mutationAdd);
+                persistDiagram(queryClient, mutation, mutationAdd);
             }, 500);
         }
         return () => {
@@ -250,7 +251,7 @@ const ERD = () => {
         let timeoutId: NodeJS.Timeout | null = null;
         if (selectedDiagram && persistingViewport) {
             timeoutId = setTimeout(() => {
-                persistDiagramViewport(mutation, mutationAdd);
+                persistDiagramViewport(queryClient, mutation, mutationAdd);
             }, 500);
         }
         return () => {

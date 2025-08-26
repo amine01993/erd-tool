@@ -1,14 +1,5 @@
-import { QueryClient } from "@tanstack/react-query";
 import { initialAttributeFormState } from "../hooks/AttributeForm";
 import { DiagramData } from "../type/DiagramType";
-
-export const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            gcTime: 1000 * 60 * 60 * 48,
-        },
-    },
-});
 
 export const defaultAttributeValues = initialAttributeFormState.values;
 

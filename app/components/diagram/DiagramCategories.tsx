@@ -2,8 +2,8 @@ import { memo } from "react";
 import { Icon } from "@iconify/react";
 import FolderOpenIcon from "@iconify/icons-tabler/folder-open";
 import TrashIcon from "@iconify/icons-tabler/trash";
+import { useQueryClient } from "@tanstack/react-query";
 import useDiagramStore from "@/app/store/diagram";
-import { queryClient } from "@/app/helper/variables";
 import useUserStore from "@/app/store/user";
 
 const DiagramCategories = () => {
@@ -11,6 +11,7 @@ const DiagramCategories = () => {
     const category = useDiagramStore((state) => state.category);
     const setCategory = useDiagramStore((state) => state.setCategory);
     const emptyDiagrams = useDiagramStore((state) => state.emptyDiagrams);
+    const queryClient = useQueryClient();
 
     const handleDisplayAll = () => {
         if(offLine || category === "all") return;

@@ -17,6 +17,7 @@ import { formatLastUpdate } from "@/app/helper/utils";
 import { DiagramData } from "@/app/type/DiagramType";
 import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface DiagramItemProps {
     searchTerm: string;
@@ -57,6 +58,7 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
     const showToast = useAlertStore((state) => state.showToast);
     const mutation = useUpdateDiagram();
     const mutationAdd = useAddDiagram();
+    const queryClient = useQueryClient();
 
     const [editName, setEditName] = useState(false);
     const [newName, setNewName] = useState(diagram.name);
@@ -103,7 +105,7 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
             event.preventDefault();
 
             setSubmitting(true);
-            updateDiagramName(mutation, mutationAdd, newName.trim()).then(
+            updateDiagramName(queryClient, mutation, mutationAdd, newName.trim()).then(
                 (data) => {
                     console.log("Update diagram name response:", data);
                     if (!data) {
