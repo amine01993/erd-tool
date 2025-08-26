@@ -17,6 +17,7 @@ const Sidebar = () => {
     const listRef = useRef<HTMLUListElement>(null);
     const category = useDiagramStore((state) => state.category);
     const diagrams = useDiagramStore((state) => state.diagrams);
+    const loadingDiagrams = useDiagramStore((state) => state.loadingDiagrams);
     const [searchTerm, setSearchTerm] = useState("");
     const [hasScrollbar, setHasScrollbar] = useState(false);
 
@@ -74,7 +75,7 @@ const Sidebar = () => {
                 ])}
                 ref={listRef}
             >
-                {diagrams.length === 0 && (
+                {loadingDiagrams && (
                     <>
                         <DiagramItemPlaceHolder />
                         <DiagramItemPlaceHolder />

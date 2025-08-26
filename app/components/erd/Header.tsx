@@ -43,12 +43,12 @@ const Header = () => {
     const disableUndo = useDiagramStore(disableUndoSelector);
     const disableRedo = useDiagramStore(disableRedoSelector);
     const refreshing = useDiagramStore((state) => state.refreshing);
+    const setCategory = useDiagramStore((state) => state.setCategory);
     const startRefreshing = useDiagramStore((state) => state.startRefreshing);
     const emptyDiagrams = useDiagramStore((state) => state.emptyDiagrams);
     const createDiagram = useDiagramStore((state) => state.createDiagram);
     const duplicateDiagram = useDiagramStore((state) => state.duplicateDiagram);
     const deleteDiagram = useDiagramStore((state) => state.deleteDiagram);
-    // const deleteDiagramPermanently = useDiagramStore((state) => state.deleteDiagramPermanently);
     const recoverDiagram = useDiagramStore((state) => state.recoverDiagram);
     const undoAction = useDiagramStore((state) => state.undoAction);
     const redoAction = useDiagramStore((state) => state.redoAction);
@@ -77,10 +77,9 @@ const Header = () => {
     }, [duplicateDiagram]);
 
     const handleDeleteDiagram = useCallback(() => {
-        if(category === "deleted") {
+        if (category === "deleted") {
             openConfirmModal();
-        }
-        else {
+        } else {
             deleteDiagram(queryClient, mutationDelete, mutationAdd);
         }
     }, [deleteDiagram, openConfirmModal, category]);
@@ -93,6 +92,8 @@ const Header = () => {
         function initAuthData() {
             retrieveAuthData()
                 .then(() => {
+                    setCategory("all");
+                    emptyDiagrams();
                     queryClient.invalidateQueries({ queryKey: ["diagrams"] });
                 })
                 .catch((error) => {

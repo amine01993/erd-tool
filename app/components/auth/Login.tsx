@@ -1,4 +1,4 @@
-import { FormEvent, memo, useCallback, useReducer } from "react";
+import { FormEvent, memo, useCallback, useReducer, useState } from "react";
 import { Icon } from "@iconify/react";
 import AlertCircleFilledIcon from "@iconify/icons-tabler/alert-circle-filled";
 import InputField from "../widgets/InputField";
@@ -10,7 +10,7 @@ import {
 import useUserStore from "@/app/store/user";
 
 const Login = ({ active }: { active: boolean }) => {
-    const login = useUserStore(state => state.login);
+    const login = useUserStore((state) => state.login);
     const [state, dispatch] = useReducer(loginReducer, initialLoginState);
     const {
         handleEmailUpdate,
@@ -18,15 +18,18 @@ const Login = ({ active }: { active: boolean }) => {
         handleEmailBlur,
         handlePasswordBlur,
     } = useLoginForm(dispatch);
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = useCallback(
         async (event: FormEvent) => {
             event.preventDefault();
+            if (loading) return;
 
             const isValid =
                 Object.values(state.errors).filter((err) => err !== undefined)
                     .length === 0;
             if (isValid) {
+                setLoading(true);
                 try {
                     await login(state.values.email, state.values.password);
                     dispatch({
@@ -36,12 +39,15 @@ const Login = ({ active }: { active: boolean }) => {
                 } catch (error: any) {
                     dispatch({
                         type: "SET_SERVER_ERROR",
-                        payload: error.toString(),
+                        payload: error.message || error.toString(),
                     });
+                }
+                finally {
+                    setLoading(false);
                 }
             }
         },
-        [state]
+        [state, loading]
     );
 
     return (
@@ -76,7 +82,7 @@ const Login = ({ active }: { active: boolean }) => {
                 onChange={handlePasswordUpdate}
                 onBlur={handlePasswordBlur}
             />
-            <button type="submit" className="auth-btn">
+            <button type="submit" disabled={loading} className="auth-btn">
                 Login
             </button>
         </form>

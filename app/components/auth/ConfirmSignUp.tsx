@@ -6,41 +6,54 @@ import { validateCode } from "@/app/helper/auth-validation";
 import ConfirmationInput from "./ConfirmationInput";
 
 const ConfirmSignUp = ({ active }: { active: boolean }) => {
-    const authDetail = useUserStore(state => state.authDetail);
-    const confirmSignUp = useUserStore(state => state.confirmSignUp);
-    const resendCode = useUserStore(state => state.resendCode);
+    const authDetail = useUserStore((state) => state.authDetail);
+    const confirmSignUp = useUserStore((state) => state.confirmSignUp);
+    const resendCode = useUserStore((state) => state.resendCode);
 
-    const [serverError, setServerError] = useState<string>("");
-    const [submitted, setSubmitted] = useState<boolean>(false);
-    const codeRef = useRef<string>("");
-    const [error, setError] = useState<string>("");
+    const [serverError, setServerError] = useState("");
+    const [submitted, setSubmitted] = useState(false);
+    const codeRef = useRef("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = useCallback(async (event: FormEvent) => {
-        setSubmitted(true);
-        event.preventDefault();
+    const handleSubmit = useCallback(
+        async (event: FormEvent) => {
+            setSubmitted(true);
+            event.preventDefault();
 
-        const validation = validateCode(codeRef.current);
-        if (!validation.valid) {
-            setError(validation.errors[0]);
-            return;
-        }
+            if (loading) return;
 
-        try {
-            await confirmSignUp(codeRef.current);
-            setServerError("");
-        } catch (error: any) {
-            setServerError(error.toString());
-        }
-    }, []);
+            const validation = validateCode(codeRef.current);
+            if (!validation.valid) {
+                setError(validation.errors[0]);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                await confirmSignUp(codeRef.current);
+                setServerError("");
+            } catch (error: any) {
+                setServerError(error.message || error.toString());
+            } finally {
+                setLoading(false);
+            }
+        },
+        [loading]
+    );
 
     const handleResend = useCallback(async () => {
+        if (loading) return;
         try {
+            setLoading(true);
             await resendCode();
             setServerError("");
         } catch (error: any) {
-            setServerError(error.toString());
+            setServerError(error.message || error.toString());
+        } finally {
+            setLoading(false);
         }
-    }, []);
+    }, [loading]);
 
     return (
         <form

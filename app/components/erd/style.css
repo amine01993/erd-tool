@@ -484,8 +484,9 @@
 
 .auth-btn {
     @apply flex gap-2 py-2 px-2.5 border-1 items-center w-fit self-end;
-    @apply bg-[#640d14] hover:bg-[#44090e] text-white font-semibold;
+    @apply bg-[#640d14] hover:not-disabled:bg-[#44090e] text-white font-semibold;
     @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 .auth-body {

@@ -1,4 +1,4 @@
-import { memo, useCallback, useReducer } from "react";
+import { memo, useCallback, useReducer, useState } from "react";
 import { Icon } from "@iconify/react";
 import AlertCircleFilledIcon from "@iconify/icons-tabler/alert-circle-filled";
 import InputField from "../widgets/InputField";
@@ -10,7 +10,7 @@ import {
 import useUserStore from "@/app/store/user";
 
 const Register = ({ active }: { active: boolean }) => {
-    const signup = useUserStore(state => state.signup);
+    const signup = useUserStore((state) => state.signup);
     const [state, dispatch] = useReducer(registerReducer, initialRegisterState);
     const {
         handleEmailUpdate,
@@ -21,14 +21,18 @@ const Register = ({ active }: { active: boolean }) => {
         handlePasswordBlur,
         handleConfirmPasswordBlur,
     } = useRegisterForm(dispatch);
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = useCallback(
         async (e: React.FormEvent) => {
             e.preventDefault();
+            if (loading) return;
+
             const isValid =
                 Object.values(state.errors).filter((err) => err !== undefined)
                     .length === 0;
             if (isValid) {
+                setLoading(true);
                 try {
                     await signup(
                         state.values.email,
@@ -42,12 +46,14 @@ const Register = ({ active }: { active: boolean }) => {
                 } catch (error: any) {
                     dispatch({
                         type: "SET_SERVER_ERROR",
-                        payload: error.toString(),
+                        payload: error.message || error.toString(),
                     });
+                } finally {
+                    setLoading(false);
                 }
             }
         },
-        [state]
+        [state, loading]
     );
 
     return (
@@ -96,7 +102,7 @@ const Register = ({ active }: { active: boolean }) => {
                 onChange={handleConfirmPasswordUpdate}
                 onBlur={handleConfirmPasswordBlur}
             />
-            <button type="submit" className="auth-btn">
+            <button type="submit" disabled={loading} className="auth-btn">
                 Register
             </button>
         </form>

@@ -31,6 +31,7 @@ interface DiagramStoreProps {
     persistingViewport: number;
     refreshing: boolean;
     loading: boolean;
+    loadingDiagrams: boolean;
     syncing: boolean;
     diagrams: DiagramData[];
     selectedDiagram: string;
@@ -156,6 +157,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     persistingViewport: 0,
     refreshing: false,
     loading: false,
+    loadingDiagrams: false,
     syncing: false,
     diagrams: getDiagramsFromLocalStorage(),
     selectedDiagram: "",
@@ -233,10 +235,10 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     ) {
         const { apiCall } = useUserStore.getState();
         const { category, clientOnly, diagrams, createDiagram } = get();
-        console.log("loadDiagrams called", { clientOnly, diagrams });
 
         if (!clientOnly && diagrams.length > 0) return;
 
+        set({ loadingDiagrams: true });
         let _diagrams: DiagramData[] = [];
 
         const response = await apiCall({
@@ -259,6 +261,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         const newDiagrams = _diagrams;
         set({
+            loadingDiagrams: false,
             clientOnly: false,
             refreshing: false,
             diagrams: newDiagrams,
