@@ -12,7 +12,6 @@ import { Direction } from "re-resizable/lib/resizer";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { QueryClient } from "@tanstack/react-query";
 import useAlertStore from "@/app/store/alert";
 import useUserStore from "@/app/store/user";
 import Header from "./Header";
@@ -25,6 +24,7 @@ import DiagramCategories from "../diagram/DiagramCategories";
 import ConfirmationPermanentDelete from "../diagram/ConfirmationPermanentDelete";
 import ReadOnlyMode from "../diagram/ReadOnlyMode";
 import EdgeInfo from "./EdgeInfo";
+import { queryClient } from "@/app/helper/variables";
 import "./style.css";
 
 const persister = createAsyncStoragePersister({
@@ -42,14 +42,6 @@ export default memo(function Main() {
     const closeThemeMenu = useUserStore((state) => state.closeThemeMenu);
     const closeSettingsMenu = useUserStore((state) => state.closeSettingsMenu);
     const [entityPanelWidth, setEntityPanelWidth] = useState(300);
-
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: {
-                gcTime: 1000 * 60 * 60 * 48,
-            },
-        },
-    });
 
     const handleResize = useCallback(
         (

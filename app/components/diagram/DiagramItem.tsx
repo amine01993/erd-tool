@@ -1,9 +1,11 @@
 import {
     ChangeEvent,
+    Dispatch,
     FormEvent,
     type KeyboardEvent,
     memo,
     type MouseEvent,
+    SetStateAction,
     useCallback,
     useEffect,
     useMemo,
@@ -17,7 +19,6 @@ import { formatLastUpdate } from "@/app/helper/utils";
 import { DiagramData } from "@/app/type/DiagramType";
 import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
-import { useQueryClient } from "@tanstack/react-query";
 
 interface DiagramItemProps {
     searchTerm: string;
@@ -47,27 +48,88 @@ const HighlightedName = memo(
     }
 );
 
-const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
+interface DiagramNameFormProps {
+    name: string;
+    setEditName: Dispatch<SetStateAction<boolean>>;
+}
+
+const DiagramNameForm = memo(({ name, setEditName }: DiagramNameFormProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
-    const selectedDiagram = useDiagramStore((state) => state.selectedDiagram);
-    const selectDiagram = useDiagramStore((state) => state.selectDiagram);
     const updateDiagramName = useDiagramStore(
         (state) => state.updateDiagramName
     );
-    const isReadOnly = useDiagramStore(isReadOnlySelector);
     const showToast = useAlertStore((state) => state.showToast);
     const mutation = useUpdateDiagram();
     const mutationAdd = useAddDiagram();
-    const queryClient = useQueryClient();
-
-    const [editName, setEditName] = useState(false);
-    const [newName, setNewName] = useState(diagram.name);
+    const [newName, setNewName] = useState(name);
     const [submitting, setSubmitting] = useState(false);
+
+    const handleNameChange = useCallback(
+        (event: ChangeEvent<HTMLInputElement>) => {
+            setNewName(event.target.value);
+        },
+        []
+    );
+
+    const handleNameBlur = useCallback(() => {
+        setEditName(false);
+        setNewName(name);
+    }, [name]);
+
+    const handleNameSubmit = useCallback(
+        (event: FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+
+            setSubmitting(true);
+            updateDiagramName(mutation, mutationAdd, newName.trim()).then(
+                (data) => {
+                    if (!data) {
+                        setEditName(false);
+                        return;
+                    }
+                    if (data.isValid) {
+                        setEditName(false);
+                    } else {
+                        showToast(data.message, "error");
+                    }
+                }
+            );
+            setSubmitting(false);
+        },
+        [newName]
+    );
+
+    useEffect(() => {
+        if (!submitting && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [submitting]);
+
+    return (
+        <form onSubmit={handleNameSubmit} className="diagram-name-form">
+            <input
+                ref={inputRef}
+                name="diagramName"
+                value={newName}
+                disabled={submitting}
+                onChange={handleNameChange}
+                onBlur={handleNameBlur}
+            />
+        </form>
+    );
+});
+
+const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
+    const selectedDiagram = useDiagramStore((state) => state.selectedDiagram);
+    const selectDiagram = useDiagramStore((state) => state.selectDiagram);
+    const isReadOnly = useDiagramStore(isReadOnlySelector);
+    const [editName, setEditName] = useState(false);
+    const [lastUpdateCounter, setLastUpdateCounter] = useState(0);
 
     const lastUpdate = useMemo(() => {
         const date = new Date(diagram.lastUpdate);
         return formatLastUpdate(date);
-    }, [diagram.lastUpdate]);
+    }, [diagram.lastUpdate, lastUpdateCounter]);
 
     const handleEditName = useCallback(
         (
@@ -88,45 +150,6 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
         [selectedDiagram, isReadOnly]
     );
 
-    const handleNameChange = useCallback(
-        (event: ChangeEvent<HTMLInputElement>) => {
-            setNewName(event.target.value);
-        },
-        []
-    );
-
-    const handleNameBlur = useCallback(() => {
-        setEditName(false);
-        setNewName(diagram.name);
-    }, []);
-
-    const handleNameSubmit = useCallback(
-        (event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-
-            setSubmitting(true);
-            updateDiagramName(queryClient, mutation, mutationAdd, newName.trim()).then(
-                (data) => {
-                    console.log("Update diagram name response:", data);
-                    if (!data) {
-                        setEditName(false);
-                        return;
-                    }
-                    if (data.isValid) {
-                        setEditName(false);
-                        showToast("Name updated successfully", "success");
-                    } else {
-                        showToast(data.message, "error");
-                    }
-                }
-            );
-            // .finally(() => {
-            // });
-            setSubmitting(false);
-        },
-        [newName]
-    );
-
     const handleDiagramSelection = useCallback(
         (event: MouseEvent<HTMLButtonElement>) => {
             const diagramId = event.currentTarget.dataset.id;
@@ -137,10 +160,14 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
     );
 
     useEffect(() => {
-        if (editName && !submitting && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [editName, submitting]);
+        const timeout = setTimeout(() => {
+            setLastUpdateCounter(lastUpdateCounter + 1);
+        }, 10000);
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, [lastUpdateCounter]);
 
     return (
         <button
@@ -168,17 +195,11 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
                     />
                 </p>
             )}
-            {editName && (
-                <form onSubmit={handleNameSubmit} className="diagram-name-form">
-                    <input
-                        ref={inputRef}
-                        name="diagramName"
-                        value={newName}
-                        disabled={submitting}
-                        onChange={handleNameChange}
-                        onBlur={handleNameBlur}
-                    />
-                </form>
+            {editName && !isReadOnly && (
+                <DiagramNameForm
+                    name={diagram.name}
+                    setEditName={setEditName}
+                />
             )}
             <p className="text-sm mt-0.5">{lastUpdate}</p>
         </button>

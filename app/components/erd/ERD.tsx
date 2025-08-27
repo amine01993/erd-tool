@@ -106,7 +106,6 @@ const ERD = () => {
 
     const mutation = useUpdateDiagram();
     const mutationAdd = useAddDiagram();
-    const queryClient = useQueryClient();
 
     const { isSuccess, isError, isPending, error } = useQuery({
         queryKey: ["diagrams"],
@@ -229,7 +228,7 @@ const ERD = () => {
         let timeoutId: NodeJS.Timeout | null = null;
         if (selectedDiagram && persisting) {
             timeoutId = setTimeout(() => {
-                persistDiagram(queryClient, mutation, mutationAdd);
+                persistDiagram(mutation, mutationAdd);
             }, 500);
         }
         return () => {
@@ -244,7 +243,7 @@ const ERD = () => {
         let timeoutId: NodeJS.Timeout | null = null;
         if (selectedDiagram && persistingViewport) {
             timeoutId = setTimeout(() => {
-                persistDiagramViewport(queryClient, mutation, mutationAdd);
+                persistDiagramViewport(mutation, mutationAdd);
             }, 500);
         }
         return () => {
