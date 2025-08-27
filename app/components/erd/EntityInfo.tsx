@@ -12,13 +12,17 @@ import InputField from "../widgets/InputField";
 import { EntityData } from "../../type/EntityType";
 import AttributeList from "./AttributeList";
 import AttributeForm from "./AttributeForm";
-import { entityFormReducer, initialEntityState, useEntityForm } from "@/app/hooks/EntityForm";
+import {
+    entityFormReducer,
+    initialEntityState,
+    useEntityForm,
+} from "@/app/hooks/EntityForm";
 
 const EntityInfo = () => {
-    const selectedNodeId = useErdStore(state => state.selectedNodeId);
-    const nodes = useErdStore(state => state.nodes);
-    const removeAttribute = useErdStore(state => state.removeAttribute);
-    const updateEntityName = useErdStore(state => state.updateEntityName);
+    const selectedNodeId = useErdStore((state) => state.selectedNodeId);
+    const nodes = useErdStore((state) => state.nodes);
+    const removeAttribute = useErdStore((state) => state.removeAttribute);
+    const updateEntityName = useErdStore((state) => state.updateEntityName);
     const isReadOnly = useDiagramStore(isReadOnlySelector);
     const [selectedData, setSelectedData] = useState<EntityData>();
     const [editingAttribute, setEditingAttribute] = useState<string | null>(
@@ -92,9 +96,9 @@ const EntityInfo = () => {
     }, [selectedNodeId, state.value, state.isValid]);
 
     return (
-        <div className="entity-info">
+        <>
             {selectedNodeId && !isReadOnly && (
-                <>
+                <div className="entity-info">
                     <div className="details">
                         <InputField
                             label="Entity"
@@ -130,9 +134,9 @@ const EntityInfo = () => {
                             </>
                         )}
                     </div>
-                </>
+                </div>
             )}
-        </div>
+        </>
     );
 };
 

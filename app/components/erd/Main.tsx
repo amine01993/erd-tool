@@ -24,6 +24,7 @@ import Toast from "./Toast";
 import DiagramCategories from "../diagram/DiagramCategories";
 import ConfirmationPermanentDelete from "../diagram/ConfirmationPermanentDelete";
 import ReadOnlyMode from "../diagram/ReadOnlyMode";
+import EdgeInfo from "./EdgeInfo";
 import "./style.css";
 
 const persister = createAsyncStoragePersister({
@@ -147,6 +148,7 @@ export default memo(function Main() {
                     >
                         <div className="bg-[#fefbfb] text-black p-3 pb-0 border-l border-gray-400 h-full">
                             <EntityInfo />
+                            <EdgeInfo />
                         </div>
                     </Resizable>
                 </main>

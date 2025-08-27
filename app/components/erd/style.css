@@ -437,6 +437,38 @@
     }
 }
 
+.edge-info {
+    @apply flex flex-col h-full;
+
+    button {
+        @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
+    }
+
+    .details {
+        @apply flex-1 h-full flex flex-col text-[#640D14];
+
+
+        .edge-form {
+            scrollbar-width: thin;
+            scrollbar-color: #640d14 #fefbfb;
+            @apply flex flex-col gap-2 relative;
+            @apply overflow-y-auto overflow-x-hidden h-full;
+        }
+
+        .select-field {
+            @apply flex flex-col;
+
+            label {
+                @apply font-medium;
+            }
+
+            select {
+                @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
+            }
+        }
+    }
+}
+
 .resize-handle {
     &::before,
     &::after {

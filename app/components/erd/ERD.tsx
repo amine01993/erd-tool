@@ -36,6 +36,7 @@ import { ErdEdgeData } from "@/app/type/EdgeType";
 import Loading from "./Loading";
 import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
+import { defaultEdgeOptions } from "@/app/helper/variables";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -64,32 +65,24 @@ const selector = (state: ErdState) => ({
 
 const nodeOrigin: [number, number] = [0.5, 0];
 
-const defaultEdgeOptions = {
-    type: "erd-edge",
-    markerStart: "edge-one-marker-start",
-    markerEnd: "edge-many-marker-end",
-    data: {
-        order: 1,
-        length: 1,
-        startValue: "1",
-        endValue: "*",
-    },
-};
-
 const ERD = () => {
     const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
     const connectingNodeId = useRef<string | null>(null);
     const { screenToFlowPosition, setViewport, fitView } = useReactFlow();
 
-    const loading = useDiagramStore(state => state.loading);
-    const persisting = useDiagramStore(state => state.persisting);
-    const persistingViewport = useDiagramStore(state => state.persistingViewport);
-    const selectedDiagram = useDiagramStore(state => state.selectedDiagram);
-    const loadDiagrams = useDiagramStore(state => state.loadDiagrams);
-    const loadDiagram = useDiagramStore(state => state.loadDiagram);
-    const saveViewport = useDiagramStore(state => state.saveViewport);
-    const persistDiagram = useDiagramStore(state => state.persistDiagram);
-    const persistDiagramViewport = useDiagramStore(state => state.persistDiagramViewport);
+    const loading = useDiagramStore((state) => state.loading);
+    const persisting = useDiagramStore((state) => state.persisting);
+    const persistingViewport = useDiagramStore(
+        (state) => state.persistingViewport
+    );
+    const selectedDiagram = useDiagramStore((state) => state.selectedDiagram);
+    const loadDiagrams = useDiagramStore((state) => state.loadDiagrams);
+    const loadDiagram = useDiagramStore((state) => state.loadDiagram);
+    const saveViewport = useDiagramStore((state) => state.saveViewport);
+    const persistDiagram = useDiagramStore((state) => state.persistDiagram);
+    const persistDiagramViewport = useDiagramStore(
+        (state) => state.persistDiagramViewport
+    );
 
     const {
         nodes,
@@ -102,8 +95,8 @@ const ERD = () => {
         addEntity,
         addSelfConnection,
     } = useErdStore(selector, shallow);
-    
-    const selectedItem = useErdItemsStore(state => state.selectedItem);
+
+    const selectedItem = useErdItemsStore((state) => state.selectedItem);
 
     useOnViewportChange({
         onEnd: (viewport: Viewport) => {
@@ -140,7 +133,7 @@ const ERD = () => {
             return Promise.resolve(0);
         },
         enabled: selectedDiagram !== "",
-        networkMode: "always"
+        networkMode: "always",
     });
 
     const onConnectEnd = useCallback(
@@ -261,7 +254,6 @@ const ERD = () => {
             }
         };
     }, [selectedDiagram, persistingViewport]);
-
 
     return (
         <div

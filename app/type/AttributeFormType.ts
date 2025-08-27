@@ -10,9 +10,6 @@ export interface AttributeFormState {
         isPrimaryKey: boolean;
         isAutoIncrement: boolean;
         isUnique: boolean;
-        isForeignKey: boolean;
-        foreignKeyTable: string;
-        foreignKeyColumn: string;
         length: number;
         precision: number;
         scale: number;

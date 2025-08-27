@@ -1,4 +1,5 @@
 import { attributeTypes } from "../type/AttributeType";
+import { AttributeData } from "../type/EntityType";
 
 // prettier-ignore
 const reserved = new Set([
@@ -95,4 +96,33 @@ export function validateDefault(value: any, type: keyof typeof attributeTypes) {
         valid: errors.length === 0,
         errors,
     };
+}
+
+export function checkCompatibility(pk: AttributeData, fk: AttributeData) {
+    // Check if the source and target columns are compatible
+    if (pk.type === "text" && fk.type === "text") return true;
+    if (pk.type === "string" && fk.type === "string") {
+        const pkLen = pk.length || 255;
+        const fkLen = fk.length || 255;
+        if (pkLen <= fkLen) return true;
+    }
+
+    if (pk.type === "largeint" && fk.type === "largeint") return true;
+    if (pk.type === "integer" && fk.type === "integer") return true;
+    if (pk.type === "smallint" && fk.type === "smallint") return true;
+
+    if (pk.type === "double" && fk.type === "double") return true;
+    if (pk.type === "float" && fk.type === "float") return true;
+
+
+    if (pk.type === "numeric" && fk.type === "numeric") {
+        const pkPrecision = pk.precision || 38;
+        const fkPrecision = fk.precision || 38;
+        const pkScale = pk.scale || 0;
+        const fkScale = fk.scale || 0;
+
+        if (pkPrecision === fkPrecision && pkScale === fkScale) return true;
+    }
+
+    return false;
 }

@@ -12,6 +12,7 @@ import {
     NodeSelectionChange,
     NodePositionChange,
     NodeDimensionChange,
+    EdgeSelectionChange,
 } from "@xyflow/react";
 import { createWithEqualityFn } from "zustand/traditional";
 import { nanoid } from "nanoid";
@@ -20,9 +21,11 @@ import useUserStore from "./user";
 import { DiagramData } from "../type/DiagramType";
 import { EntityData, AttributeData } from "../type/EntityType";
 import { ErdEdgeData } from "../type/EdgeType";
+import { defaultEdgeOptions } from "../helper/variables";
 
 export type ErdState = {
     selectedNodeId: string | null;
+    selectedEdgeId: string | null;
     loaded: boolean;
     nodes: Node<EntityData>[];
     edges: Edge<ErdEdgeData>[];
@@ -45,15 +48,23 @@ export type ErdState = {
     editAttribute: (id: string, attribute: AttributeData) => void;
     removeAttribute: (id: string, attributeId: string) => void;
     updateEntityName: (id: string, newName: string) => void;
+    handleForeignKeyConstraint: (
+        oldForeignKey: string,
+        foreignKey: string,
+        reference: string,
+        onDelete: string,
+        onUpdate: string
+    ) => void;
 };
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     selectedNodeId: null,
+    selectedEdgeId: null,
     loaded: false,
     nodes: [],
     edges: [],
     clearSelection() {
-        set({ selectedNodeId: null });
+        set({ selectedNodeId: null, selectedEdgeId: null });
     },
     setErd(diagram: DiagramData) {
         const state = diagram.history.states[diagram.history.current];
@@ -144,20 +155,32 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             nodes: newNodes as any,
             loaded: true,
         });
+        if (selectedId) {
+            set({ selectedEdgeId: null });
+        }
 
         if (loaded && saving) {
             saveDiagram(newNodes as any, edges);
         }
     },
     onEdgesChange: (changes: EdgeChange[]) => {
-        const { edges, nodes, getMarkersName } = get();
+        const { selectedEdgeId, edges, nodes, getMarkersName } = get();
         const { saveDiagram } = useDiagramStore.getState();
         const { openReadOnlyModal } = useUserStore.getState();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
-        let saving = false;
+        let saving = false,
+            selectedId = selectedEdgeId,
+            removedId = null;
         for (const change of changes) {
+            const selected = (change as EdgeSelectionChange).selected;
+
+            if (selected) {
+                selectedId = (change as EdgeSelectionChange).id;
+            }
+
             if (change.type === "remove") {
                 saving = true;
+                removedId = change.id;
             }
         }
 
@@ -165,6 +188,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             openReadOnlyModal();
             return;
         }
+
+        const deletedEdge = edges.find((e) => e.id === removedId);
 
         const newEdges = applyEdgeChanges(changes, edges);
         newEdges.forEach((e) => {
@@ -181,11 +206,45 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 e.markerEnd = markerEnd;
             }
         });
-        set({
-            edges: newEdges as any,
+
+        const newNodes = nodes.map((n) => {
+            if (
+                (n.id === deletedEdge?.source ||
+                    n.id === deletedEdge?.target) &&
+                n.data.name === deletedEdge?.data?.foreignKeyTable
+            ) {
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        attributes: n.data.attributes.map((attr) => {
+                            if (
+                                attr.name ===
+                                deletedEdge?.data?.foreignKeyColumn
+                            ) {
+                                return {
+                                    ...attr,
+                                    isForeignKey: false,
+                                };
+                            }
+                            return attr;
+                        }),
+                    },
+                };
+            }
+            return n;
         });
+
+        set({
+            selectedEdgeId: selectedId,
+            edges: newEdges as any,
+            nodes: newNodes,
+        });
+        if (selectedId) {
+            set({ selectedNodeId: null });
+        }
         if (saving) {
-            saveDiagram(nodes, newEdges as any);
+            saveDiagram(newNodes, newEdges as any);
         }
     },
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => {
@@ -232,6 +291,20 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             )
             .map((e) => e.id);
 
+        const sourceNode = nodes.find((n) => n.id === source);
+        const targetNode = nodes.find((n) => n.id === target);
+
+        let primaryKeyColumn =
+            sourceNode?.data.attributes.find((attr) => attr.isPrimaryKey)
+                ?.name ?? "";
+        let primaryKeyTable = sourceNode?.data.name ?? "";
+        if (!primaryKeyColumn) {
+            primaryKeyColumn =
+                targetNode?.data.attributes.find((attr) => attr.isPrimaryKey)
+                    ?.name ?? "";
+            primaryKeyTable = targetNode?.data.name ?? "";
+        }
+
         const newEdge: Edge<ErdEdgeData> = {
             id: nanoid(),
             source,
@@ -241,6 +314,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 length: sharedEdges.length + 1,
                 startValue: "1",
                 endValue: "*",
+                primaryKeyColumn,
+                primaryKeyTable,
+                foreignKeyColumn: "",
+                foreignKeyTable: "",
             },
         };
 
@@ -315,6 +392,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
 
         let name = getName();
 
+        const sourceNode = nodes.find((n) => n.id === fromId);
+
+        let primaryKeyColumn =
+            sourceNode?.data.attributes.find((attr) => attr.isPrimaryKey)
+                ?.name ?? "";
+        let primaryKeyTable = sourceNode?.data.name ?? "";
+
         const newNode: Node<EntityData> = {
             id: nanoid(),
             position,
@@ -327,6 +411,11 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             id: nanoid(),
             source: fromId,
             target: newNode.id,
+            data: {
+                ...defaultEdgeOptions.data,
+                primaryKeyColumn,
+                primaryKeyTable,
+            },
         };
 
         const newNodes = [...nodes, newNode];
@@ -354,6 +443,13 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             .filter((e) => e.source === nodeId && e.target === nodeId)
             .map((e) => e.id);
 
+        const sourceNode = nodes.find((n) => n.id === nodeId);
+
+        let primaryKeyColumn =
+            sourceNode?.data.attributes.find((attr) => attr.isPrimaryKey)
+                ?.name ?? "";
+        let primaryKeyTable = sourceNode?.data.name ?? "";
+
         const newEdge: Edge<ErdEdgeData> = {
             id: nanoid(),
             source: nodeId,
@@ -365,6 +461,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 length: sharedEdges.length + 1,
                 startValue: "1",
                 endValue: "1",
+                primaryKeyColumn,
+                primaryKeyTable,
+                foreignKeyColumn: "",
+                foreignKeyTable: "",
             },
         };
 
@@ -566,6 +666,86 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             saveDiagram(newNodes, edges);
         }
     },
-}));
+    handleForeignKeyConstraint(
+        oldForeignKey: string,
+        foreignKey: string,
+        reference: string,
+        onDelete: string,
+        onUpdate: string
+    ) {
+        const { selectedEdgeId, nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
+        const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
+        const [oldForeignKeyTable, oldForeignKeyColumn] =
+            oldForeignKey.split(".");
+        const [foreignKeyTable, foreignKeyColumn] = foreignKey.split(".");
+        const [referenceTable, referenceColumn] = reference.split(".");
+
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
+
+        const newEdges = edges.map((e) => {
+            if (e.id === selectedEdgeId) {
+                return {
+                    ...e,
+                    data: {
+                        ...e.data,
+                        primaryKeyColumn: referenceColumn,
+                        primaryKeyTable: referenceTable,
+                        foreignKeyColumn,
+                        foreignKeyTable,
+                        onDelete,
+                        onUpdate,
+                    } as ErdEdgeData,
+                };
+            }
+            return e;
+        });
+
+        const newNodes = nodes.map((n) => {
+            if (n.data.name === oldForeignKeyTable) {
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        attributes: n.data.attributes.map((a) => {
+                            if (a.name !== oldForeignKeyColumn) return a;
+                            return {
+                                ...a,
+                                isForeignKey: false,
+                            };
+                        }),
+                    },
+                };
+            }
+            if (n.data.name === foreignKeyTable) {
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        attributes: n.data.attributes.map((a) => {
+                            if (a.name !== foreignKeyColumn) return a;
+                            return {
+                                ...a,
+                                isForeignKey: true,
+                            };
+                        }),
+                    },
+                };
+            }
+            return n;
+        });
+
+        set({
+            nodes: newNodes,
+            edges: newEdges,
+        });
+
+        saveDiagram(newNodes, newEdges);
+    },
+}));
 export default useErdStore;

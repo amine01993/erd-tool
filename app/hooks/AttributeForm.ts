@@ -51,27 +51,6 @@ export function useAttributeForm(
             label: type,
         }));
     }, []);
-    const referenceOptions = useMemo(() => {
-        const options = [];
-        for (const node of nodes) {
-            for (const attribute of node.data.attributes) {
-                if (attribute.isPrimaryKey) {
-                    options.push({
-                        value: `${node.data.name}.${attribute.name}`,
-                        label: `${node.data.name}.${attribute.name}`,
-                    });
-                }
-            }
-        }
-        return options;
-    }, []);
-    const referenceColumn = useMemo(() => {
-        if (!state.values.foreignKeyTable || !state.values.foreignKeyColumn)
-            return "";
-        return (
-            state.values.foreignKeyTable + "." + state.values.foreignKeyColumn
-        );
-    }, [state.values.foreignKeyTable, state.values.foreignKeyColumn]);
     const showLength = useMemo(() => {
         return state.values.type === "string";
     }, [state.values.type]);
@@ -187,26 +166,6 @@ export function useAttributeForm(
         []
     );
     const handleUniqueChange = useCallback(handleCheckBoxField("isUnique"), []);
-    const handleForeignKeyChange = useCallback(
-        handleCheckBoxField("isForeignKey"),
-        []
-    );
-    const handleReferenceChange = useCallback(
-        (event: ChangeEvent<HTMLSelectElement>) => {
-            const [table, column] = event.target.value.split(".");
-            dispatch({
-                type: "SET_FIELD",
-                field: "foreignKeyTable",
-                value: table,
-            });
-            dispatch({
-                type: "SET_FIELD",
-                field: "foreignKeyColumn",
-                value: column,
-            });
-        },
-        []
-    );
     const handleUnicodeChange = useCallback(
         handleCheckBoxField("isUnicode"),
         []
@@ -247,8 +206,6 @@ export function useAttributeForm(
 
     return {
         typeOptions,
-        referenceOptions,
-        referenceColumn,
         showLength,
         showAutoIncrement,
         showDefaultAndCurrent,
@@ -266,11 +223,9 @@ export function useAttributeForm(
         handleDefaultChange,
         handleDescriptionChange,
         handleUnicodeChange,
-        handleReferenceChange,
         handleCurrentChange,
         handleNameChange,
         handleNullableChange,
-        handleForeignKeyChange,
         handleUniqueChange,
         handlePrecisionChange,
         handlePrimaryKeyChange,
@@ -290,9 +245,6 @@ export const initialAttributeFormState: AttributeFormState = {
         isPrimaryKey: false,
         isAutoIncrement: false,
         isUnique: false,
-        isForeignKey: false,
-        foreignKeyTable: "",
-        foreignKeyColumn: "",
         length: 255,
         precision: 10,
         scale: 0,

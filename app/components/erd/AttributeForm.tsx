@@ -37,9 +37,9 @@ const AttributeForm = ({
     setSelectedData,
 }: AttributeFormProps) => {
     const attributesRef = useRef<HTMLDivElement>(null);
-    const selectedNodeId = useErdStore(state => state.selectedNodeId);
-    const addAttribute = useErdStore(state => state.addAttribute);
-    const editAttribute = useErdStore(state => state.editAttribute);
+    const selectedNodeId = useErdStore((state) => state.selectedNodeId);
+    const addAttribute = useErdStore((state) => state.addAttribute);
+    const editAttribute = useErdStore((state) => state.editAttribute);
 
     const [state, dispatch] = useReducer(
         attributeFormReducer,
@@ -54,8 +54,6 @@ const AttributeForm = ({
         showUnicode,
         showLength,
         showPrecisionAndScale,
-        referenceOptions,
-        referenceColumn,
         isDefaultValueDisabled,
         handleNameBlur,
         handleLengthBlur,
@@ -72,8 +70,6 @@ const AttributeForm = ({
         handlePrimaryKeyChange,
         handleAutoIncrementChange,
         handleUniqueChange,
-        handleForeignKeyChange,
-        handleReferenceChange,
         handleNullableChange,
         handleDescriptionChange,
         handleUnicodeChange,
@@ -246,17 +242,6 @@ const AttributeForm = ({
                     label="Unique"
                     checked={state.values.isUnique}
                     onChange={handleUniqueChange}
-                />
-                <CheckBoxField
-                    label="Foreign Key"
-                    checked={state.values.isForeignKey}
-                    onChange={handleForeignKeyChange}
-                />
-                <SelectField
-                    label="Reference"
-                    list={referenceOptions}
-                    value={referenceColumn}
-                    onChange={handleReferenceChange}
                 />
                 {showNullable && (
                     <CheckBoxField

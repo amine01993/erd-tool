@@ -464,11 +464,10 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
     },
     saveDiagram(nodes: Node<EntityData>[], edges: Edge<ErdEdgeData>[]) {
         const { persisting, selectedDiagram, diagrams, cloneDiagram } = get();
-        let diagram: DiagramData | undefined;
+
         const newDiagrams = diagrams.map((d) => {
             if (d.id !== selectedDiagram) return d;
             const cd = cloneDiagram(d);
-            diagram = cd;
             if (cd.history.current === cd.history.states.length - 1) {
                 cd.history.states.push({
                     nodes,

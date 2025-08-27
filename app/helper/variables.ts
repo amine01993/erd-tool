@@ -27,6 +27,10 @@ export const defaultEdgeValues = {
         length: 0,
         startValue: "",
         endValue: "",
+        primaryKeyColumn: "",
+        primaryKeyTable: "",
+        foreignKeyColumn: "",
+        foreignKeyTable: "",
     },
 };
 
@@ -38,4 +42,20 @@ export const defaultNodeValues = {
     },
     position: { x: 0, y: 0 },
     type: "entity",
+};
+
+export const defaultEdgeOptions = {
+    type: "erd-edge",
+    markerStart: "edge-one-marker-start",
+    markerEnd: "edge-many-marker-end",
+    data: {
+        order: 1,
+        length: 1,
+        startValue: "1",
+        endValue: "*",
+        primaryKeyColumn: "",
+        primaryKeyTable: "",
+        foreignKeyColumn: "",
+        foreignKeyTable: "",
+    },
 };
