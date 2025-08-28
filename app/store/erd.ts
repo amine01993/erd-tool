@@ -53,7 +53,8 @@ export type ErdState = {
         foreignKey: string,
         reference: string,
         onDelete: string,
-        onUpdate: string
+        onUpdate: string,
+        edgePosition: string
     ) => void;
 };
 
@@ -671,7 +672,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         foreignKey: string,
         reference: string,
         onDelete: string,
-        onUpdate: string
+        onUpdate: string,
+        edgePosition: string
     ) {
         const { selectedEdgeId, nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
@@ -688,19 +690,26 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             return;
         }
 
+        const edgeData = {
+            primaryKeyColumn: referenceColumn,
+            primaryKeyTable: referenceTable,
+            foreignKeyColumn,
+            foreignKeyTable,
+            onDelete,
+            onUpdate,
+        } as ErdEdgeData;
+        if (edgePosition) {
+            edgeData.edgePosition = edgePosition;
+        }
+
         const newEdges = edges.map((e) => {
             if (e.id === selectedEdgeId) {
                 return {
                     ...e,
                     data: {
                         ...e.data,
-                        primaryKeyColumn: referenceColumn,
-                        primaryKeyTable: referenceTable,
-                        foreignKeyColumn,
-                        foreignKeyTable,
-                        onDelete,
-                        onUpdate,
-                    } as ErdEdgeData,
+                        ...edgeData,
+                    },
                 };
             }
             return e;

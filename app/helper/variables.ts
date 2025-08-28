@@ -25,6 +25,13 @@ export const defaultDiagramValues: DiagramData = {
     },
 };
 
+export const defaultEdgeDataValues = {
+    order: 0,
+    length: 0,
+    startValue: "",
+    endValue: "",
+};
+
 export const defaultEdgeValues = {
     id: "",
     source: "",
@@ -32,14 +39,7 @@ export const defaultEdgeValues = {
     markerStart: null,
     markerEnd: null,
     data: {
-        order: 0,
-        length: 0,
-        startValue: "",
-        endValue: "",
-        primaryKeyColumn: "",
-        primaryKeyTable: "",
-        foreignKeyColumn: "",
-        foreignKeyTable: "",
+        ...defaultEdgeDataValues,
     },
 };
 
@@ -62,9 +62,5 @@ export const defaultEdgeOptions = {
         length: 1,
         startValue: "1",
         endValue: "*",
-        primaryKeyColumn: "",
-        primaryKeyTable: "",
-        foreignKeyColumn: "",
-        foreignKeyTable: "",
     },
 };

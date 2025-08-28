@@ -11,9 +11,11 @@ export type EdgeInfoData = {
         reference: string;
         onDelete: string;
         onUpdate: string;
+        edgePosition: string;
     };
     primaryKeys: { column: AttributeData; tableName: string }[];
     foreignKeys: { column: AttributeData; tableName: string }[];
+    uniqueTables: Set<string>;
 };
 
 const EdgeInfo = () => {
@@ -27,9 +29,11 @@ const EdgeInfo = () => {
             reference: "",
             onDelete: "RESTRICT",
             onUpdate: "RESTRICT",
+            edgePosition: "l-r",
         },
         primaryKeys: [],
         foreignKeys: [],
+        uniqueTables: new Set(),
     });
 
     useEffect(() => {
@@ -39,6 +43,7 @@ const EdgeInfo = () => {
                 reference: "",
                 onDelete: "RESTRICT",
                 onUpdate: "RESTRICT",
+                edgePosition: "l-r",
             };
 
             const selectedEdge = edges.find(
@@ -53,6 +58,7 @@ const EdgeInfo = () => {
                     primaryKeyColumn,
                     onDelete,
                     onUpdate,
+                    edgePosition,
                 } = selectedEdge.data;
                 if (foreignKeyTable) {
                     currentData.foreignKey =
@@ -68,12 +74,16 @@ const EdgeInfo = () => {
                 if (onUpdate) {
                     currentData.onUpdate = onUpdate;
                 }
+                if (edgePosition) {
+                    currentData.edgePosition = edgePosition;
+                }
             }
 
             const primaryKeys: { column: AttributeData; tableName: string }[] =
                 [];
             const foreignKeys: { column: AttributeData; tableName: string }[] =
                 [];
+            const uniqueTables = new Set<string>();
 
             const connectedNodesData = nodes
                 .filter(
@@ -91,6 +101,7 @@ const EdgeInfo = () => {
                             column: attr,
                             tableName: nd.name,
                         });
+                        uniqueTables.add(nd.name);
                     }
                 }
             }
@@ -106,6 +117,7 @@ const EdgeInfo = () => {
                             column: attr,
                             tableName: nd.name,
                         });
+                        uniqueTables.add(nd.name);
                     }
                 }
             }
@@ -114,6 +126,7 @@ const EdgeInfo = () => {
                 currentData,
                 primaryKeys,
                 foreignKeys,
+                uniqueTables,
             });
         }
     }, [selectedEdgeId, isReadOnly, nodes, edges]);

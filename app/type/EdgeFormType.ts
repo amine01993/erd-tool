@@ -5,6 +5,7 @@ export interface EdgeFormState {
         reference: string;
         onDelete: string;
         onUpdate: string;
+        edgePosition: string;
     };
 }
 

@@ -14,6 +14,7 @@ import {
     EdgeProps,
     getSmoothStepPath,
     useInternalNode,
+    useReactFlow,
 } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import ChevronDownIcon from "@iconify/icons-tabler/chevron-down";
@@ -102,6 +103,7 @@ function ErdEdge({
     style,
     data,
 }: EdgeProps<Edge<ErdEdgeData>>) {
+    const { screenToFlowPosition } = useReactFlow();
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
 
@@ -118,17 +120,20 @@ function ErdEdge({
         targetY = null;
 
     if (source === target) {
-        edgePath = getSelfLoopPath(
-            sourceNode,
-            data?.order || 1,
-            data?.length || 1
-        );
+        const path = getSelfLoopPath(sourceNode, data!, screenToFlowPosition);
+        sp = path.sp;
+        tp = path.tp;
+        edgePath = path.edgePath;
+        sourceX = path.sx;
+        sourceY = path.sy;
+        targetX = path.tx;
+        targetY = path.ty;
     } else {
         const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
             sourceNode,
             targetNode,
-            data?.order || 1,
-            data?.length || 1
+            data!,
+            screenToFlowPosition
         );
 
         [edgePath] = getSmoothStepPath({
@@ -153,29 +158,51 @@ function ErdEdge({
             sTY = 0,
             tTX = 0,
             tTY = 0;
-        if (sp === "bottom") {
-            sTX = -50;
-            sTY = 75;
-            tTX = -50;
-            tTY = -150;
-        } else if (sp === "top") {
-            sTX = -50;
-            sTY = -150;
-            tTX = -50;
-            tTY = 75;
-        } else if (sp === "left") {
-            sTX = -150;
-            sTY = 75;
-            tTX = 50;
-            tTY = -150;
-        } else if (sp === "right") {
-            sTX = 50;
-            sTY = -150;
-            tTX = -150;
-            tTY = 75;
+        if (source === target) {
+            if (sp === "left") {
+                sTX = -150;
+                sTY = -150;
+            } else {
+                sTX = 50;
+                sTY = -150;
+            }
+            if (tp === "left") {
+                tTX = -150;
+                tTY = 50;
+            } else {
+                tTX = 50;
+                tTY = 50;
+            }
+        } else {
+            if (sp === "bottom") {
+                sTX = -50;
+                sTY = 75;
+            } else if (sp === "top") {
+                sTX = -50;
+                sTY = -150;
+            } else if (sp === "left") {
+                sTX = -150;
+                sTY = 75;
+            } else if (sp === "right") {
+                sTX = 50;
+                sTY = -150;
+            }
+            if (tp === "bottom") {
+                tTX = -50;
+                tTY = 75;
+            } else if (tp === "top") {
+                tTX = -50;
+                tTY = -150;
+            } else if (tp === "left") {
+                tTX = -150;
+                tTY = -150;
+            } else if (tp === "right") {
+                tTX = 50;
+                tTY = -150;
+            }
         }
         return { sTX, sTY, tTX, tTY };
-    }, [sp]);
+    }, [sp, tp, source, target]);
 
     return (
         <>

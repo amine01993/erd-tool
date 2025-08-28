@@ -1,4 +1,11 @@
-import { Position, type InternalNode, type Node } from "@xyflow/react";
+import {
+    Position,
+    XYPosition,
+    type InternalNode,
+    type Node,
+} from "@xyflow/react";
+import { ErdEdgeData } from "../type/EdgeType";
+import { AttributeData, EntityData } from "../type/EntityType";
 
 // this helper function returns the intersection point
 // between the line between the center of the intersectionNode and the target node
@@ -64,31 +71,77 @@ function getEdgePosition(
 export function getEdgeParams(
     source: InternalNode<Node>,
     target: InternalNode<Node>,
-    edgeOrder: number,
-    edgeLength: number // is the number of edges connecting the source and target nodes
+    edgeData: ErdEdgeData,
+    screenToFlowPosition: (
+        clientPosition: XYPosition,
+        options?: {
+            snapToGrid: boolean;
+        }
+    ) => XYPosition
 ) {
+    const { order, length } = edgeData;
+
+    const position = getEdgeAttributePosition(
+        source,
+        target,
+        edgeData,
+        screenToFlowPosition
+    );
+
     const sourceIntersectionPoint = getNodeIntersection(
         source,
         target,
-        edgeOrder,
-        edgeLength
+        order,
+        length
     );
     const targetIntersectionPoint = getNodeIntersection(
         target,
         source,
-        edgeOrder,
-        edgeLength
+        order,
+        length
     );
 
-    const sourcePos = getEdgePosition(source, sourceIntersectionPoint);
-    const targetPos = getEdgePosition(target, targetIntersectionPoint);
+    let sourcePos = getEdgePosition(source, sourceIntersectionPoint);
+    let targetPos = getEdgePosition(target, targetIntersectionPoint);
 
+    const { width: sW } = source.measured;
+    const { width: tW } = target.measured;
+    const { x: sX } = source.internals.positionAbsolute;
+    const { x: tX } = target.internals.positionAbsolute;
+    const sCX = sX + sW! / 2;
+    const tCX = tX + tW! / 2;
+
+    if (position.sx === undefined || position.sy === undefined) {
+        position.sx = sourceIntersectionPoint.x;
+        position.sy = sourceIntersectionPoint.y;
+    } else {
+        if (sCX <= tCX) {
+            sourcePos = Position.Right;
+            position.sx += sW! / 2;
+        } else {
+            sourcePos = Position.Left;
+            position.sx -= sW! / 2;
+        }
+    }
+
+    if (position.tx === undefined || position.ty === undefined) {
+        position.tx = targetIntersectionPoint.x;
+        position.ty = targetIntersectionPoint.y;
+    } else {
+        if (tCX <= sCX) {
+            targetPos = Position.Right;
+            position.tx += tW! / 2;
+        } else {
+            targetPos = Position.Left;
+            position.tx -= tW! / 2;
+        }
+    }
 
     return {
-        sx: sourceIntersectionPoint.x,
-        sy: sourceIntersectionPoint.y,
-        tx: targetIntersectionPoint.x,
-        ty: targetIntersectionPoint.y,
+        sx: position.sx,
+        sy: position.sy,
+        tx: position.tx,
+        ty: position.ty,
         sourcePos,
         targetPos,
     };
@@ -141,32 +194,174 @@ function getNodeIntersection2(
 
 export function getSelfLoopPath(
     source: InternalNode<Node>,
-    edgeOrder: number,
-    edgeLength: number
+    edgeData: ErdEdgeData,
+    screenToFlowPosition: (
+        clientPosition: XYPosition,
+        options?: {
+            snapToGrid: boolean;
+        }
+    ) => XYPosition
 ) {
+    let { order = 1, length = 1, edgePosition } = edgeData;
     const { x, y } = source.internals.positionAbsolute;
     const { width: W, height: H } = source.measured;
-    const dx = 25,
-        dy = Math.min(30, H! / edgeLength);
-    const sx = x;
-    const sy = y + dy * edgeOrder;
-    const tx = x + source.measured.width!;
-    const ty = y + dy * edgeOrder;
-    const height = 55 + 2 * dy * (edgeOrder - 1);
-    const distance = 30 + dx * edgeOrder;
+    const dx = 5,
+        dy = Math.min(30, H! / length);
+    let sx = x;
+    let sy = y + dy * order;
+    let tx = x + source.measured.width!;
+    let ty = y + dy * order;
+    const height = 55 + 2 * dy * (order - 1);
+    const distance = 30 + dx * order;
     const radius = 4;
 
-    // prettier-ignore
-    const edgePath = `M ${sx} ${sy} 
-        L ${sx - distance + radius} ${sy} 
-        Q ${sx - distance},${sy} ${sx - distance},${sy - radius}  
-        L ${sx - distance} ${sy - height + radius} 
-        Q ${sx - distance},${sy - height} ${sx - distance + radius},${ sy - height }  
-        L ${tx + distance - radius} ${ty - height}
-        Q ${tx + distance} ${ty - height} ${tx + distance} ${ ty - height + radius }
-        L ${tx + distance} ${ty - radius}
-        Q ${tx + distance} ${ty} ${tx + distance - radius} ${ty}
-        L ${tx} ${ty} `;
+    const position = getEdgeAttributePosition(
+        source,
+        source,
+        edgeData,
+        screenToFlowPosition
+    );
 
-    return edgePath;
+    if (position.sx !== undefined && position.sy !== undefined) {
+        sy = position.sy;
+    }
+
+    if (position.tx !== undefined && position.ty !== undefined) {
+        ty = position.ty;
+    }
+
+    if (edgePosition === undefined) edgePosition = "l-r";
+
+    const pos2 = edgePosition.split("-");
+    const sp = pos2[0] == "l" ? "left" : "right";
+    const tp = pos2[1] == "l" ? "left" : "right";
+
+    let edgePath = "";
+
+    if (sp === "left" && tp === "right") {
+        // prettier-ignore
+        edgePath = `M ${sx} ${sy} 
+            L ${sx - distance + radius} ${sy} 
+            Q ${sx - distance},${sy} ${sx - distance},${sy - radius}  
+            L ${sx - distance} ${sy - height + radius} 
+            Q ${sx - distance},${sy - height} ${sx - distance + radius},${sy - height}  
+            L ${tx + distance - radius} ${sy - height}
+            Q ${tx + distance} ${sy - height} ${tx + distance} ${sy - height + radius}
+            L ${tx + distance} ${ty - radius}
+            Q ${tx + distance} ${ty} ${tx + distance - radius} ${ty}
+            L ${tx} ${ty}`;
+    } else if (sp === "right" && tp === "left") {
+        // prettier-ignore
+        edgePath = `M ${tx} ${sy} 
+            L ${tx + distance - radius} ${sy} 
+            Q ${tx + distance},${sy} ${tx + distance},${sy - radius}  
+            L ${tx + distance} ${sy - height + radius} 
+            Q ${tx + distance},${sy - height} ${tx + distance - radius},${sy - height}  
+            L ${sx - distance + radius} ${sy - height}
+            Q ${sx - distance} ${sy - height} ${sx - distance} ${sy - height + radius}
+            L ${sx - distance} ${ty - radius}
+            Q ${sx - distance} ${ty} ${sx - distance + radius} ${ty}
+            L ${sx} ${ty}`;
+        const tmp = sx;
+        sx = tx;
+        tx = tmp;
+    } else if (sp === "left" && tp === "left") {
+        // prettier-ignore
+        edgePath = `M ${sx} ${sy} 
+            L ${sx - distance + radius} ${sy} 
+            Q ${sx - distance},${sy} ${sx - distance},${sy + radius}  
+            L ${sx - distance} ${ty - radius} 
+            Q ${sx - distance},${ty} ${sx - distance + radius},${ty}
+            L ${sx} ${ty}`;
+        tx = sx;
+    } else {
+        // prettier-ignore
+        edgePath = `M ${tx} ${sy} 
+            L ${tx + distance - radius} ${sy} 
+            Q ${tx + distance},${sy} ${tx + distance},${sy + radius}  
+            L ${tx + distance} ${ty - radius} 
+            Q ${tx + distance},${ty} ${tx + distance - radius},${ty}
+            L ${tx} ${ty}`;
+        sx = tx;
+    }
+
+    return { edgePath, sx, sy, tx, ty, sp, tp };
+}
+
+function getEdgeAttributePosition(
+    source: InternalNode<Node>,
+    target: InternalNode<Node>,
+    edgeData: ErdEdgeData,
+    screenToFlowPosition: (
+        clientPosition: XYPosition,
+        options?: {
+            snapToGrid: boolean;
+        }
+    ) => XYPosition
+): {
+    sx?: number;
+    sy?: number;
+    tx?: number;
+    ty?: number;
+} {
+    const {
+        foreignKeyColumn,
+        foreignKeyTable,
+        primaryKeyColumn,
+        primaryKeyTable,
+    } = edgeData;
+
+    const sourceData = source.data as EntityData;
+    const targetData = target.data as EntityData;
+
+    let sourceAttr: AttributeData | undefined,
+        targetAttr: AttributeData | undefined;
+    let sx: number | undefined,
+        sy: number | undefined,
+        tx: number | undefined,
+        ty: number | undefined;
+
+    if (sourceData.name === primaryKeyTable) {
+        sourceAttr = sourceData.attributes.find(
+            (attr) => attr.name === primaryKeyColumn
+        );
+    } else if (sourceData.name === foreignKeyTable) {
+        sourceAttr = sourceData.attributes.find(
+            (attr) => attr.name === foreignKeyColumn
+        );
+    }
+
+    if (sourceAttr) {
+        const elem = document.getElementById(sourceAttr.id);
+        const rect = elem!.getBoundingClientRect();
+        const fp = screenToFlowPosition({
+            x: rect.x + rect.width / 2,
+            y: rect.y + rect.height / 2,
+        });
+        sx = fp.x;
+        sy = fp.y;
+    }
+
+    if (targetData.name === foreignKeyTable) {
+        targetAttr = targetData.attributes.find(
+            (attr) => attr.name === foreignKeyColumn
+        );
+    } else if (targetData.name === primaryKeyTable) {
+        targetAttr = targetData.attributes.find(
+            (attr) => attr.name === primaryKeyColumn
+        );
+    }
+
+    if (targetAttr) {
+        const elem = document.getElementById(targetAttr.id);
+        const rect = elem!.getBoundingClientRect();
+        const fp = screenToFlowPosition({
+            x: rect.x + rect.width / 2,
+            y: rect.y + rect.height / 2,
+        });
+        tx = fp.x;
+        ty = fp.y;
+    }
+
+    return { sx, sy, tx, ty };
 }

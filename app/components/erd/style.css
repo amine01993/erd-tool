@@ -466,6 +466,18 @@
                 @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
             }
         }
+
+        .radio-field {
+            @apply flex gap-2;
+
+            label {
+                @apply font-medium;
+            }
+
+            input {
+                @apply p-2;
+            }
+        }
     }
 }
 

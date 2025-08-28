@@ -1,13 +1,15 @@
 import {
     ConnectionLineComponentProps,
     getStraightPath,
+    useReactFlow,
 } from "@xyflow/react";
+import useErdStore from "@/app/store/erd";
 import {
     getConnectionParams,
     getEdgeParams,
     getSelfLoopPath,
 } from "@/app/helper/items";
-import useErdStore from "@/app/store/erd";
+import { defaultEdgeDataValues } from "@/app/helper/variables";
 
 const ErdConnectionLine = ({
     toX,
@@ -41,8 +43,8 @@ const ErdConnectionLine = ({
         const { sx, sy, tx, ty } = getEdgeParams(
             fromNode,
             toNode,
-            (existingEdge?.data?.length || 0) + 1,
-            (existingEdge?.data?.length || 0) + 1
+            existingEdge?.data ?? {...defaultEdgeDataValues},
+            useReactFlow().screenToFlowPosition
         );
 
         [edgePath] = getStraightPath({
@@ -57,19 +59,18 @@ const ErdConnectionLine = ({
             (edge) => edge.source === fromNode.id && edge.target === fromNode.id
         );
 
-        edgePath = getSelfLoopPath(
+        const path = getSelfLoopPath(
             fromNode,
-            (existingEdge?.data?.length || 0) + 1,
-            (existingEdge?.data?.length || 0) + 1
+            existingEdge?.data ?? {...defaultEdgeDataValues},
+            useReactFlow().screenToFlowPosition
         );
+        edgePath = path.edgePath;
     }
 
     return (
         <path
             fill="none"
-            // stroke={connectionStatus === "valid" ? "#22c55e" : "#ef4444"}
             className="erd-connection-line"
-            // strokeWidth={2}
             d={edgePath}
         />
     );

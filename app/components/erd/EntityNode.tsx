@@ -40,7 +40,7 @@ const AttributeNode = memo(({ data }: { data: AttributeData }) => {
 
 const EntityNode = (props: { data: EntityData }) => {
     const { name, attributes } = props.data;
-    const selectedItem = useErdItemsStore(state => state.selectedItem);
+    const selectedItem = useErdItemsStore((state) => state.selectedItem);
 
     return (
         <div className="entity-node">
@@ -70,8 +70,8 @@ const EntityNode = (props: { data: EntityData }) => {
                 <div className="name nodrag">{name}</div>
             </h3>
             <ol className="attributes nodrag">
-                {attributes.map((attr, index) => (
-                    <li key={index}>
+                {attributes.map((attr) => (
+                    <li key={attr.id} id={attr.id}>
                         <AttributeNode data={attr} />
                     </li>
                 ))}
