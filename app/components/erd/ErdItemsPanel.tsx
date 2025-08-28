@@ -26,6 +26,25 @@ const ErdItemsPanel = () => {
     );
 
     useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            e.preventDefault();
+            if (e.shiftKey && e.key.toLowerCase() === "s") {
+                selectItem("selector");
+            } else if (e.shiftKey && e.key.toLowerCase() === "e") {
+                selectItem("entity");
+            } else if (e.shiftKey && e.key.toLowerCase() === "d") {
+                selectItem("edge");
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [selectItem]);
+
+    useEffect(() => {
         if (isReadOnly) {
             selectItem("selector");
         }

@@ -90,6 +90,39 @@ const Header = () => {
     }, [recoverDiagram]);
 
     useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            e.preventDefault();
+
+            if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "z") {
+                handleUndo();
+            } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") {
+                handleRedo();
+            } else if (e.ctrlKey && e.key.toLowerCase() === "r") {
+                handleDiagramsRefresh();
+            } else if (e.ctrlKey && e.key.toLowerCase() === "n") {
+                handleNewDiagram();
+            } else if (e.ctrlKey && e.key.toLowerCase() === "d") {
+                handleDuplicateDiagram();
+            } else if (e.key.toLowerCase() === "delete") {
+                handleDeleteDiagram();
+            }
+        }
+
+        window.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [
+        handleUndo,
+        handleRedo,
+        handleDiagramsRefresh,
+        handleNewDiagram,
+        handleDuplicateDiagram,
+        handleDeleteDiagram,
+    ]);
+
+    useEffect(() => {
         function initAuthData() {
             retrieveAuthData()
                 .then(() => {
@@ -153,7 +186,11 @@ const Header = () => {
                             disabled={disableUndo}
                         >
                             <Icon icon={ArrowBackUpIcon} fontSize={21} />
-                            <Tooltip message="Undo (Ctrl + Z)" selector="#undo-button" position="bottom" />
+                            <Tooltip
+                                message="Undo (Ctrl + Z)"
+                                selector="#undo-button"
+                                position="bottom"
+                            />
                         </button>
 
                         <button
@@ -164,7 +201,11 @@ const Header = () => {
                             disabled={disableRedo}
                         >
                             <Icon icon={ArrowForwardUpIcon} fontSize={21} />
-                            <Tooltip message="Redo (Ctrl + Shift + Z)" selector="#redo-button" position="bottom" />
+                            <Tooltip
+                                message="Redo (Ctrl + Shift + Z)"
+                                selector="#redo-button"
+                                position="bottom"
+                            />
                         </button>
                     </>
                 )}
@@ -180,7 +221,11 @@ const Header = () => {
                     disabled={offLine || refreshing}
                 >
                     <Icon icon={RefreshIcon} fontSize={21} />
-                    <Tooltip message="Refresh (Ctrl + R)" selector="#refresh-button" position="bottom" />
+                    <Tooltip
+                        message="Refresh (Ctrl + R)"
+                        selector="#refresh-button"
+                        position="bottom"
+                    />
                 </button>
 
                 {category === "all" && (
@@ -192,7 +237,11 @@ const Header = () => {
                             onClick={handleNewDiagram}
                         >
                             <Icon icon={CirclePlusIcon} fontSize={21} />
-                            <Tooltip message="Create (Ctrl + N)" selector="#new-diagram-button" position="bottom" />
+                            <Tooltip
+                                message="Create (Ctrl + N)"
+                                selector="#new-diagram-button"
+                                position="bottom"
+                            />
                         </button>
                         <button
                             aria-label="Duplicate selected diagram"
@@ -202,7 +251,11 @@ const Header = () => {
                             disabled={selectedDiagram === "" || loading}
                         >
                             <Icon icon={LayersSubtractIcon} fontSize={21} />
-                            <Tooltip message="Duplicate (Ctrl + D)" selector="#duplicate-diagram-button" position="bottom" />
+                            <Tooltip
+                                message="Duplicate (Ctrl + D)"
+                                selector="#duplicate-diagram-button"
+                                position="bottom"
+                            />
                         </button>
                     </>
                 )}
@@ -215,7 +268,15 @@ const Header = () => {
                     disabled={selectedDiagram === "" || loading}
                 >
                     <Icon icon={TrashIcon} fontSize={21} />
-                    <Tooltip message={category === "all" ? "Delete (Del)" : "Delete Permanently (Del)"} selector="#delete-diagram-button" position="bottom" />
+                    <Tooltip
+                        message={
+                            category === "all"
+                                ? "Delete (Del)"
+                                : "Delete Permanently (Del)"
+                        }
+                        selector="#delete-diagram-button"
+                        position="bottom"
+                    />
                 </button>
 
                 {category === "deleted" && (
@@ -227,7 +288,11 @@ const Header = () => {
                         disabled={selectedDiagram === "" || loading}
                     >
                         <Icon icon={TrashOffIcon} fontSize={21} />
-                        <Tooltip message="Recover (Ctrl + Shift + R)" selector="#recover-diagram-button" position="bottom" />
+                        <Tooltip
+                            message="Recover (Ctrl + Shift + R)"
+                            selector="#recover-diagram-button"
+                            position="bottom"
+                        />
                     </button>
                 )}
 
@@ -239,7 +304,11 @@ const Header = () => {
                     >
                         <Icon icon={DatabaseExportIcon} fontSize={21} />
                         Export
-                        <Tooltip message="Export (Ctrl + E)" selector="#export-diagram-button" position="bottom" />
+                        <Tooltip
+                            message="Export (Ctrl + E)"
+                            selector="#export-diagram-button"
+                            position="bottom"
+                        />
                     </button>
                 )}
 
