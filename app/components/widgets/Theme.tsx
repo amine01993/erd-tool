@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import useUserStore from "@/app/store/user";
 import ThemeMenu from "./ThemeMenu";
+import Tooltip from "../erd/Tooltip";
 
 interface IconProps {
     theme: "light" | "dark";
@@ -88,8 +89,8 @@ export const LightIcon = memo(({ theme, fontSize }: IconProps) => {
 });
 
 const Theme = () => {
-    const theme = useUserStore(state => state.theme);
-    const toggleThemeMenu = useUserStore(state => state.toggleThemeMenu);
+    const theme = useUserStore((state) => state.theme);
+    const toggleThemeMenu = useUserStore((state) => state.toggleThemeMenu);
     const [isDark, setIsDark] = useState(false);
 
     const computedTheme = useMemo(() => {
@@ -119,13 +120,14 @@ const Theme = () => {
 
     useEffect(() => {
         setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }, [])
+    }, []);
 
     return (
         <div className="relative">
             <button
                 aria-label="Toggle theme menu"
                 className="header-btn theme"
+                id="theme-settings-btn"
                 onClick={handleThemeClick}
             >
                 {theme === "system" && (
@@ -135,6 +137,11 @@ const Theme = () => {
                 {theme === "light" && <LightIcon theme="light" fontSize={21} />}
             </button>
             <ThemeMenu />
+            <Tooltip
+                message="Theme Settings"
+                selector="#theme-settings-btn"
+                position="left"
+            />
         </div>
     );
 };

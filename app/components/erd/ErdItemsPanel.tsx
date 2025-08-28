@@ -6,10 +6,11 @@ import LocationFilledIcon from "@iconify/icons-tabler/location-filled";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
 import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
+import Tooltip from "./Tooltip";
 
 const ErdItemsPanel = () => {
-    const selectedItem = useErdItemsStore(state => state.selectedItem);
-    const selectItem = useErdItemsStore(state => state.selectItem);
+    const selectedItem = useErdItemsStore((state) => state.selectedItem);
+    const selectItem = useErdItemsStore((state) => state.selectItem);
     const isReadOnly = useDiagramStore(isReadOnlySelector);
 
     const handleSelection = useCallback(
@@ -25,7 +26,7 @@ const ErdItemsPanel = () => {
     );
 
     useEffect(() => {
-        if(isReadOnly) {
+        if (isReadOnly) {
             selectItem("selector");
         }
     }, [isReadOnly]);
@@ -36,7 +37,7 @@ const ErdItemsPanel = () => {
             className="erd-items-panel bg-white p-1 shadow-md"
         >
             <ul className="erd-items select-none">
-                <li>
+                <li id="selector-erd-item" className="relative">
                     <button
                         title="Select to Move and Resize Nodes"
                         data-id="selector"
@@ -52,8 +53,13 @@ const ErdItemsPanel = () => {
                             height={24}
                         />
                     </button>
+                    <Tooltip
+                        message="Selector (Shift + S)"
+                        selector="#selector-erd-item"
+                        position="right"
+                    />
                 </li>
-                <li>
+                <li id="entity-erd-item" className="relative">
                     <button
                         title="Select to Add Entities"
                         data-id="entity"
@@ -70,8 +76,13 @@ const ErdItemsPanel = () => {
                             height={24}
                         />
                     </button>
+                    <Tooltip
+                        message="Entity (Shift + E)"
+                        selector="#entity-erd-item"
+                        position="right"
+                    />
                 </li>
-                <li>
+                <li id="edge-erd-item" className="relative">
                     <button
                         title="Select to Add Edges"
                         data-id="edge"
@@ -88,6 +99,11 @@ const ErdItemsPanel = () => {
                             height={24}
                         />
                     </button>
+                    <Tooltip
+                        message="Edge (Shift + D)"
+                        selector="#edge-erd-item"
+                        position="right"
+                    />
                 </li>
             </ul>
         </Panel>

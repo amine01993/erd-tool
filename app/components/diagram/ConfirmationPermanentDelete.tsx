@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
 import CloudIcon from "@iconify/icons-tabler/cloud";
 import XIcon from "@iconify/icons-tabler/x";
@@ -8,6 +8,7 @@ import Modal from "../widgets/Modal";
 import useDeleteDiagram from "@/app/hooks/DiagramDelete";
 
 const ConfirmationPermanentDelete = () => {
+    const cancelButtonRef = useRef<HTMLButtonElement>(null);
     const isConfirmModalOpen = useUserStore(
         (state) => state.isConfirmModalOpen
     );
@@ -26,6 +27,12 @@ const ConfirmationPermanentDelete = () => {
         deleteDiagramPermanently(mutationDelete);
         closeConfirmModal()
     }, [deleteDiagramPermanently, closeConfirmModal]);
+
+    useEffect(() => {
+        if (isConfirmModalOpen) {
+            cancelButtonRef.current?.focus();
+        }
+    }, [isConfirmModalOpen]);
 
     return (
         <Modal isOpen={isConfirmModalOpen} handleClose={handleClose}>
@@ -46,6 +53,7 @@ const ConfirmationPermanentDelete = () => {
 
                 <div className="action-btns">
                     <button
+                        ref={cancelButtonRef}
                         className="cancel-btn"
                         onClick={handleClose}
                     >

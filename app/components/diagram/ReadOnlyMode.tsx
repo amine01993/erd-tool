@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
 import CloudIcon from "@iconify/icons-tabler/cloud";
 import XIcon from "@iconify/icons-tabler/x";
@@ -8,14 +8,15 @@ import Modal from "../widgets/Modal";
 import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 
 const ReadOnlyMode = () => {
+    const cancelButtonRef = useRef<HTMLButtonElement>(null);
     const isReadOnlyModalOpen = useUserStore(
         (state) => state.isReadOnlyModalOpen
     );
-    const closeReadOnlyModal = useUserStore((state) => state.closeReadOnlyModal);
-    const currentDiagram = useDiagramStore(currentDiagramSelector);
-    const recoverDiagram = useDiagramStore(
-        (state) => state.recoverDiagram
+    const closeReadOnlyModal = useUserStore(
+        (state) => state.closeReadOnlyModal
     );
+    const currentDiagram = useDiagramStore(currentDiagramSelector);
+    const recoverDiagram = useDiagramStore((state) => state.recoverDiagram);
     const mutationRecover = useRecoverDiagram();
 
     const handleClose = useCallback(() => {
@@ -26,6 +27,12 @@ const ReadOnlyMode = () => {
         recoverDiagram(mutationRecover);
         closeReadOnlyModal();
     }, [recoverDiagram, closeReadOnlyModal]);
+
+    useEffect(() => {
+        if (isReadOnlyModalOpen) {
+            cancelButtonRef.current?.focus();
+        }
+    }, [isReadOnlyModalOpen]);
 
     return (
         <Modal isOpen={isReadOnlyModalOpen} handleClose={handleClose}>
@@ -40,20 +47,19 @@ const ReadOnlyMode = () => {
                     Recently deleted diagrams can’t be edited.
                 </h1>
                 <p className="text-center">
-                    To edit this diagram "{currentDiagram?.name}", you’ll need to recover it.
+                    To edit this diagram "{currentDiagram?.name}", you’ll need
+                    to recover it.
                 </p>
 
                 <div className="action-btns">
                     <button
                         className="cancel-btn"
+                        ref={cancelButtonRef}
                         onClick={handleClose}
                     >
                         Cancel
                     </button>
-                    <button
-                        className="confirm-btn"
-                        onClick={handleRecovery}
-                    >
+                    <button className="confirm-btn" onClick={handleRecovery}>
                         Recover
                     </button>
                 </div>

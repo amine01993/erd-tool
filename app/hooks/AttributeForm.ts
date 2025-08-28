@@ -93,7 +93,7 @@ export function useAttributeForm(
                 dispatch({
                     type: "SET_FIELD",
                     field,
-                    value: event.target.value.trim(),
+                    value: event.target.value,
                     attributeNames,
                 });
             };
@@ -106,7 +106,7 @@ export function useAttributeForm(
                 dispatch({
                     type: "SET_FIELD",
                     field,
-                    value: event.target.value.trim(),
+                    value: event.target.value,
                 });
             };
         },
@@ -313,7 +313,7 @@ export const attributeFormReducer = (
             ) {
                 const error = validateAttributeField(
                     action.field,
-                    String(action.value),
+                    String(action.value).trim(),
                     state,
                     action.attributeNames
                 );

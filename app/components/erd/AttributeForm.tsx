@@ -91,13 +91,14 @@ const AttributeForm = ({
             dispatch({ type: "SET_TOUCHED", field: "precision" });
             dispatch({ type: "SET_TOUCHED", field: "scale" });
 
-            // dispatch({ type: "SET_SUBMITTING", isSubmitting: true });
-
             if (state.isValid) {
                 if (editingAttribute) {
                     const attribute: AttributeData = {
                         id: editingAttribute,
                         ...state.values,
+                        name: state.values.name.trim(),
+                        defaultValue: state.values.defaultValue?.trim(),
+                        description: state.values.description.trim(),
                     };
                     editAttribute(selectedNodeId, attribute);
                     setSelectedData((prev) => {
@@ -125,7 +126,6 @@ const AttributeForm = ({
                 }
                 setEditingAttribute(null);
             }
-            // dispatch({ type: "SET_SUBMITTING", isSubmitting: false });
         },
         [
             selectedNodeId,

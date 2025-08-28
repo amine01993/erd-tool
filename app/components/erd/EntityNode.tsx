@@ -2,10 +2,12 @@ import { memo, useMemo } from "react";
 import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import DotsVerticalIcon from "@iconify/icons-tabler/dots-vertical";
+import NotesIcon from "@iconify/icons-tabler/notes";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
 import useErdStore from "@/app/store/erd";
 import { AttributeData, EntityData } from "../../type/EntityType";
+import Tooltip from "./Tooltip";
 
 interface AttributeDataProps {
     data: AttributeData;
@@ -17,29 +19,49 @@ const AttributeNode = memo(({ data }: AttributeDataProps) => {
     }, [data.isPrimaryKey, data.isNullable]);
 
     return (
-        <div className="flex justify-between items-center">
-            <div className="flex-1 truncate space-x-0.5">
-                <span>
-                    <span
-                        className={cc([
-                            {
-                                "font-bold underline":
-                                    data.isPrimaryKey || data.isForeignKey,
-                            },
-                        ])}
-                    >
-                        {data.name}
+        <>
+            <div className="flex justify-between items-center">
+                <div className="flex-1 truncate space-x-0.5">
+                    <span className="inline-flex items-center">
+                        <span
+                            className={cc([
+                                {
+                                    "font-bold underline":
+                                        data.isPrimaryKey || data.isForeignKey,
+                                },
+                            ])}
+                        >
+                            {data.name}
+                        </span>
+                        {nullable && <span className="italic">?</span>}
+                        {data.description && (
+                            // <span>
+                            <Icon
+                                icon={NotesIcon}
+                                className="inline ml-0.5 text-gray-500"
+                            />
+                            // </span>
+                        )}
                     </span>
-                    {nullable && <span className="italic">?</span>}
-                </span>
-                {data.isPrimaryKey && <span className="">(PK)</span>}
-                {data.isForeignKey && <span className="">(FK)</span>}
-                {data.defaultValue && (
-                    <span className="font-semibold">[{data.defaultValue}]</span>
-                )}
+                    {data.isPrimaryKey && <span className="">(PK)</span>}
+                    {data.isForeignKey && <span className="">(FK)</span>}
+                    {data.defaultValue && (
+                        <span className="font-semibold">
+                            [{data.defaultValue}]
+                        </span>
+                    )}
+                </div>
+                <div className="shrink-0">{data.type}</div>
             </div>
-            <div className="shrink-0">{data.type}</div>
-        </div>
+            {data.description && (
+                <Tooltip
+                    message={data.description}
+                    position="right"
+                    selector={`#${data.id}`}
+                    props={{ className: "text-[12px]! w-32 whitespace-normal" }}
+                />
+            )}
+        </>
     );
 });
 
@@ -101,7 +123,12 @@ const EntityNode = (props: { id: string; data: EntityData }) => {
                     <li
                         key={attr.id}
                         id={attr.id}
-                        className={connectedAttributes.includes(attr.id) ? "connected" : undefined}
+                        className={cc([
+                            "relative",
+                            connectedAttributes.includes(attr.id)
+                                ? "connected"
+                                : undefined,
+                        ])}
                     >
                         <AttributeNode data={attr} />
                     </li>

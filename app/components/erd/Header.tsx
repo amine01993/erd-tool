@@ -25,6 +25,7 @@ import Settings from "../widgets/Settings";
 import useDeleteDiagram from "@/app/hooks/DiagramDelete";
 import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
+import Tooltip from "./Tooltip";
 
 const Header = () => {
     const offLine = useUserStore((state) => state.offLine);
@@ -80,7 +81,7 @@ const Header = () => {
         if (category === "deleted") {
             openConfirmModal();
         } else {
-            deleteDiagram(queryClient, mutationDelete, mutationAdd);
+            deleteDiagram(mutationDelete, mutationAdd);
         }
     }, [deleteDiagram, openConfirmModal, category]);
 
@@ -146,20 +147,24 @@ const Header = () => {
                     <>
                         <button
                             aria-label="Undo last action"
-                            className="header-btn"
+                            className="header-btn relative"
+                            id="undo-button"
                             onClick={handleUndo}
                             disabled={disableUndo}
                         >
                             <Icon icon={ArrowBackUpIcon} fontSize={21} />
+                            <Tooltip message="Undo (Ctrl + Z)" selector="#undo-button" position="bottom" />
                         </button>
 
                         <button
                             aria-label="Redo"
-                            className="header-btn"
+                            className="header-btn relative"
+                            id="redo-button"
                             onClick={handleRedo}
                             disabled={disableRedo}
                         >
                             <Icon icon={ArrowForwardUpIcon} fontSize={21} />
+                            <Tooltip message="Redo (Ctrl + Shift + Z)" selector="#redo-button" position="bottom" />
                         </button>
                     </>
                 )}
@@ -167,62 +172,74 @@ const Header = () => {
                 <button
                     aria-label="Refresh diagrams' list"
                     className={cc([
-                        "header-btn",
+                        "header-btn relative",
                         { "animate-spin": refreshing },
                     ])}
+                    id="refresh-button"
                     onClick={handleDiagramsRefresh}
                     disabled={offLine || refreshing}
                 >
                     <Icon icon={RefreshIcon} fontSize={21} />
+                    <Tooltip message="Refresh (Ctrl + R)" selector="#refresh-button" position="bottom" />
                 </button>
 
                 {category === "all" && (
                     <>
                         <button
                             aria-label="Create new diagram"
-                            className="header-btn"
+                            className="header-btn relative"
+                            id="new-diagram-button"
                             onClick={handleNewDiagram}
                         >
                             <Icon icon={CirclePlusIcon} fontSize={21} />
+                            <Tooltip message="Create (Ctrl + N)" selector="#new-diagram-button" position="bottom" />
                         </button>
                         <button
                             aria-label="Duplicate selected diagram"
-                            className="header-btn"
+                            className="header-btn relative"
+                            id="duplicate-diagram-button"
                             onClick={handleDuplicateDiagram}
                             disabled={selectedDiagram === "" || loading}
                         >
                             <Icon icon={LayersSubtractIcon} fontSize={21} />
+                            <Tooltip message="Duplicate (Ctrl + D)" selector="#duplicate-diagram-button" position="bottom" />
                         </button>
                     </>
                 )}
 
                 <button
                     aria-label="Delete selected diagram"
-                    className="header-btn"
+                    className="header-btn relative"
+                    id="delete-diagram-button"
                     onClick={handleDeleteDiagram}
                     disabled={selectedDiagram === "" || loading}
                 >
                     <Icon icon={TrashIcon} fontSize={21} />
+                    <Tooltip message={category === "all" ? "Delete (Del)" : "Delete Permanently (Del)"} selector="#delete-diagram-button" position="bottom" />
                 </button>
 
                 {category === "deleted" && (
                     <button
                         aria-label="Recover selected diagram"
-                        className="header-btn"
+                        className="header-btn relative"
+                        id="recover-diagram-button"
                         onClick={handleRecoverDiagram}
                         disabled={selectedDiagram === "" || loading}
                     >
                         <Icon icon={TrashOffIcon} fontSize={21} />
+                        <Tooltip message="Recover (Ctrl + Shift + R)" selector="#recover-diagram-button" position="bottom" />
                     </button>
                 )}
 
                 {category === "all" && (
                     <button
-                        className="flex items-center gap-2 header-btn"
+                        className="flex items-center gap-2 header-btn relative"
+                        id="export-diagram-button"
                         disabled={selectedDiagram === "" || loading}
                     >
                         <Icon icon={DatabaseExportIcon} fontSize={21} />
                         Export
+                        <Tooltip message="Export (Ctrl + E)" selector="#export-diagram-button" position="bottom" />
                     </button>
                 )}
 

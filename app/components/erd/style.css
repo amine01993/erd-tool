@@ -96,6 +96,30 @@
     }
 }
 
+.tooltip {
+    @apply absolute bg-black text-white rounded-md py-1 px-2 z-1 whitespace-nowrap text-sm;
+    &.top {
+        @apply -translate-x-1/2 -translate-y-full;
+        @apply left-1/2 -top-2;
+    }
+    &.bottom {
+        @apply -translate-x-1/2 translate-y-full;
+        @apply left-1/2 -bottom-2;
+    }
+    &.left {
+        @apply -translate-x-full -translate-y-1/2;
+        @apply -left-2 top-1/2;
+    }
+    &.right {
+        @apply translate-x-full -translate-y-1/2;
+        @apply -right-2 top-1/2;
+    }
+
+    &:not(.hidden) {
+        @apply flex animate-[fadeIn_0.3s_linear_forwards];
+    }
+}
+
 @keyframes slideDown {
     0% {
         opacity: 100%;
@@ -285,7 +309,7 @@
 }
 
 .entity-node {
-    @apply text-[12px] h-full flex flex-col overflow-hidden min-w-[199px] min-h-[99px];
+    @apply text-[12px] h-full flex flex-col min-w-[199px] min-h-[99px];
 
     .title {
         @apply font-semibold border-b text-center flex items-center;
@@ -592,31 +616,39 @@
         }
 
         &.close-modal {
-            @apply absolute top-2 right-2;
-
+            @apply absolute top-2 right-2 outline-2 outline-[#fefbfb] -outline-offset-2;
             @apply p-2 rounded-md text-[#640D14] cursor-pointer transition-colors duration-200;
             &:hover {
-                @apply not-disabled:bg-[#f7dee0];
+                @apply not-disabled:bg-[#f7dee0] not-disabled:outline-[#f7dee0];
+            }
+            &:focus {
+                @apply outline-[#44090e];
             }
         }
 
         &.cancel-btn,
         &.confirm-btn {
-            @apply px-5 py-2 rounded-md font-semibold cursor-pointer transition-colors duration-200;
+            @apply px-5 py-2 rounded-md font-semibold cursor-pointer transition-all duration-200;
             @apply disabled:opacity-50 disabled:cursor-not-allowed;
         }
 
         &.cancel-btn {
-            @apply text-[#44090e] bg-[#f7dee0];
+            @apply text-[#44090e] bg-[#f7dee0] outline-2 outline-[#f7dee0] -outline-offset-2;
             &:hover {
-                @apply not-disabled:bg-[#fbeff0];
+                @apply not-disabled:bg-[#fbeff0] not-disabled:outline-[#fbeff0];
+            }
+            &:focus {
+                @apply outline-[#44090e];
             }
         }
 
         &.confirm-btn {
-            @apply text-white bg-[#640D14];
+            @apply text-white bg-[#640D14] outline-2 outline-[#640D14] -outline-offset-2;
             &:hover {
-                @apply not-disabled:bg-[#44090e];
+                @apply not-disabled:bg-[#44090e] not-disabled:outline-[#44090e];
+            }
+            &:focus {
+                @apply outline-[#f7dee0];
             }
         }
     }
