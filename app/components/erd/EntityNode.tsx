@@ -4,9 +4,14 @@ import { Icon } from "@iconify/react";
 import DotsVerticalIcon from "@iconify/icons-tabler/dots-vertical";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
+import useErdStore from "@/app/store/erd";
 import { AttributeData, EntityData } from "../../type/EntityType";
 
-const AttributeNode = memo(({ data }: { data: AttributeData }) => {
+interface AttributeDataProps {
+    data: AttributeData;
+}
+
+const AttributeNode = memo(({ data }: AttributeDataProps) => {
     const nullable = useMemo(() => {
         return !data.isPrimaryKey && data.isNullable;
     }, [data.isPrimaryKey, data.isNullable]);
@@ -38,9 +43,31 @@ const AttributeNode = memo(({ data }: { data: AttributeData }) => {
     );
 });
 
-const EntityNode = (props: { data: EntityData }) => {
-    const { name, attributes } = props.data;
+const EntityNode = (props: { id: string; data: EntityData }) => {
+    const {
+        id,
+        data: { name, attributes },
+    } = props;
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
+    const edges = useErdStore((state) => state.edges);
+
+    const connectedAttributes = useMemo(() => {
+        const entityEdges = edges.filter((edge) => {
+            return edge.source === id || edge.target === id;
+        });
+
+        return attributes
+            .filter((attr) => {
+                return entityEdges.find(
+                    (e) =>
+                        (e.data?.foreignKeyColumn === attr.name &&
+                            name === e.data.foreignKeyTable) ||
+                        (e.data?.primaryKeyColumn === attr.name &&
+                            name === e.data.primaryKeyTable)
+                );
+            })
+            .map((attr) => attr.id);
+    }, [edges, name, id]);
 
     return (
         <div className="entity-node">
@@ -71,7 +98,11 @@ const EntityNode = (props: { data: EntityData }) => {
             </h3>
             <ol className="attributes nodrag">
                 {attributes.map((attr) => (
-                    <li key={attr.id} id={attr.id}>
+                    <li
+                        key={attr.id}
+                        id={attr.id}
+                        className={connectedAttributes.includes(attr.id) ? "connected" : undefined}
+                    >
                         <AttributeNode data={attr} />
                     </li>
                 ))}

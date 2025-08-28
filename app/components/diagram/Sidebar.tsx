@@ -75,7 +75,7 @@ const Sidebar = () => {
                 ])}
                 ref={listRef}
             >
-                {loadingDiagrams && (
+                {loadingDiagrams && filteredDiagrams.length === 0 && (
                     <>
                         <DiagramItemPlaceHolder />
                         <DiagramItemPlaceHolder />

@@ -19,9 +19,10 @@ import {
     Edge,
     useOnViewportChange,
     Viewport,
+    Node,
 } from "@xyflow/react";
 import { shallow } from "zustand/shallow";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import cc from "classcat";
 import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
@@ -37,6 +38,7 @@ import Loading from "./Loading";
 import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import { defaultEdgeOptions } from "@/app/helper/variables";
+import { EntityData } from "@/app/type/EntityType";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -57,10 +59,13 @@ const selector = (state: ErdState) => ({
     onNodesChange: state.onNodesChange,
     onEdgesChange: state.onEdgesChange,
     onEdgeHover: state.onEdgeHover,
+    onEdgeSelected: state.onEdgeSelected,
     onConnect: state.onConnect,
     addEntity: state.addEntity,
     addConnection: state.addConnection,
     addSelfConnection: state.addSelfConnection,
+    getConnectedFromNode: state.getConnectedFromNode,
+    getConnectedFromEdge: state.getConnectedFromEdge,
 });
 
 const nodeOrigin: [number, number] = [0.5, 0];
@@ -90,10 +95,13 @@ const ERD = () => {
         onNodesChange,
         onEdgesChange,
         onEdgeHover,
+        onEdgeSelected,
         onConnect,
         addConnection,
         addEntity,
         addSelfConnection,
+        getConnectedFromNode,
+        getConnectedFromEdge,
     } = useErdStore(selector, shallow);
 
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
@@ -204,25 +212,124 @@ const ERD = () => {
         [selectedItem]
     );
 
+    const handleNodesAndEdgesHover = useCallback(
+        (
+            nodes: Node<EntityData>[],
+            edges: Edge<ErdEdgeData>[],
+            hovered: boolean
+        ) => {
+            nodes.forEach((n) => {
+                const nodeElem = reactFlowWrapper.current?.querySelector(
+                    `.react-flow__node-entity[data-id="${n.id}"]`
+                );
+                if (nodeElem) {
+                    nodeElem.classList.toggle("hovered", hovered);
+                }
+            });
+
+            edges.forEach((e) => {
+                const edgeElem = reactFlowWrapper.current?.querySelector(
+                    `.react-flow__edge-erd-edge[data-id="${e.id}"]`
+                );
+                if (edgeElem) {
+                    edgeElem.classList.toggle("hovered", hovered);
+                }
+                onEdgeHover(e, hovered);
+            });
+        },
+        [onEdgeHover]
+    );
+
     const onEdgeMouseEnter = useCallback((_: any, edge: Edge<ErdEdgeData>) => {
-        const edgeElem = reactFlowWrapper.current?.querySelector(
-            `.react-flow__edge-erd-edge[data-id="${edge.id}"]`
-        );
-        if (edgeElem) {
-            edgeElem.classList.add("hovered");
-        }
-        onEdgeHover(edge, true);
-    }, []);
+        const { edges, nodes } = getConnectedFromEdge(edge);
+        handleNodesAndEdgesHover(nodes, edges, true);
+    }, [handleNodesAndEdgesHover, getConnectedFromEdge]);
 
     const onEdgeMouseLeave = useCallback((_: any, edge: Edge<ErdEdgeData>) => {
-        const edgeElem = reactFlowWrapper.current?.querySelector(
-            `.react-flow__edge-erd-edge[data-id="${edge.id}"]`
-        );
-        if (edgeElem) {
-            edgeElem.classList.remove("hovered");
-        }
-        onEdgeHover(edge, false);
-    }, []);
+        const { edges, nodes } = getConnectedFromEdge(edge);
+        handleNodesAndEdgesHover(nodes, edges, false);
+    }, [handleNodesAndEdgesHover, getConnectedFromEdge]);
+
+    const onNodeMouseEnter = useCallback((_: any, node: Node<EntityData>) => {
+        const { edges, nodes } = getConnectedFromNode(node);
+        handleNodesAndEdgesHover(nodes, edges, true);
+    }, [handleNodesAndEdgesHover, getConnectedFromNode]);
+
+    const onNodeMouseLeave = useCallback((_: any, node: Node<EntityData>) => {
+        const { edges, nodes } = getConnectedFromNode(node);
+        handleNodesAndEdgesHover(nodes, edges, false);
+    }, [handleNodesAndEdgesHover, getConnectedFromNode]);
+
+    const onSelectionChange = useCallback(
+        ({
+            nodes,
+            edges,
+        }: {
+            nodes: Node<EntityData>[];
+            edges: Edge<ErdEdgeData>[];
+        }) => {
+            const uniqueEdges: Map<string, Edge<ErdEdgeData>> = new Map();
+            const uniqueNodes: Map<string, Node<EntityData>> = new Map();
+
+            for (const node of nodes) {
+                const { edges: eds, nodes: nds } = getConnectedFromNode(node);
+                for (const e of eds) {
+                    uniqueEdges.set(e.id, e);
+                }
+                for (const n of nds) {
+                    uniqueNodes.set(n.id, n);
+                }
+            }
+
+            for (const edge of edges) {
+                const { edges: eds, nodes: nds } = getConnectedFromEdge(edge);
+                for (const e of eds) {
+                    uniqueEdges.set(e.id, e);
+                }
+                for (const n of nds) {
+                    uniqueNodes.set(n.id, n);
+                }
+            }
+
+            const selectedNodeElems =
+                reactFlowWrapper.current?.querySelectorAll(
+                    `.react-flow__node-entity.selected`
+                );
+            const selectedEdgeElems =
+                reactFlowWrapper.current?.querySelectorAll(
+                    `.react-flow__edge-erd-edge.selected`
+                );
+
+            selectedNodeElems?.forEach((elem) => {
+                elem.classList.remove("selected");
+            });
+            selectedEdgeElems?.forEach((elem) => {
+                const edgeId = (elem as HTMLElement).dataset.id ?? "";
+                elem.classList.remove("selected");
+                onEdgeSelected(edgeId, false);
+            });
+
+            uniqueNodes.forEach((_, id) => {
+                const nodeElem = reactFlowWrapper.current?.querySelector(
+                    `.react-flow__node-entity[data-id="${id}"]`
+                );
+                if (nodeElem) {
+                    nodeElem.classList.add("selected");
+                }
+            });
+
+            uniqueEdges.forEach((e, id) => {
+                const edgeElem = reactFlowWrapper.current?.querySelector(
+                    `.react-flow__edge-erd-edge[data-id="${id}"]`
+                );
+                if (edgeElem) {
+                    edgeElem.classList.add("selected");
+                }
+                onEdgeSelected(e, true);
+            });
+        },
+        []
+    );
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout | null = null;
@@ -272,6 +379,9 @@ const ERD = () => {
                 onConnectEnd={onConnectEnd}
                 onEdgeMouseEnter={onEdgeMouseEnter}
                 onEdgeMouseLeave={onEdgeMouseLeave}
+                onNodeMouseEnter={onNodeMouseEnter}
+                onNodeMouseLeave={onNodeMouseLeave}
+                onSelectionChange={onSelectionChange}
                 panOnScroll
                 selectionOnDrag
                 panOnDrag={false}

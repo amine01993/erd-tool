@@ -36,6 +36,18 @@ export type ErdState = {
     onNodesChange: OnNodesChange;
     onEdgesChange: OnEdgesChange;
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => void;
+    onEdgeSelected: (
+        edge: Edge<ErdEdgeData> | string,
+        selected: boolean
+    ) => void;
+    getConnectedFromNode: (node: Node<EntityData>) => {
+        nodes: Node<EntityData>[];
+        edges: Edge<ErdEdgeData>[];
+    };
+    getConnectedFromEdge: (edge: Edge<ErdEdgeData>) => {
+        nodes: Node<EntityData>[];
+        edges: Edge<ErdEdgeData>[];
+    };
     onConnect: (params: Connection) => void;
     clearSelection: () => void;
     setErd: (diagram: DiagramData) => void;
@@ -251,6 +263,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => {
         const { edges, getMarkersName } = get();
         if (edge.selected) return;
+        if (String(edge.markerStart).endsWith("-selected")) return;
         if (edge.data) {
             let { markerStart, markerEnd } = getMarkersName(
                 String(edge.data.startValue),
@@ -271,6 +284,66 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 }),
             });
         }
+    },
+    onEdgeSelected: (edge: Edge<ErdEdgeData> | string, selected: boolean) => {
+        console.log("onEdgeSelected");
+        const { edges, getMarkersName } = get();
+        let edg: Edge<ErdEdgeData> | undefined;
+
+        if(typeof edge === "string") {
+            if(!edge) return;
+            edg = edges.find(e => e.id === edge);
+            if(!edg) return;
+        }
+        else {
+            edg = edge;
+        }
+
+        if (edg.selected) return;
+        console.log({ selected, edg });
+        if (edg.data) {
+            let { markerStart, markerEnd } = getMarkersName(
+                String(edg.data.startValue),
+                String(edg.data.endValue)
+            );
+            if (selected) {
+                markerStart += "-selected";
+                markerEnd += "-selected";
+            }
+            set({
+                edges: edges.map((e) => {
+                    if (e.id !== edg.id) return e;
+                    return {
+                        ...edg,
+                        markerStart,
+                        markerEnd,
+                    };
+                }),
+            });
+        }
+    },
+    getConnectedFromNode: (node: Node<EntityData>) => {
+        const { nodes, edges } = get();
+        const connectedEdges = edges.filter(
+            (e) => e.source === node.id || e.target === node.id
+        );
+        const connectedNodes = nodes.filter((n) =>
+            connectedEdges.some((e) => e.source === n.id || e.target === n.id)
+        );
+        return {
+            nodes: connectedNodes,
+            edges: connectedEdges,
+        };
+    },
+    getConnectedFromEdge: (edge: Edge<ErdEdgeData>) => {
+        const { nodes } = get();
+        const connectedNodes = nodes.filter(
+            (n) => edge.source === n.id || edge.target === n.id
+        );
+        return {
+            nodes: connectedNodes,
+            edges: [edge],
+        };
     },
     onConnect: (params: Connection) => {
         const { source, target } = params;
