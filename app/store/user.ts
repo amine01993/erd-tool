@@ -40,6 +40,8 @@ export interface UserState {
     isAuthModalOpen: boolean;
     isConfirmModalOpen: boolean;
     isReadOnlyModalOpen: boolean;
+    isAiPromptOpen: boolean;
+    aiSuggestionsEnabled: boolean;
     authType: AuthType;
     authDetail: any;
     isGuest: boolean;
@@ -60,6 +62,9 @@ export interface UserState {
     closeConfirmModal: () => void;
     openReadOnlyModal: () => void;
     closeReadOnlyModal: () => void;
+    openAiPrompt: () => void;
+    closeAiPrompt: () => void;
+    toggleAiSuggestions: () => void;
     setAuthType: (authType: AuthType) => void;
     login: (userName: string, password: string) => Promise<void>;
     signup: (
@@ -88,6 +93,8 @@ const useUserStore = create<UserState>((set, get) => ({
     isAuthModalOpen: false,
     isConfirmModalOpen: false,
     isReadOnlyModalOpen: false,
+    isAiPromptOpen: false,
+    aiSuggestionsEnabled: true,
     authType: "login",
     authDetail: null,
     isGuest: true,
@@ -158,6 +165,21 @@ const useUserStore = create<UserState>((set, get) => ({
     closeReadOnlyModal() {
         set({
             isReadOnlyModalOpen: false,
+        });
+    },
+    openAiPrompt() {
+        set({
+            isAiPromptOpen: true,
+        });
+    },
+    closeAiPrompt() {
+        set({
+            isAiPromptOpen: false,
+        });
+    },
+    toggleAiSuggestions() {
+        set({
+            aiSuggestionsEnabled: !get().aiSuggestionsEnabled,
         });
     },
     setAuthType(authType: AuthType) {

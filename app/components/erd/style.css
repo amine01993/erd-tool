@@ -9,6 +9,21 @@
     @apply disabled:cursor-not-allowed disabled:opacity-50;
 }
 
+.ai-prompt-btn {
+    @apply w-[170px] bg-white flex justify-between items-center;
+    @apply border-1 border-[#640D14] rounded-md p-1 outline-none focus:bg-[#f7dee0];
+    @apply hover:not-disabled:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+
+    .placeholder {
+        @apply font-semibold;
+    }
+
+    .shortcut {
+        @apply text-xs bg-[#640D14] text-white p-0.5 rounded-[2px];
+    }
+}
+
 .diagram-item-placeholder {
     mask-size: 200% 100%;
 

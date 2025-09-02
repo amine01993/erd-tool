@@ -100,6 +100,7 @@ export default memo(function Main() {
             persistOptions={{ persister }}
         >
             <div
+                id="main-wrapper"
                 className="h-screen w-full flex flex-col"
                 onClick={handleOutsideClick}
             >

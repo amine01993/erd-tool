@@ -1,9 +1,11 @@
 import {
+    Edge,
     Position,
     XYPosition,
     type InternalNode,
     type Node,
 } from "@xyflow/react";
+import dagre from "@dagrejs/dagre";
 import { ErdEdgeData } from "../type/EdgeType";
 import { AttributeData, EntityData } from "../type/EntityType";
 
@@ -333,13 +335,15 @@ function getEdgeAttributePosition(
 
     if (sourceAttr) {
         const elem = document.getElementById(sourceAttr.id);
-        const rect = elem!.getBoundingClientRect();
-        const fp = screenToFlowPosition({
-            x: rect.x + rect.width / 2,
-            y: rect.y + rect.height / 2,
-        });
-        sx = fp.x;
-        sy = fp.y;
+        if (elem) {
+            const rect = elem.getBoundingClientRect();
+            const fp = screenToFlowPosition({
+                x: rect.x + rect.width / 2,
+                y: rect.y + rect.height / 2,
+            });
+            sx = fp.x;
+            sy = fp.y;
+        }
     }
 
     if (targetData.name === foreignKeyTable) {
@@ -354,14 +358,64 @@ function getEdgeAttributePosition(
 
     if (targetAttr) {
         const elem = document.getElementById(targetAttr.id);
-        const rect = elem!.getBoundingClientRect();
-        const fp = screenToFlowPosition({
-            x: rect.x + rect.width / 2,
-            y: rect.y + rect.height / 2,
-        });
-        tx = fp.x;
-        ty = fp.y;
+        if (elem) {
+            const rect = elem.getBoundingClientRect();
+            const fp = screenToFlowPosition({
+                x: rect.x + rect.width / 2,
+                y: rect.y + rect.height / 2,
+            });
+            tx = fp.x;
+            ty = fp.y;
+        }
     }
 
     return { sx, sy, tx, ty };
+}
+
+const defaultHeight = 101;
+const defaultWidth = 201;
+
+export function getLayoutedElements(
+    nodes: Node<EntityData>[],
+    edges: Edge<ErdEdgeData>[]
+): {
+    nodes: Node<EntityData>[];
+    edges: Edge<ErdEdgeData>[];
+} {
+    const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(
+        () => ({})
+    );
+    dagreGraph.setGraph({ rankdir: "TB" });
+
+    nodes.forEach((node) => {
+        dagreGraph.setNode(node.id, {
+            width: node.measured?.width ?? defaultWidth,
+            height: node.measured?.height ?? defaultHeight,
+        });
+    });
+
+    edges.forEach((edge) => {
+        dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(dagreGraph);
+
+    const newNodes = nodes.map((node) => {
+        const nodeWithPosition = dagreGraph.node(node.id);
+        const newNode = {
+            ...node,
+            measured: {
+                width: nodeWithPosition.width,
+                height: nodeWithPosition.height,
+            },
+            position: {
+                x: nodeWithPosition.x - nodeWithPosition.width / 2,
+                y: nodeWithPosition.y - nodeWithPosition.height / 2,
+            },
+        };
+
+        return newNode;
+    });
+
+    return { nodes: newNodes, edges };
 }

@@ -78,7 +78,7 @@ const EntityNode = (props: { id: string; data: EntityData }) => {
             return edge.source === id || edge.target === id;
         });
 
-        return attributes
+        const _connectedAttributes = attributes
             .filter((attr) => {
                 return entityEdges.find(
                     (e) =>
@@ -89,6 +89,8 @@ const EntityNode = (props: { id: string; data: EntityData }) => {
                 );
             })
             .map((attr) => attr.id);
+
+        return _connectedAttributes;
     }, [edges, name, id]);
 
     return (

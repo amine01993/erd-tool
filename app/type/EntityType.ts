@@ -1,4 +1,6 @@
+import z from "zod";
 import { AttributeType } from "@/app/type/AttributeType";
+import { erdSchema } from "../erd-suggestion/schema";
 
 export type EntityData = {
     name: string;
@@ -22,3 +24,5 @@ export interface AttributeData {
     description?: string;
     isUnicode?: boolean;
 }
+
+export type ErdSchema = z.infer<typeof erdSchema>;

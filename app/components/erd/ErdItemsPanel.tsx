@@ -27,12 +27,14 @@ const ErdItemsPanel = () => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            e.preventDefault();
             if (e.shiftKey && e.key.toLowerCase() === "s") {
+                e.preventDefault();
                 selectItem("selector");
             } else if (e.shiftKey && e.key.toLowerCase() === "e") {
+                e.preventDefault();
                 selectItem("entity");
             } else if (e.shiftKey && e.key.toLowerCase() === "d") {
+                e.preventDefault();
                 selectItem("edge");
             }
         }

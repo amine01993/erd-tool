@@ -6,10 +6,10 @@ import {
     useEffect,
     useRef,
 } from "react";
+import { createPortal } from "react-dom";
 import {
     Background,
     Controls,
-    MiniMap,
     ReactFlow,
     SelectionMode,
     useReactFlow,
@@ -39,6 +39,7 @@ import useUpdateDiagram from "@/app/hooks/DiagramUpdate";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import { defaultEdgeOptions } from "@/app/helper/variables";
 import { EntityData } from "@/app/type/EntityType";
+import AiPrompt from "../diagram/AiPrompt";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -71,6 +72,7 @@ const selector = (state: ErdState) => ({
 const nodeOrigin: [number, number] = [0.5, 0];
 
 const ERD = () => {
+    const mainWrapper = useRef<HTMLDivElement | null>(null);
     const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
     const connectingNodeId = useRef<string | null>(null);
     const { screenToFlowPosition, setViewport, fitView } = useReactFlow();
@@ -240,25 +242,37 @@ const ERD = () => {
         [onEdgeHover]
     );
 
-    const onEdgeMouseEnter = useCallback((_: any, edge: Edge<ErdEdgeData>) => {
-        const { edges, nodes } = getConnectedFromEdge(edge);
-        handleNodesAndEdgesHover(nodes, edges, true);
-    }, [handleNodesAndEdgesHover, getConnectedFromEdge]);
+    const onEdgeMouseEnter = useCallback(
+        (_: any, edge: Edge<ErdEdgeData>) => {
+            const { edges, nodes } = getConnectedFromEdge(edge);
+            handleNodesAndEdgesHover(nodes, edges, true);
+        },
+        [handleNodesAndEdgesHover, getConnectedFromEdge]
+    );
 
-    const onEdgeMouseLeave = useCallback((_: any, edge: Edge<ErdEdgeData>) => {
-        const { edges, nodes } = getConnectedFromEdge(edge);
-        handleNodesAndEdgesHover(nodes, edges, false);
-    }, [handleNodesAndEdgesHover, getConnectedFromEdge]);
+    const onEdgeMouseLeave = useCallback(
+        (_: any, edge: Edge<ErdEdgeData>) => {
+            const { edges, nodes } = getConnectedFromEdge(edge);
+            handleNodesAndEdgesHover(nodes, edges, false);
+        },
+        [handleNodesAndEdgesHover, getConnectedFromEdge]
+    );
 
-    const onNodeMouseEnter = useCallback((_: any, node: Node<EntityData>) => {
-        const { edges, nodes } = getConnectedFromNode(node);
-        handleNodesAndEdgesHover(nodes, edges, true);
-    }, [handleNodesAndEdgesHover, getConnectedFromNode]);
+    const onNodeMouseEnter = useCallback(
+        (_: any, node: Node<EntityData>) => {
+            const { edges, nodes } = getConnectedFromNode(node);
+            handleNodesAndEdgesHover(nodes, edges, true);
+        },
+        [handleNodesAndEdgesHover, getConnectedFromNode]
+    );
 
-    const onNodeMouseLeave = useCallback((_: any, node: Node<EntityData>) => {
-        const { edges, nodes } = getConnectedFromNode(node);
-        handleNodesAndEdgesHover(nodes, edges, false);
-    }, [handleNodesAndEdgesHover, getConnectedFromNode]);
+    const onNodeMouseLeave = useCallback(
+        (_: any, node: Node<EntityData>) => {
+            const { edges, nodes } = getConnectedFromNode(node);
+            handleNodesAndEdgesHover(nodes, edges, false);
+        },
+        [handleNodesAndEdgesHover, getConnectedFromNode]
+    );
 
     const onSelectionChange = useCallback(
         ({
@@ -361,6 +375,12 @@ const ERD = () => {
         };
     }, [selectedDiagram, persistingViewport]);
 
+    useEffect(() => {
+        mainWrapper.current = document.getElementById(
+            "main-wrapper"
+        ) as HTMLDivElement;
+    }, []);
+
     return (
         <div
             className={`${robotoMono.className} h-full w-full`}
@@ -397,10 +417,10 @@ const ERD = () => {
             >
                 <Background />
                 <Controls showInteractive={false} />
-                <MiniMap />
-                {/* <DevTools /> */}
                 <ErdItemsPanel />
                 {loading && <Loading />}
+                {mainWrapper.current &&
+                    createPortal(<AiPrompt />, mainWrapper.current)}
             </ReactFlow>
         </div>
     );

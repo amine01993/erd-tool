@@ -19,9 +19,10 @@ import { nanoid } from "nanoid";
 import useDiagramStore, { isReadOnlySelector } from "./diagram";
 import useUserStore from "./user";
 import { DiagramData } from "../type/DiagramType";
-import { EntityData, AttributeData } from "../type/EntityType";
+import { EntityData, AttributeData, ErdSchema } from "../type/EntityType";
 import { ErdEdgeData } from "../type/EdgeType";
 import { defaultEdgeOptions } from "../helper/variables";
+import { getLayoutedElements } from "../helper/items";
 
 export type ErdState = {
     selectedNodeId: string | null;
@@ -68,6 +69,7 @@ export type ErdState = {
         onUpdate: string,
         edgePosition: string
     ) => void;
+    setErdFromSchema: (schema: ErdSchema) => void;
 };
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
@@ -129,7 +131,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         let selectedId = selectedNodeId,
             saving = false,
             update = false;
-
+        
         for (const change of changes) {
             const selected = (change as NodeSelectionChange).selected;
 
@@ -286,21 +288,20 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
     },
     onEdgeSelected: (edge: Edge<ErdEdgeData> | string, selected: boolean) => {
-        console.log("onEdgeSelected");
+
         const { edges, getMarkersName } = get();
         let edg: Edge<ErdEdgeData> | undefined;
 
-        if(typeof edge === "string") {
-            if(!edge) return;
-            edg = edges.find(e => e.id === edge);
-            if(!edg) return;
-        }
-        else {
+        if (typeof edge === "string") {
+            if (!edge) return;
+            edg = edges.find((e) => e.id === edge);
+            if (!edg) return;
+        } else {
             edg = edge;
         }
 
         if (edg.selected) return;
-        console.log({ selected, edg });
+        
         if (edg.data) {
             let { markerStart, markerEnd } = getMarkersName(
                 String(edg.data.startValue),
@@ -828,6 +829,134 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
 
         saveDiagram(newNodes, newEdges);
+    },
+    setErdFromSchema(schema: ErdSchema) {
+        const { nodes, edges, getMarkersName } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+        const { openReadOnlyModal } = useUserStore.getState();
+        const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
+
+        if (isReadOnly) {
+            openReadOnlyModal();
+            return;
+        }
+
+        const newNodes = schema.nodes.map((entity) => {
+            const existingNode = nodes.find((n) => n.data.name === entity.name);
+            return {
+                ...(existingNode || {}),
+                id: nanoid(),
+                type: "entity",
+                origin: [0.5, 0.0],
+                data: {
+                    ...(existingNode?.data || {}),
+                    name: entity.name,
+                    attributes: (entity.attributes || []).map((attr) => ({
+                        id: nanoid(),
+                        name: attr.name,
+                        type: attr.type,
+                        isPrimaryKey: attr.isPrimaryKey,
+                        isNullable: attr.isNullable,
+                        defaultValue: attr.defaultValue,
+                        isCurrent: attr.isCurrent,
+                        isAutoIncrement: attr.isAutoIncrement,
+                        isUnique: attr.isUnique,
+                        length: attr.length,
+                        precision: attr.precision,
+                        scale: attr.scale,
+                        description: attr.description,
+                        isUnicode: attr.isUnicode,
+                    })),
+                },
+            };
+        }).filter((n) => n.data.name) as Node<EntityData>[];
+
+        const newEdges: Edge<ErdEdgeData>[] = [];
+
+        schema.edges.forEach((edge) => {
+            if (
+                !edge.source ||
+                !edge.foreignKey ||
+                !edge.references ||
+                !edge.relationship ||
+                !edge.references.entity ||
+                !edge.references.attribute
+            ) return;
+
+            const s = newNodes.find((n) => n.data.name === edge.source);
+            const t = newNodes.find(
+                (n) => n.data.name === edge.references.entity
+            );
+
+            if (!s || !t) return;
+
+            const fk = (s.data.attributes || []).find(
+                (a) => a.name === edge.foreignKey
+            );
+            if (fk) fk.isForeignKey = true;
+
+            const [start, end] = edge.relationship.split("-");
+            const startValue =
+                start === "one" ? "1" : start === "zero" ? "0..1" : "*";
+            const endValue =
+                end === "one" ? "1" : end === "zero" ? "0..1" : "*";
+            const { markerStart, markerEnd } = getMarkersName(
+                startValue,
+                endValue
+            );
+
+            newEdges.push({
+                id: nanoid(),
+                source: s.id,
+                target: t.id,
+                type: "erd-edge",
+                markerStart,
+                markerEnd,
+                data: {
+                    ...defaultEdgeOptions.data,
+                    startValue,
+                    endValue,
+                    primaryKeyColumn: edge.references.attribute,
+                    primaryKeyTable: edge.references.entity,
+                    foreignKeyColumn: edge.foreignKey,
+                    foreignKeyTable: edge.source,
+                },
+            });
+        });
+
+        nodes.forEach((n) => {
+            const existingNode = newNodes.find(
+                (nn) => nn.data.name === n.data.name
+            );
+            if (!existingNode) {
+                newNodes.push(n);
+            }
+        });
+
+        edges.forEach((e) => {
+            const existingEdge = newEdges.find(
+                (ne) =>
+                    ne.source === e.source &&
+                    ne.target === e.target &&
+                    ne.data?.primaryKeyColumn === e.data?.primaryKeyColumn &&
+                    ne.data?.primaryKeyTable === e.data?.primaryKeyTable &&
+                    ne.data?.foreignKeyColumn === e.data?.foreignKeyColumn &&
+                    ne.data?.foreignKeyTable === e.data?.foreignKeyTable
+            );
+            if (!existingEdge) {
+                newEdges.push(e);
+            }
+        });
+
+        const { nodes: layoutedNodes, edges: layoutedEdges } =
+            getLayoutedElements(newNodes, newEdges);
+
+        set({
+            nodes: layoutedNodes,
+            edges: layoutedEdges,
+        });
+
+        saveDiagram(layoutedNodes, layoutedEdges);
     },
 }));
 export default useErdStore;

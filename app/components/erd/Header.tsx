@@ -26,12 +26,14 @@ import useDeleteDiagram from "@/app/hooks/DiagramDelete";
 import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import Tooltip from "./Tooltip";
+import AiSuggestions from "../widgets/AiSuggestions";
 
 const Header = () => {
     const offLine = useUserStore((state) => state.offLine);
     const retrieveAuthData = useUserStore((state) => state.retrieveAuthData);
     const emptyAuthData = useUserStore((state) => state.emptyAuthData);
     const openConfirmModal = useUserStore((state) => state.openConfirmModal);
+    const openAiPrompt = useUserStore((state) => state.openAiPrompt);
     const mutationAdd = useAddDiagram();
     const mutationDelete = useDeleteDiagram();
     const mutationRecover = useRecoverDiagram();
@@ -89,21 +91,33 @@ const Header = () => {
         recoverDiagram(mutationRecover);
     }, [recoverDiagram]);
 
+    const handleOpenAiPrompt = useCallback(() => {
+        openAiPrompt();
+    }, []);
+
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            e.preventDefault();
 
-            if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "z") {
+            if (e.ctrlKey && !e.shiftKey && e.key?.toLowerCase() === "z") {
+                e.preventDefault();
                 handleUndo();
             } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") {
+                e.preventDefault();
                 handleRedo();
-            } else if (e.ctrlKey && e.key.toLowerCase() === "r") {
+            } else if (e.ctrlKey && e.key?.toLowerCase() === "r") {
+                e.preventDefault();
                 handleDiagramsRefresh();
-            } else if (e.ctrlKey && e.key.toLowerCase() === "n") {
+            } else if (e.ctrlKey && e.key?.toLowerCase() === "n") {
+                e.preventDefault();
                 handleNewDiagram();
-            } else if (e.ctrlKey && e.key.toLowerCase() === "d") {
+            } else if (e.ctrlKey && e.key?.toLowerCase() === "d") {
+                e.preventDefault();
                 handleDuplicateDiagram();
-            } else if (e.key.toLowerCase() === "delete") {
+            } else if (e.ctrlKey && e.key?.toLowerCase() === "i") {
+                e.preventDefault();
+                handleOpenAiPrompt();
+            } else if (e.key?.toLowerCase() === "delete") {
+                e.preventDefault();
                 handleDeleteDiagram();
             }
         }
@@ -336,6 +350,7 @@ const Header = () => {
                 </div>
             </div>
             <div className="flex items-center">
+                <AiSuggestions />
                 <Theme />
                 <Settings />
             </div>
