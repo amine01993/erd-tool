@@ -18,6 +18,7 @@ import {
 } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import ChevronDownIcon from "@iconify/icons-tabler/chevron-down";
+import cc from "classcat";
 import { getEdgeParams, getSelfLoopPath } from "@/app/helper/items";
 import useErdStore from "@/app/store/erd";
 import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
@@ -106,6 +107,15 @@ function ErdEdge({
     const { screenToFlowPosition } = useReactFlow();
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
+    const edgeStyle = useMemo(() => {
+        const _style = {...style};
+        if(data?.isSuggestion) {
+            _style.strokeDasharray = "5,5";
+            _style.opacity = 0.6;
+            _style.stroke = "var(--color-gray-700)";
+        }
+        return _style;
+    }, [data, style]);
 
     if (!sourceNode || !targetNode) {
         return null;
@@ -208,11 +218,14 @@ function ErdEdge({
         <>
             <BaseEdge
                 id={id}
-                className="react-flow__edge-path"
+                className={cc([
+                    "react-flow__edge-path",
+                    { suggested: data?.isSuggestion },
+                ])}
                 path={edgePath}
                 markerStart={markerStart}
                 markerEnd={markerEnd}
-                style={style}
+                style={edgeStyle}
             />
 
             <EdgeLabelRenderer>

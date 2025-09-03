@@ -1,10 +1,12 @@
 import z from "zod";
 import { AttributeType } from "@/app/type/AttributeType";
 import { erdSchema } from "../erd-suggestion/schema";
+import { erdCompletionSchema } from "../erd-completion/schema";
 
 export type EntityData = {
     name: string;
     attributes: AttributeData[];
+    isSuggestion?: boolean;
 }
 
 export interface AttributeData {
@@ -23,6 +25,8 @@ export interface AttributeData {
     scale?: number;
     description?: string;
     isUnicode?: boolean;
+    isSuggestion?: boolean;
 }
 
 export type ErdSchema = z.infer<typeof erdSchema>;
+export type ErdCompletionSchema = z.infer<typeof erdCompletionSchema>;

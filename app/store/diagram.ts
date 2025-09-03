@@ -945,10 +945,10 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                                     ...n.data,
                                     attributes: n.data.attributes.map((a) => ({
                                         ...a,
-                                    })),
+                                    })).filter((a) => !a.isSuggestion),
                                 } as EntityData,
                             };
-                        }),
+                        }).filter((n) => !n.data.isSuggestion),
                         edges: s.edges.map((e) => {
                             return {
                                 ...e,
@@ -956,7 +956,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                                     ...e.data,
                                 } as ErdEdgeData,
                             };
-                        }),
+                        }).filter((e) => !e.data.isSuggestion),
                     };
                 }),
             },

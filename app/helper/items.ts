@@ -377,7 +377,8 @@ const defaultWidth = 201;
 
 export function getLayoutedElements(
     nodes: Node<EntityData>[],
-    edges: Edge<ErdEdgeData>[]
+    edges: Edge<ErdEdgeData>[],
+    fixedNodeIds: Set<string> | null = null
 ): {
     nodes: Node<EntityData>[];
     edges: Edge<ErdEdgeData>[];
@@ -392,6 +393,11 @@ export function getLayoutedElements(
             width: node.measured?.width ?? defaultWidth,
             height: node.measured?.height ?? defaultHeight,
         });
+
+        if (fixedNodeIds?.has(node.id)) {
+            dagreGraph.node(node.id).x = node.position.x;
+            dagreGraph.node(node.id).y = node.position.y;
+        }
     });
 
     edges.forEach((edge) => {

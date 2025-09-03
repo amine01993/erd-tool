@@ -12,9 +12,7 @@ const AiSuggestions = () => {
     const toggleAiSuggestions = useUserStore(
         (state) => state.toggleAiSuggestions
     );
-    const openAiPrompt = useUserStore(
-        (state) => state.openAiPrompt
-    );
+    const openAiPrompt = useUserStore((state) => state.openAiPrompt);
 
     const handleAiPrompt = useCallback(() => {
         openAiPrompt();
@@ -26,14 +24,9 @@ const AiSuggestions = () => {
 
     return (
         <div className="flex gap-2 items-center">
-            <button
-                className="ai-prompt-btn"
-                onClick={handleAiPrompt}
-            >
+            <button className="ai-prompt-btn" onClick={handleAiPrompt}>
                 <span className="placeholder">AI Prompt</span>
-                <span className="shortcut">
-                    Ctrl+I
-                </span>
+                <span className="shortcut">Ctrl+I</span>
             </button>
             <button
                 aria-label="Toggle ai suggestions"

@@ -326,6 +326,10 @@
 .entity-node {
     @apply text-[12px] h-full flex flex-col min-w-[199px] min-h-[99px];
 
+    &.suggested {
+        @apply opacity-60 brightness-50 text-gray-700;
+    }
+
     .title {
         @apply font-semibold border-b text-center flex items-center;
 
@@ -346,6 +350,10 @@
             &:hover,
             .hover {
                 @apply bg-(--color-blue-400) text-white;
+            }
+
+            &.suggested {
+                @apply opacity-60 brightness-50 text-gray-700;
             }
         }
     }

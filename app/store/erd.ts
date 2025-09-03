@@ -19,15 +19,24 @@ import { nanoid } from "nanoid";
 import useDiagramStore, { isReadOnlySelector } from "./diagram";
 import useUserStore from "./user";
 import { DiagramData } from "../type/DiagramType";
-import { EntityData, AttributeData, ErdSchema } from "../type/EntityType";
+import {
+    EntityData,
+    AttributeData,
+    ErdSchema,
+    ErdCompletionSchema,
+} from "../type/EntityType";
 import { ErdEdgeData } from "../type/EdgeType";
-import { defaultEdgeOptions } from "../helper/variables";
+import {
+    defaultAttributeValues,
+    defaultEdgeOptions,
+} from "../helper/variables";
 import { getLayoutedElements } from "../helper/items";
 
 export type ErdState = {
     selectedNodeId: string | null;
     selectedEdgeId: string | null;
     loaded: boolean;
+    suggestionsAvailable: boolean;
     nodes: Node<EntityData>[];
     edges: Edge<ErdEdgeData>[];
     getMarkersName: (
@@ -70,12 +79,20 @@ export type ErdState = {
         edgePosition: string
     ) => void;
     setErdFromSchema: (schema: ErdSchema) => void;
+    autoCompleteSuggestion: (
+        selected: { nodes: Node<EntityData>[]; edges: Edge<ErdEdgeData>[] },
+        submit: (input: any) => void
+    ) => void;
+    setSuggestionsFromSchema: (schema: ErdCompletionSchema) => void;
+    clearSuggestions: () => void;
+    saveSuggestions: () => void;
 };
 
 const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
     selectedNodeId: null,
     selectedEdgeId: null,
     loaded: false,
+    suggestionsAvailable: false,
     nodes: [],
     edges: [],
     clearSelection() {
@@ -131,7 +148,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         let selectedId = selectedNodeId,
             saving = false,
             update = false;
-        
+
         for (const change of changes) {
             const selected = (change as NodeSelectionChange).selected;
 
@@ -288,7 +305,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
     },
     onEdgeSelected: (edge: Edge<ErdEdgeData> | string, selected: boolean) => {
-
         const { edges, getMarkersName } = get();
         let edg: Edge<ErdEdgeData> | undefined;
 
@@ -301,7 +317,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
 
         if (edg.selected) return;
-        
+
         if (edg.data) {
             let { markerStart, markerEnd } = getMarkersName(
                 String(edg.data.startValue),
@@ -841,35 +857,40 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             return;
         }
 
-        const newNodes = schema.nodes.map((entity) => {
-            const existingNode = nodes.find((n) => n.data.name === entity.name);
-            return {
-                ...(existingNode || {}),
-                id: nanoid(),
-                type: "entity",
-                origin: [0.5, 0.0],
-                data: {
-                    ...(existingNode?.data || {}),
-                    name: entity.name,
-                    attributes: (entity.attributes || []).map((attr) => ({
-                        id: nanoid(),
-                        name: attr.name,
-                        type: attr.type,
-                        isPrimaryKey: attr.isPrimaryKey,
-                        isNullable: attr.isNullable,
-                        defaultValue: attr.defaultValue,
-                        isCurrent: attr.isCurrent,
-                        isAutoIncrement: attr.isAutoIncrement,
-                        isUnique: attr.isUnique,
-                        length: attr.length,
-                        precision: attr.precision,
-                        scale: attr.scale,
-                        description: attr.description,
-                        isUnicode: attr.isUnicode,
-                    })),
-                },
-            };
-        }).filter((n) => n.data.name) as Node<EntityData>[];
+        const newNodes = schema.nodes
+            .map((entity) => {
+                const existingNode = nodes.find(
+                    (n) => n.data.name === entity.name
+                );
+                return {
+                    ...(existingNode || {}),
+                    id: nanoid(),
+                    type: "entity",
+                    origin: [0.5, 0.0],
+                    data: {
+                        ...(existingNode?.data || {}),
+                        name: entity.name,
+                        attributes: (entity.attributes || []).map((attr) => ({
+                            ...defaultAttributeValues,
+                            id: nanoid(),
+                            name: attr.name,
+                            type: attr.type,
+                            isPrimaryKey: attr.isPrimaryKey,
+                            isNullable: attr.isNullable,
+                            defaultValue: attr.defaultValue,
+                            isCurrent: attr.isCurrent,
+                            isAutoIncrement: attr.isAutoIncrement,
+                            isUnique: attr.isUnique,
+                            length: attr.length,
+                            precision: attr.precision,
+                            scale: attr.scale,
+                            description: attr.description,
+                            isUnicode: attr.isUnicode,
+                        })),
+                    },
+                };
+            })
+            .filter((n) => n.data.name) as Node<EntityData>[];
 
         const newEdges: Edge<ErdEdgeData>[] = [];
 
@@ -881,7 +902,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 !edge.relationship ||
                 !edge.references.entity ||
                 !edge.references.attribute
-            ) return;
+            )
+                return;
 
             const s = newNodes.find((n) => n.data.name === edge.source);
             const t = newNodes.find(
@@ -957,6 +979,302 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
 
         saveDiagram(layoutedNodes, layoutedEdges);
+    },
+    autoCompleteSuggestion(
+        selected: { nodes: Node<EntityData>[]; edges: Edge<ErdEdgeData>[] },
+        submit: (input: any) => void
+    ) {
+        const { nodes, edges } = get();
+        const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
+
+        if (isReadOnly) {
+            return;
+        }
+
+        submit({
+            selectedNodes: selected.nodes.map((n) => n.data.name),
+            selectedEdges: selected.edges.map((e) => {
+                const data = {
+                    source: e.data?.primaryKeyTable,
+                    foreignKey: e.data?.foreignKeyColumn,
+                    references: {
+                        entity: e.data?.primaryKeyTable,
+                        attribute: e.data?.primaryKeyColumn,
+                    },
+                };
+                if(!data.source) delete data.source;
+                if(!data.foreignKey) delete data.foreignKey;
+                if(!data.references.entity) delete data.references.entity;
+                if(!data.references.attribute) delete data.references.attribute;
+                return data;
+            }),
+            nodes: nodes.map((n) => n.data),
+            edges: edges
+                .map((e) => {
+                    if (
+                        !e.data?.foreignKeyColumn ||
+                        !e.data?.foreignKeyTable ||
+                        !e.data?.primaryKeyColumn ||
+                        !e.data?.primaryKeyTable ||
+                        !e.data?.startValue ||
+                        !e.data?.endValue
+                    )
+                        return null;
+
+                    const start =
+                        e.data.startValue === "1"
+                            ? "one"
+                            : e.data.startValue === "0..1"
+                            ? "zero"
+                            : "many";
+                    const end =
+                        e.data.endValue === "1"
+                            ? "one"
+                            : e.data.endValue === "0..1"
+                            ? "zero"
+                            : "many";
+
+                    return {
+                        source: e.data.primaryKeyTable,
+                        foreignKey: e.data.foreignKeyColumn,
+                        references: {
+                            entity: e.data.primaryKeyTable,
+                            attribute: e.data.primaryKeyColumn,
+                        },
+                        relationship: start + "-to-" + end,
+                    };
+                })
+                .filter((e) => e !== null),
+        });
+    },
+    setSuggestionsFromSchema(schema: ErdCompletionSchema) {
+        const { nodes, edges, getMarkersName } = get();
+        const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
+
+        if (isReadOnly) {
+            return;
+        }
+
+        const newNodes: Node<EntityData>[] = [];
+
+        schema.nodes.forEach((entity) => {
+            const existingNode = nodes.find((n) => n.data.name === entity.name);
+            if (existingNode) {
+                const newNode = {
+                    ...existingNode,
+                    data: {
+                        ...existingNode.data,
+                        attributes: existingNode.data.attributes.map((a) => ({
+                            ...a,
+                        })),
+                    },
+                };
+
+                entity.attributes.forEach((attr) => {
+                    const existingAttribute = existingNode.data.attributes.find(
+                        (a) => a.name === attr.name
+                    );
+                    if (existingAttribute) return;
+
+                    newNode.data.attributes.push({
+                        ...defaultAttributeValues,
+                        id: nanoid(),
+                        ...attr,
+                        isSuggestion: true,
+                    });
+                });
+
+                newNodes.push(newNode);
+            } else {
+                const newNode: Node<EntityData> = {
+                    id: nanoid(),
+                    type: "entity",
+                    origin: [0.5, 0.0],
+                    position: { x: 0, y: 0 },
+                    data: {
+                        name: entity.name,
+                        attributes: (entity.attributes || []).map((attr) => ({
+                            ...defaultAttributeValues,
+                            ...attr,
+                            id: nanoid(),
+                        })),
+                        isSuggestion: true,
+                    },
+                };
+                newNodes.push(newNode);
+            }
+        });
+
+        nodes.forEach((n) => {
+            const existingNode = newNodes.find(
+                (nn) => nn.data.name === n.data.name
+            );
+            if (!existingNode) {
+                newNodes.push(n);
+            }
+        });
+
+        const newEdges: Edge<ErdEdgeData>[] = [];
+
+        schema.edges?.forEach((edge) => {
+            if (
+                !edge.source ||
+                !edge.foreignKey ||
+                !edge.references ||
+                !edge.relationship ||
+                !edge.references.entity ||
+                !edge.references.attribute
+            )
+                return;
+
+            const s = newNodes.find((n) => n.data.name === edge.source);
+            const t = newNodes.find(
+                (n) => n.data.name === edge.references.entity
+            );
+
+            if (!s || !t) return;
+
+            const fk = (s.data.attributes || []).find(
+                (a) => a.name === edge.foreignKey
+            );
+            if (fk) fk.isForeignKey = true;
+            else {
+                s.data.attributes.push({
+                    ...defaultAttributeValues,
+                    id: nanoid(),
+                    type: "integer",
+                    name: edge.foreignKey,
+                    isForeignKey: true,
+                    isSuggestion: true,
+                });
+            }
+
+            const [start, end] = edge.relationship.split("-");
+            const startValue =
+                start === "one" ? "1" : start === "zero" ? "0..1" : "*";
+            const endValue =
+                end === "one" ? "1" : end === "zero" ? "0..1" : "*";
+            const { markerStart, markerEnd } = getMarkersName(
+                startValue,
+                endValue
+            );
+
+            newEdges.push({
+                id: nanoid(),
+                source: s.id,
+                target: t.id,
+                type: "erd-edge",
+                markerStart,
+                markerEnd,
+                data: {
+                    ...defaultEdgeOptions.data,
+                    startValue,
+                    endValue,
+                    primaryKeyColumn: edge.references.attribute,
+                    primaryKeyTable: edge.references.entity,
+                    foreignKeyColumn: edge.foreignKey,
+                    foreignKeyTable: edge.source,
+                    isSuggestion: true,
+                },
+            });
+        });
+
+        edges.forEach((e) => {
+            const existingEdge = newEdges.find(
+                (ne) =>
+                    ne.data?.primaryKeyColumn === e.data?.primaryKeyColumn &&
+                    ne.data?.primaryKeyTable === e.data?.primaryKeyTable &&
+                    ne.data?.foreignKeyColumn === e.data?.foreignKeyColumn &&
+                    ne.data?.foreignKeyTable === e.data?.foreignKeyTable
+            );
+            if (!existingEdge) {
+                newEdges.push(e);
+            }
+        });
+
+        const { nodes: layoutedNodes, edges: layoutedEdges } =
+            getLayoutedElements(
+                newNodes,
+                newEdges,
+                // new Set(nodes.map((n) => n.id))
+            );
+
+        set({
+            nodes: layoutedNodes,
+            edges: newEdges,
+            suggestionsAvailable: true,
+        });
+    },
+    clearSuggestions() {
+        const { nodes, edges } = get();
+
+        const newNodes = nodes
+            .map((n) => {
+                return {
+                    ...n,
+                    data: {
+                        ...n.data,
+                        attributes: n.data.attributes
+                            .map((a) => ({
+                                ...a,
+                            }))
+                            .filter((a) => !a.isSuggestion),
+                    },
+                };
+            })
+            .filter((n) => !n.data.isSuggestion);
+
+        const newEdges = edges
+            .map((e) => {
+                return {
+                    ...e,
+                    data: {
+                        ...e.data,
+                    } as ErdEdgeData,
+                };
+            })
+            .filter((e) => !e.data.isSuggestion);
+
+        set({
+            nodes: newNodes,
+            edges: newEdges,
+            suggestionsAvailable: false,
+        });
+    },
+    saveSuggestions() {
+        const { nodes, edges } = get();
+        const { saveDiagram } = useDiagramStore.getState();
+
+        const newNodes = nodes.map((n) => {
+            return {
+                ...n,
+                data: {
+                    ...n.data,
+                    isSuggestion: false,
+                    attributes: n.data.attributes.map((a) => ({
+                        ...a,
+                        isSuggestion: false,
+                    })),
+                },
+            };
+        });
+        const newEdges = edges.map((e) => {
+            return {
+                ...e,
+                data: {
+                    ...e.data,
+                    isSuggestion: false,
+                } as ErdEdgeData,
+            };
+        });
+
+        set({
+            nodes: newNodes,
+            edges: newEdges,
+            suggestionsAvailable: false,
+        });
+
+        saveDiagram(newNodes, newEdges);
     },
 }));
 export default useErdStore;

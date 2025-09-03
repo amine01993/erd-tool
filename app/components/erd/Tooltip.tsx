@@ -18,21 +18,32 @@ const Tooltip = ({
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        const elements = document.querySelectorAll(selector);
+        let elements: NodeListOf<HTMLElement> | null = null;
+        let element: HTMLElement | null = null;
+
+        if (selector.startsWith("#")) {
+            element = document.getElementById(selector.slice(1));
+        } else {
+            elements = document.querySelectorAll(selector);
+        }
 
         const showTooltip = () => setIsVisible(true);
         const hideTooltip = () => setIsVisible(false);
 
-        elements.forEach((element) => {
-            element.addEventListener("mouseenter", showTooltip);
-            element.addEventListener("mouseleave", hideTooltip);
+        elements?.forEach((el) => {
+            el.addEventListener("mouseenter", showTooltip);
+            el.addEventListener("mouseleave", hideTooltip);
         });
+        element?.addEventListener("mouseenter", showTooltip);
+        element?.addEventListener("mouseleave", hideTooltip);
 
         return () => {
-            elements.forEach((element) => {
-                element.removeEventListener("mouseenter", showTooltip);
-                element.removeEventListener("mouseleave", hideTooltip);
+            elements?.forEach((el) => {
+                el.removeEventListener("mouseenter", showTooltip);
+                el.removeEventListener("mouseleave", hideTooltip);
             });
+            element?.removeEventListener("mouseenter", showTooltip);
+            element?.removeEventListener("mouseleave", hideTooltip);
         };
     }, [selector]);
 

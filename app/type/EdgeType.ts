@@ -10,4 +10,5 @@ export type ErdEdgeData = {
     onDelete?: string;
     onUpdate?: string;
     edgePosition?: string;
+    isSuggestion?: boolean;
 };

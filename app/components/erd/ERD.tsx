@@ -5,6 +5,7 @@ import {
     useCallback,
     useEffect,
     useRef,
+    useState,
 } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -23,6 +24,7 @@ import {
 } from "@xyflow/react";
 import { shallow } from "zustand/shallow";
 import { useQuery } from "@tanstack/react-query";
+import { experimental_useObject as useObject } from "@ai-sdk/react";
 import cc from "classcat";
 import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
@@ -40,6 +42,8 @@ import useAddDiagram from "@/app/hooks/DiagramAdd";
 import { defaultEdgeOptions } from "@/app/helper/variables";
 import { EntityData } from "@/app/type/EntityType";
 import AiPrompt from "../diagram/AiPrompt";
+import { erdCompletionSchema } from "@/app/erd-completion/schema";
+import useUserStore from "@/app/store/user";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -55,6 +59,7 @@ const edgeTypes = {
 };
 
 const selector = (state: ErdState) => ({
+    suggestionsAvailable: state.suggestionsAvailable,
     nodes: state.nodes,
     edges: state.edges,
     onNodesChange: state.onNodesChange,
@@ -67,6 +72,10 @@ const selector = (state: ErdState) => ({
     addSelfConnection: state.addSelfConnection,
     getConnectedFromNode: state.getConnectedFromNode,
     getConnectedFromEdge: state.getConnectedFromEdge,
+    autoCompleteSuggestion: state.autoCompleteSuggestion,
+    setSuggestionsFromSchema: state.setSuggestionsFromSchema,
+    clearSuggestions: state.clearSuggestions,
+    saveSuggestions: state.saveSuggestions,
 });
 
 const nodeOrigin: [number, number] = [0.5, 0];
@@ -76,6 +85,10 @@ const ERD = () => {
     const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
     const connectingNodeId = useRef<string | null>(null);
     const { screenToFlowPosition, setViewport, fitView } = useReactFlow();
+    const [prevSelection, setPrevSelection] = useState<{
+        nodeIds: Set<string>;
+        edgeIds: Set<string>;
+    }>({ nodeIds: new Set(), edgeIds: new Set() });
 
     const loading = useDiagramStore((state) => state.loading);
     const persisting = useDiagramStore((state) => state.persisting);
@@ -90,8 +103,12 @@ const ERD = () => {
     const persistDiagramViewport = useDiagramStore(
         (state) => state.persistDiagramViewport
     );
+    const aiSuggestionsEnabled = useUserStore(
+        (state) => state.aiSuggestionsEnabled
+    );
 
     const {
+        suggestionsAvailable,
         nodes,
         edges,
         onNodesChange,
@@ -104,6 +121,10 @@ const ERD = () => {
         addSelfConnection,
         getConnectedFromNode,
         getConnectedFromEdge,
+        autoCompleteSuggestion,
+        setSuggestionsFromSchema,
+        clearSuggestions,
+        saveSuggestions,
     } = useErdStore(selector, shallow);
 
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
@@ -143,6 +164,23 @@ const ERD = () => {
         },
         enabled: selectedDiagram !== "",
         networkMode: "always",
+    });
+
+    const {
+        isLoading: isLoadingSuggestion,
+        submit,
+        stop,
+    } = useObject({
+        api: "/erd-completion",
+        schema: erdCompletionSchema,
+        onFinish({ object, error }) {
+            if (!error && object) {
+                setSuggestionsFromSchema(object);
+            }
+        },
+        onError(error) {
+            console.error("An error occurred:", error);
+        },
     });
 
     const onConnectEnd = useCallback(
@@ -282,10 +320,28 @@ const ERD = () => {
             nodes: Node<EntityData>[];
             edges: Edge<ErdEdgeData>[];
         }) => {
+            if (
+                nodes.length === prevSelection.nodeIds.size &&
+                edges.length === prevSelection.edgeIds.size &&
+                nodes.every(
+                    (n) =>
+                        prevSelection.nodeIds.has(n.id) &&
+                        edges.every((e) => prevSelection.edgeIds.has(e.id))
+                )
+            ) {
+                return;
+            } else {
+                setPrevSelection({
+                    nodeIds: new Set(nodes.map((n) => n.id)),
+                    edgeIds: new Set(edges.map((e) => e.id)),
+                });
+            }
+
             const uniqueEdges: Map<string, Edge<ErdEdgeData>> = new Map();
             const uniqueNodes: Map<string, Node<EntityData>> = new Map();
 
             for (const node of nodes) {
+                uniqueNodes.set(node.id, node);
                 const { edges: eds, nodes: nds } = getConnectedFromNode(node);
                 for (const e of eds) {
                     uniqueEdges.set(e.id, e);
@@ -341,8 +397,48 @@ const ERD = () => {
                 }
                 onEdgeSelected(e, true);
             });
+
+            if (
+                aiSuggestionsEnabled &&
+                (nodes.length > 0 || edges.length > 0)
+            ) {
+                if (suggestionsAvailable) {
+                    // check if suggestions are available in the selected nodes and edges
+                    let suggestionExist = false;
+                    m: for (const node of nodes) {
+                        if (node.data?.isSuggestion) {
+                            suggestionExist = true;
+                            break;
+                        }
+                        else {
+                            for (const attr of node.data.attributes) {
+                                if (attr.isSuggestion) {
+                                    suggestionExist = true;
+                                    break m;
+                                }
+                            }
+                        }
+                    }
+                    for (const edge of edges) {
+                        if (edge.data?.isSuggestion) {
+                            suggestionExist = true;
+                            break;
+                        }
+                    }
+                    if(suggestionExist) {
+                        saveSuggestions();
+                    }
+                } else if (!isLoadingSuggestion) {
+                    autoCompleteSuggestion({ nodes, edges }, submit);
+                }
+            }
         },
-        []
+        [
+            aiSuggestionsEnabled,
+            isLoadingSuggestion,
+            suggestionsAvailable,
+            prevSelection,
+        ]
     );
 
     useEffect(() => {
@@ -374,6 +470,38 @@ const ERD = () => {
             }
         };
     }, [selectedDiagram, persistingViewport]);
+
+    useEffect(() => {
+        if (selectedDiagram) {
+            clearSuggestions();
+            stop();
+        }
+    }, [selectedDiagram]);
+
+    useEffect(() => {
+        function handleKeyDown(e: KeyboardEvent) {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                clearSuggestions();
+            } else if (e.key === "Tab") {
+                e.preventDefault();
+                saveSuggestions();
+            }
+        }
+
+        if (!aiSuggestionsEnabled) {
+            clearSuggestions();
+            stop();
+        } else {
+            window.addEventListener("keydown", handleKeyDown);
+        }
+
+        return () => {
+            if (aiSuggestionsEnabled) {
+                window.removeEventListener("keydown", handleKeyDown);
+            }
+        };
+    }, [stop, clearSuggestions, saveSuggestions, aiSuggestionsEnabled]);
 
     useEffect(() => {
         mainWrapper.current = document.getElementById(

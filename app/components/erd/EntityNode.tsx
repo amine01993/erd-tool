@@ -35,12 +35,10 @@ const AttributeNode = memo(({ data }: AttributeDataProps) => {
                         </span>
                         {nullable && <span className="italic">?</span>}
                         {data.description && (
-                            // <span>
                             <Icon
                                 icon={NotesIcon}
                                 className="inline ml-0.5 text-gray-500"
                             />
-                            // </span>
                         )}
                     </span>
                     {data.isPrimaryKey && <span className="">(PK)</span>}
@@ -58,7 +56,7 @@ const AttributeNode = memo(({ data }: AttributeDataProps) => {
                     message={data.description}
                     position="right"
                     selector={`#${data.id}`}
-                    props={{ className: "text-[12px]! w-32 whitespace-normal" }}
+                    props={{ className: "text-[12px]! w-32 whitespace-normal!" }}
                 />
             )}
         </>
@@ -68,7 +66,7 @@ const AttributeNode = memo(({ data }: AttributeDataProps) => {
 const EntityNode = (props: { id: string; data: EntityData }) => {
     const {
         id,
-        data: { name, attributes },
+        data: { name, attributes, isSuggestion },
     } = props;
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
     const edges = useErdStore((state) => state.edges);
@@ -94,7 +92,7 @@ const EntityNode = (props: { id: string; data: EntityData }) => {
     }, [edges, name, id]);
 
     return (
-        <div className="entity-node">
+        <div className={cc(["entity-node", { suggested: isSuggestion }])}>
             <h3 className="title">
                 <div
                     className={cc([
@@ -127,6 +125,7 @@ const EntityNode = (props: { id: string; data: EntityData }) => {
                         id={attr.id}
                         className={cc([
                             "relative",
+                            { suggested: attr.isSuggestion },
                             connectedAttributes.includes(attr.id)
                                 ? "connected"
                                 : undefined,

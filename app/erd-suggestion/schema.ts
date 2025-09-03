@@ -101,7 +101,16 @@ export const erdSchema = z.object({
                     .describe("Name of the referenced attribute."),
             }),
             relationship: z
-                .enum(["zero-to-one", "one-to-one", "zero-to-many", "one-to-many", "many-to-many"])
+                .enum([
+                    "many-to-many",
+                    "many-to-one",
+                    "many-to-zero",
+                    "one-to-zero",
+                    "one-to-one",
+                    "one-to-many",
+                    "zero-to-one",
+                    "zero-to-many",
+                ])
                 .describe("Type of the relationship."),
         })
     ),
