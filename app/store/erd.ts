@@ -1002,10 +1002,11 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                         attribute: e.data?.primaryKeyColumn,
                     },
                 };
-                if(!data.source) delete data.source;
-                if(!data.foreignKey) delete data.foreignKey;
-                if(!data.references.entity) delete data.references.entity;
-                if(!data.references.attribute) delete data.references.attribute;
+                if (!data.source) delete data.source;
+                if (!data.foreignKey) delete data.foreignKey;
+                if (!data.references.entity) delete data.references.entity;
+                if (!data.references.attribute)
+                    delete data.references.attribute;
                 return data;
             }),
             nodes: nodes.map((n) => n.data),
@@ -1195,7 +1196,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         const { nodes: layoutedNodes, edges: layoutedEdges } =
             getLayoutedElements(
                 newNodes,
-                newEdges,
+                newEdges
                 // new Set(nodes.map((n) => n.id))
             );
 
@@ -1206,7 +1207,9 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
     },
     clearSuggestions() {
-        const { nodes, edges } = get();
+        const { suggestionsAvailable, nodes, edges } = get();
+
+        if (!suggestionsAvailable) return;
 
         const newNodes = nodes
             .map((n) => {
@@ -1242,8 +1245,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
     },
     saveSuggestions() {
-        const { nodes, edges } = get();
+        const { suggestionsAvailable, nodes, edges } = get();
         const { saveDiagram } = useDiagramStore.getState();
+
+        if (!suggestionsAvailable) return;
 
         const newNodes = nodes.map((n) => {
             return {

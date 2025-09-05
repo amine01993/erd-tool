@@ -14,9 +14,11 @@ const Modal = ({ isOpen, children, handleClose }: ModalProps) => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === "Escape") {
-                e.preventDefault();
-                handleClose();
+            if (isOpen) {
+                if (e.key === "Escape") {
+                    e.preventDefault();
+                    handleClose();
+                }
             }
         }
 
@@ -25,7 +27,7 @@ const Modal = ({ isOpen, children, handleClose }: ModalProps) => {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, []);
+    }, [isOpen]);
 
     return (
         <div

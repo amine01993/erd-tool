@@ -580,6 +580,28 @@
     }
 }
 
+.feedback-form {
+    .input-field {
+        @apply w-full;
+    }
+
+    .text-area-field {
+        @apply flex flex-col w-full;
+
+        label {
+            @apply font-medium;
+        }
+
+        textarea {
+            @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
+        }
+
+        .required {
+            @apply text-[#640D14] ml-0.5;
+        }
+    }
+}
+
 .auth-header {
     @apply flex rounded-t-md justify-around font-medium mb-4 overflow-hidden;
     li {

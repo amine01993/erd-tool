@@ -1,16 +1,28 @@
-import { ChangeEvent, memo, useMemo } from "react";
+import { ChangeEvent, memo, RefObject, useMemo } from "react";
 import { nanoid } from "nanoid";
 
 const TextAreaField = ({
     label,
     value,
-    onChange,
     placeholder = "",
+    error = "",
+    touched = false,
+    required = false,
+    rows = 4,
+    ref,
+    onChange,
+    onBlur,
 }: {
     label: string;
     value: string | number;
-    onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
     placeholder?: string;
+    error?: string;
+    touched?: boolean;
+    required?: boolean;
+    rows?: number;
+    ref?: RefObject<HTMLTextAreaElement | null>;
+    onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+    onBlur?: () => void;
 }) => {
     const id = useMemo(() => {
         return nanoid(5);
@@ -20,12 +32,19 @@ const TextAreaField = ({
         <div className="text-area-field">
             <label htmlFor={id}>
                 {label}
+                {required && <span className="required">*</span>}
             </label>
             <textarea
                 id={id}
                 value={value}
                 onChange={onChange}
-                placeholder={placeholder}></textarea>
+                onBlur={onBlur}
+                placeholder={placeholder}
+                required={required}
+                rows={rows}
+                ref={ref}
+            ></textarea>
+            {error && touched && <span className="error">{error}</span>}
         </div>
     );
 };

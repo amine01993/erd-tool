@@ -6,12 +6,14 @@ import LocationFilledIcon from "@iconify/icons-tabler/location-filled";
 import cc from "classcat";
 import useErdItemsStore from "@/app/store/erd-items";
 import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
+import useUserStore, { isAnyModalOrMenuOpenSelector } from "@/app/store/user";
 import Tooltip from "./Tooltip";
 
 const ErdItemsPanel = () => {
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
     const selectItem = useErdItemsStore((state) => state.selectItem);
     const isReadOnly = useDiagramStore(isReadOnlySelector);
+    const isAnyModalOrMenuOpen = useUserStore(isAnyModalOrMenuOpenSelector);
 
     const handleSelection = useCallback(
         (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -27,15 +29,17 @@ const ErdItemsPanel = () => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.shiftKey && e.key.toLowerCase() === "s") {
-                e.preventDefault();
-                selectItem("selector");
-            } else if (e.shiftKey && e.key.toLowerCase() === "e") {
-                e.preventDefault();
-                selectItem("entity");
-            } else if (e.shiftKey && e.key.toLowerCase() === "d") {
-                e.preventDefault();
-                selectItem("edge");
+            if(!isAnyModalOrMenuOpen) {
+                if (e.shiftKey && e.key.toLowerCase() === "s") {
+                    e.preventDefault();
+                    selectItem("selector");
+                } else if (e.shiftKey && e.key.toLowerCase() === "e") {
+                    e.preventDefault();
+                    selectItem("entity");
+                } else if (e.shiftKey && e.key.toLowerCase() === "d") {
+                    e.preventDefault();
+                    selectItem("edge");
+                }
             }
         }
 
@@ -44,7 +48,7 @@ const ErdItemsPanel = () => {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [selectItem]);
+    }, [isAnyModalOrMenuOpen, selectItem]);
 
     useEffect(() => {
         if (isReadOnly) {

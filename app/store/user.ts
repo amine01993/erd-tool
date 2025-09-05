@@ -17,6 +17,8 @@ import useDiagramStore from "./diagram";
 
 const host = "9nnhrbiki6.execute-api.us-east-1.amazonaws.com";
 const url = `https://${host}/prod/diagrams`;
+const feedbackHost = "1qb3r4fde3.execute-api.us-east-1.amazonaws.com";
+const feedbackUrl = `https://${feedbackHost}/prod/feedback`;
 
 Amplify.configure({
     Auth: {
@@ -34,6 +36,7 @@ export type AuthType = "login" | "register" | "confirm_sign_up";
 
 export interface UserState {
     offLine: boolean;
+    fetchingSession: boolean;
     theme: AppTheme;
     isThemeMenuOpen: boolean;
     isSettingsMenuOpen: boolean;
@@ -41,6 +44,7 @@ export interface UserState {
     isConfirmModalOpen: boolean;
     isReadOnlyModalOpen: boolean;
     isAiPromptOpen: boolean;
+    isFeedbackModalOpen: boolean;
     aiSuggestionsEnabled: boolean;
     authType: AuthType;
     authDetail: any;
@@ -49,6 +53,7 @@ export interface UserState {
     authData: any;
     jwtToken: string | "";
     setOffLine: (offline: boolean) => void;
+    setFetchingSession: (fetching: boolean) => void;
     setTheme: (theme: AppTheme) => void;
     toggleThemeMenu: () => void;
     openThemeMenu: () => void;
@@ -64,6 +69,8 @@ export interface UserState {
     closeReadOnlyModal: () => void;
     openAiPrompt: () => void;
     closeAiPrompt: () => void;
+    openFeedbackModal: () => void;
+    closeFeedbackModal: () => void;
     toggleAiSuggestions: () => void;
     setAuthType: (authType: AuthType) => void;
     login: (userName: string, password: string) => Promise<void>;
@@ -83,10 +90,12 @@ export interface UserState {
     logOut: () => void;
     emptyAuthData: () => void;
     apiCall: (props: ApiCallProps) => Promise<any>;
+    feedbackApiCall: (props: ApiCallProps) => Promise<any>;
 }
 
 const useUserStore = create<UserState>((set, get) => ({
     theme: "system",
+    fetchingSession: false,
     offLine: false,
     isThemeMenuOpen: false,
     isSettingsMenuOpen: false,
@@ -94,6 +103,7 @@ const useUserStore = create<UserState>((set, get) => ({
     isConfirmModalOpen: false,
     isReadOnlyModalOpen: false,
     isAiPromptOpen: false,
+    isFeedbackModalOpen: false,
     aiSuggestionsEnabled: true,
     authType: "login",
     authDetail: null,
@@ -103,6 +113,9 @@ const useUserStore = create<UserState>((set, get) => ({
     jwtToken: "",
     setOffLine: (offline: boolean) => {
         set({ offLine: offline });
+    },
+    setFetchingSession(fetching: boolean) {
+        set({ fetchingSession: fetching });
     },
     setTheme(theme: AppTheme) {
         set({ theme });
@@ -177,6 +190,16 @@ const useUserStore = create<UserState>((set, get) => ({
             isAiPromptOpen: false,
         });
     },
+    openFeedbackModal() {
+        set({
+            isFeedbackModalOpen: true,
+        });
+    },
+    closeFeedbackModal() {
+        set({
+            isFeedbackModalOpen: false,
+        });
+    },
     toggleAiSuggestions() {
         set({
             aiSuggestionsEnabled: !get().aiSuggestionsEnabled,
@@ -249,7 +272,7 @@ const useUserStore = create<UserState>((set, get) => ({
     getAuthData() {
         const { isGuest, credentials, authData, jwtToken } = get();
 
-        if (isGuest && !credentials || !isGuest && !authData) {
+        if ((isGuest && !credentials) || (!isGuest && !authData)) {
             let creds = localStorage.getItem("credentials");
             let payload = localStorage.getItem("authData");
             let token = localStorage.getItem("jwtToken");
@@ -288,8 +311,8 @@ const useUserStore = create<UserState>((set, get) => ({
             return { credentials, authData, jwtToken };
         }
 
+        set({ fetchingSession: true });
         const session = await fetchAuthSession({ forceRefresh: true });
-
 
         const sessionCreds = {
             ...session.credentials,
@@ -303,6 +326,7 @@ const useUserStore = create<UserState>((set, get) => ({
             credentials: credentials ?? null,
             authData: payload ?? null,
             jwtToken: token ?? "",
+            fetchingSession: false,
         });
 
         if (sessionCreds)
@@ -385,6 +409,69 @@ const useUserStore = create<UserState>((set, get) => ({
 
         return response;
     },
+    async feedbackApiCall({
+        method = "POST",
+        query,
+        body,
+        controller,
+    }: ApiCallProps) {
+        const { isGuest, retrieveAuthData } = get();
+
+        const { jwtToken, credentials } = await retrieveAuthData();
+
+        let queryString = "";
+        if (query) {
+            const searchParams = new URLSearchParams(query);
+            queryString = `?${searchParams.toString()}`;
+        }
+
+        let response;
+
+        if (isGuest) {
+            const request = new HttpRequest({
+                method,
+                protocol: "https:",
+                path: "/prod/feedbackForGuests",
+                headers: {
+                    host: feedbackHost,
+                },
+                hostname: feedbackHost,
+                query,
+                body: body ? JSON.stringify(body) : undefined,
+            });
+
+            const signer = new SignatureV4({
+                credentials: credentials,
+                service: "execute-api",
+                region: "us-east-1",
+                sha256: Sha256,
+            });
+
+            const signedRequest = await signer.sign(request);
+
+            response = await fetch(
+                `https://${signedRequest.hostname}${signedRequest.path}${queryString}`,
+                {
+                    method: signedRequest.method,
+                    headers: signedRequest.headers,
+                    body: signedRequest.body,
+                    signal: controller?.signal,
+                }
+            );
+        } else {
+            response = await fetch(`${feedbackUrl}${queryString}`, {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${jwtToken}`,
+                },
+                body: body ? JSON.stringify(body) : undefined,
+                signal: controller?.signal,
+            });
+        }
+
+        return response;
+    },
 }));
 
 interface ApiCallProps {
@@ -393,6 +480,20 @@ interface ApiCallProps {
     body?: Record<string, any>;
     token?: string;
     creds?: any;
+    controller?: AbortController;
 }
 
 export default useUserStore;
+
+const isModalOpenSelector = (state: UserState) =>
+    state.isAuthModalOpen ||
+    state.isConfirmModalOpen ||
+    state.isReadOnlyModalOpen ||
+    state.isAiPromptOpen ||
+    state.isFeedbackModalOpen;
+
+const isMenuOpenSelector = (state: UserState) =>
+    state.isThemeMenuOpen || state.isSettingsMenuOpen;
+
+export const isAnyModalOrMenuOpenSelector = (state: UserState) =>
+    isModalOpenSelector(state) || isMenuOpenSelector(state);

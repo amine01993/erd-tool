@@ -19,7 +19,7 @@ import useDiagramStore, {
     disableRedoSelector,
     disableUndoSelector,
 } from "@/app/store/diagram";
-import useUserStore from "@/app/store/user";
+import useUserStore, { isAnyModalOrMenuOpenSelector } from "@/app/store/user";
 import Theme from "../widgets/Theme";
 import Settings from "../widgets/Settings";
 import useDeleteDiagram from "@/app/hooks/DiagramDelete";
@@ -30,6 +30,10 @@ import AiSuggestions from "../widgets/AiSuggestions";
 
 const Header = () => {
     const offLine = useUserStore((state) => state.offLine);
+    const isAnyModalOrMenuOpen = useUserStore(isAnyModalOrMenuOpenSelector);
+    const setFetchingSession = useUserStore(
+        (state) => state.setFetchingSession
+    );
     const retrieveAuthData = useUserStore((state) => state.retrieveAuthData);
     const emptyAuthData = useUserStore((state) => state.emptyAuthData);
     const openConfirmModal = useUserStore((state) => state.openConfirmModal);
@@ -97,28 +101,33 @@ const Header = () => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-
-            if (e.ctrlKey && !e.shiftKey && e.key?.toLowerCase() === "z") {
-                e.preventDefault();
-                handleUndo();
-            } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") {
-                e.preventDefault();
-                handleRedo();
-            } else if (e.ctrlKey && e.key?.toLowerCase() === "r") {
-                e.preventDefault();
-                handleDiagramsRefresh();
-            } else if (e.ctrlKey && e.key?.toLowerCase() === "n") {
-                e.preventDefault();
-                handleNewDiagram();
-            } else if (e.ctrlKey && e.key?.toLowerCase() === "d") {
-                e.preventDefault();
-                handleDuplicateDiagram();
-            } else if (e.ctrlKey && e.key?.toLowerCase() === "i") {
-                e.preventDefault();
-                handleOpenAiPrompt();
-            } else if (e.key?.toLowerCase() === "delete") {
-                e.preventDefault();
-                handleDeleteDiagram();
+            if (!isAnyModalOrMenuOpen) {
+                if (e.ctrlKey && !e.shiftKey && e.key?.toLowerCase() === "z") {
+                    e.preventDefault();
+                    handleUndo();
+                } else if (
+                    e.ctrlKey &&
+                    e.shiftKey &&
+                    e.key.toLowerCase() === "z"
+                ) {
+                    e.preventDefault();
+                    handleRedo();
+                } else if (e.ctrlKey && e.key?.toLowerCase() === "r") {
+                    e.preventDefault();
+                    handleDiagramsRefresh();
+                } else if (e.ctrlKey && e.key?.toLowerCase() === "n") {
+                    e.preventDefault();
+                    handleNewDiagram();
+                } else if (e.ctrlKey && e.key?.toLowerCase() === "d") {
+                    e.preventDefault();
+                    handleDuplicateDiagram();
+                } else if (e.ctrlKey && e.key?.toLowerCase() === "i") {
+                    e.preventDefault();
+                    handleOpenAiPrompt();
+                } else if (e.key?.toLowerCase() === "delete") {
+                    e.preventDefault();
+                    handleDeleteDiagram();
+                }
             }
         }
 
@@ -128,6 +137,7 @@ const Header = () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
     }, [
+        isAnyModalOrMenuOpen,
         handleUndo,
         handleRedo,
         handleDiagramsRefresh,
@@ -146,6 +156,9 @@ const Header = () => {
                 })
                 .catch((error) => {
                     console.error("Error retrieving auth data:", error);
+                })
+                .finally(() => {
+                    setFetchingSession(false);
                 });
         }
 

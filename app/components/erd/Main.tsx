@@ -25,6 +25,7 @@ import ConfirmationPermanentDelete from "../diagram/ConfirmationPermanentDelete"
 import ReadOnlyMode from "../diagram/ReadOnlyMode";
 import EdgeInfo from "./EdgeInfo";
 import { queryClient } from "@/app/helper/variables";
+import Feedback from "../diagram/Feedback";
 import "./style.css";
 
 const persister = createAsyncStoragePersister({
@@ -148,6 +149,7 @@ export default memo(function Main() {
                 <Authentication />
                 <ConfirmationPermanentDelete />
                 <ReadOnlyMode />
+                <Feedback />
                 <Toast />
             </div>
             <ReactQueryDevtools initialIsOpen={false} />

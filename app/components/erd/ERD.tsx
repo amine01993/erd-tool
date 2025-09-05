@@ -30,6 +30,7 @@ import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
 import useErdItemsStore from "@/app/store/erd-items";
 import useDiagramStore from "@/app/store/diagram";
+import useUserStore, { isAnyModalOrMenuOpenSelector } from "@/app/store/user";
 import EntityNode from "./EntityNode";
 import ErdEdge from "./ErdEdge";
 import ErdItemsPanel from "./ErdItemsPanel";
@@ -43,7 +44,6 @@ import { defaultEdgeOptions } from "@/app/helper/variables";
 import { EntityData } from "@/app/type/EntityType";
 import AiPrompt from "../diagram/AiPrompt";
 import { erdCompletionSchema } from "@/app/erd-completion/schema";
-import useUserStore from "@/app/store/user";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -128,6 +128,7 @@ const ERD = () => {
     } = useErdStore(selector, shallow);
 
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
+    const isAnyModalOrMenuOpen = useUserStore(isAnyModalOrMenuOpenSelector);
 
     useOnViewportChange({
         onEnd: (viewport: Viewport) => {
@@ -409,8 +410,7 @@ const ERD = () => {
                         if (node.data?.isSuggestion) {
                             suggestionExist = true;
                             break;
-                        }
-                        else {
+                        } else {
                             for (const attr of node.data.attributes) {
                                 if (attr.isSuggestion) {
                                     suggestionExist = true;
@@ -425,7 +425,7 @@ const ERD = () => {
                             break;
                         }
                     }
-                    if(suggestionExist) {
+                    if (suggestionExist) {
                         saveSuggestions();
                     }
                 } else if (!isLoadingSuggestion) {
@@ -480,12 +480,14 @@ const ERD = () => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (e.key === "Escape") {
-                e.preventDefault();
-                clearSuggestions();
-            } else if (e.key === "Tab") {
-                e.preventDefault();
-                saveSuggestions();
+            if (!isAnyModalOrMenuOpen && suggestionsAvailable) {
+                if (e.key === "Escape") {
+                    e.preventDefault();
+                    clearSuggestions();
+                } else if (e.key === "Tab") {
+                    e.preventDefault();
+                    saveSuggestions();
+                }
             }
         }
 
@@ -501,7 +503,14 @@ const ERD = () => {
                 window.removeEventListener("keydown", handleKeyDown);
             }
         };
-    }, [stop, clearSuggestions, saveSuggestions, aiSuggestionsEnabled]);
+    }, [
+        stop,
+        clearSuggestions,
+        saveSuggestions,
+        aiSuggestionsEnabled,
+        suggestionsAvailable,
+        isAnyModalOrMenuOpen,
+    ]);
 
     useEffect(() => {
         mainWrapper.current = document.getElementById(
