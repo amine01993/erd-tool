@@ -8,7 +8,6 @@ export async function POST(req: Request) {
 
     const result = await generateObject({
         model: "openai/gpt-4.1-mini",
-        // model: "google/gemini-2.0-flash",
         system:
             "You are a helpful assistant to a Database Engineer. " +
             "Given an Entity-Relationship Diagram (ERD) with different entities and relationships as an input. " +
@@ -22,7 +21,6 @@ export async function POST(req: Request) {
             "and it is of type integer it must be auto incremented (`isAutoIncrement` is set to true)." +
             "The length property can only be defined for string attributes." +
             "While scale and precision properties can only be defined for decimal attributes.",
-        // "The output must respect the given schema.",
         temperature: 0,
         experimental_telemetry: {
             isEnabled: true,

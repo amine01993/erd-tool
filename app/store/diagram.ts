@@ -471,8 +471,8 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                     edges,
                 });
             }
-            cd.history.current = cd.history.states.length - 1;
             cd.history.states = cd.history.states.slice(-25);
+            cd.history.current = cd.history.states.length - 1;
             cd.lastUpdate = new Date().toISOString();
             return cd;
         });

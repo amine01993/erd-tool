@@ -83,9 +83,8 @@ const AiPrompt = () => {
                 nodes: [],
                 edges: [],
                 ...object,
-            } as ErdSchema).then(() => {
-                fitView({ padding: 0.1 });
-            });
+            } as ErdSchema);
+            fitView({ padding: 0.1 });
         }
     }, [object]);
 

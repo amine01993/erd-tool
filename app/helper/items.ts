@@ -5,9 +5,7 @@ import {
     type InternalNode,
     type Node,
 } from "@xyflow/react";
-import dagre from "@dagrejs/dagre";
-import ELK from "elkjs/lib/elk.bundled.js";
-// import ELK from "elkjs";
+import cytoscape from "cytoscape";
 import { ErdEdgeData } from "../type/EdgeType";
 import { AttributeData, EntityData } from "../type/EntityType";
 
@@ -381,132 +379,69 @@ export function getLayoutedElements(
     nodes: Node<EntityData>[],
     edges: Edge<ErdEdgeData>[],
     fixedNodeIds: Set<string> | null = null
-): {
-    nodes: Node<EntityData>[];
-    edges: Edge<ErdEdgeData>[];
-} {
-    const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(
-        () => ({})
+) {
+    const maxWidth = Math.max(
+        ...nodes.map((n) => n.measured?.width ?? defaultWidth)
     );
-    dagreGraph.setGraph({ rankdir: "TB" });
+    const maxHeight = Math.max(
+        ...nodes.map((n) => n.measured?.height ?? defaultHeight)
+    );
 
-    nodes.forEach((node) => {
-        dagreGraph.setNode(node.id, {
-            width: node.measured?.width ?? defaultWidth,
-            height: node.measured?.height ?? defaultHeight,
-        });
-
-        if (fixedNodeIds?.has(node.id)) {
-            dagreGraph.node(node.id).x = node.position.x;
-            dagreGraph.node(node.id).y = node.position.y;
-        }
-    });
-
-    edges.forEach((edge) => {
-        dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    const newNodes = nodes.map((node) => {
-        const nodeWithPosition = dagreGraph.node(node.id);
-        const newNode = {
-            ...node,
-            measured: {
-                width: nodeWithPosition.width,
-                height: nodeWithPosition.height,
-            },
-            position: {
-                x: nodeWithPosition.x - nodeWithPosition.width / 2,
-                y: nodeWithPosition.y - nodeWithPosition.height / 2,
-            },
-        };
-
-        return newNode;
-    });
-
-    return { nodes: newNodes, edges };
-}
-
-export async function getLayoutedElements2(
-    nodes: Node<EntityData>[],
-    edges: Edge<ErdEdgeData>[],
-    fixedNodeIds: Set<string> | null = null
-): Promise<{
-    nodes: Node<EntityData>[];
-    edges: Edge<ErdEdgeData>[];
-}> {
-    const elk = new ELK();
-    const layoutedElements = await elk.layout({
-        id: "root",
-        children: nodes.map((node) => {
-            const cn: any = {
-                id: node.id,
-                width: node.measured?.width ?? defaultWidth,
-                height: node.measured?.height ?? defaultHeight,
-                // x: node.position.x,
-                // y: node.position.y,
-                // layoutOptions: {
-                //     "elk.position": fixedNodeIds?.has(node.id)
-                //         ? "fixed"
-                //         : "layered",
-                // },
+    const nodesAndEdges = [
+        ...nodes.map((node) => {
+            
+            return {
+                data: {
+                    id: node.id,
+                    width: (node.measured?.width ?? defaultWidth) + "px",
+                    height: (node.measured?.height ?? defaultHeight) + "px",
+                },
+                position: node.position,
+                locked: fixedNodeIds?.has(node.id) ?? false,
             };
-            // if (fixedNodeIds?.has(node.id)) {
-            //     cn.x = node.position.x;
-            //     cn.y = node.position.y;
-            //     cn.layoutOptions = { "elk.position": "fixed" };
-            // } else {
-            //     cn.layoutOptions = {
-            //         "elk.algorithm": "layered", // hierarchical layout
-            //         "elk.direction": "DOWN", // top → bottom
-            //         "org.eclipse.elk.spacing.componentComponent": "50",
-            //         "org.eclipse.elk.spacing.nodeNode": "50",
-            //         "org.eclipse.elk.spacing.nodeSelfLoop": "25",
-            //         "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers":
-            //             "50",
-            //     };
-            // }
-            console.log("Node layout options", { cn });
-            return cn;
         }),
-        edges: edges.map((edge) => ({
-            id: edge.id,
-            sources: [edge.source],
-            targets: [edge.target],
+        ...edges.map((edge) => ({
+            data: {
+                id: edge.id,
+                source: edge.source,
+                target: edge.target,
+            },
         })),
-        layoutOptions: {
-            "elk.algorithm": "layered", // hierarchical layout
-            "elk.direction": "DOWN", // top → bottom
-            "org.eclipse.elk.spacing.componentComponent": "50",
-            "org.eclipse.elk.spacing.nodeNode": "50",
-            "org.eclipse.elk.spacing.nodeSelfLoop": "25",
-            "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "50",
-        },
-        // options: {
-        //     "elk.algorithm": "layered",
-        //     // "elk.direction": "RIGHT",
-        //     "elk.spacing.nodeNode": "500",
-        //     // "elk.layered.spacing.nodeNodeBetweenLayers": "500",
-        //     // "elk.layered.spacing.nodeNodeBetweenLayers": "500", // spacing between nodes in different layers
-        //     "org.eclipse.elk.spacing.nodeNode": 100, // horizontal spacing between nodes in same layer
-        // },
+    ];
+
+    const cy = cytoscape({
+        elements: nodesAndEdges,
+        headless: true,
+        style: [
+            {
+                selector: "[group = 'nodes']",
+                style: {
+                    width: "data(width)",
+                    height: "data(height)",
+                },
+            },
+        ],
+    });
+    const layout = cy.nodes().filter((node) => !node.locked()).layout({
+        name: "grid",
+        spacingFactor: Math.max(maxWidth, maxHeight) / 9,
+        fit: false,
     });
 
-    // layoutedElements.children
+    layout.run();
 
-    const newNodes = layoutedElements.children?.map((child) => {
-        const originalNode = nodes.find((node) => node.id === child.id);
-        console.log("Node position", {
-            name: originalNode?.data.name,
-            x: child.x,
-            y: child.y,
-        });
+    const layoutedElements = cy
+        .elements()
+        .jsons()
+        .filter((el) => el.group === "nodes");
+        
+    const newNodes = layoutedElements.map((el) => {
+        const originalNode = nodes.find((node) => node.id === el.data.id);
         return {
             ...originalNode!,
             position: {
-                x: child.x,
-                y: child.y,
+                x: el.position.x,
+                y: el.position.y,
             },
         };
     });

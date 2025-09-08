@@ -30,7 +30,7 @@ import {
     defaultAttributeValues,
     defaultEdgeOptions,
 } from "../helper/variables";
-import { getLayoutedElements, getLayoutedElements2 } from "../helper/items";
+import { getLayoutedElements } from "../helper/items";
 
 export type ErdState = {
     selectedNodeId: string | null;
@@ -78,12 +78,12 @@ export type ErdState = {
         onUpdate: string,
         edgePosition: string
     ) => void;
-    setErdFromSchema: (schema: ErdSchema) => Promise<void>;
+    setErdFromSchema: (schema: ErdSchema) => void;
     autoCompleteSuggestion: (
         selected: { nodes: Node<EntityData>[]; edges: Edge<ErdEdgeData>[] },
         submit: (input: any) => void
     ) => void;
-    setSuggestionsFromSchema: (schema: ErdCompletionSchema) => Promise<void>;
+    setSuggestionsFromSchema: (schema: ErdCompletionSchema) => void;
     clearSuggestions: () => void;
     saveSuggestions: () => void;
 };
@@ -846,7 +846,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
 
         saveDiagram(newNodes, newEdges);
     },
-    async setErdFromSchema(schema: ErdSchema) {
+    setErdFromSchema(schema: ErdSchema) {
         const { nodes, edges, getMarkersName } = get();
         const { saveDiagram } = useDiagramStore.getState();
         const { openReadOnlyModal } = useUserStore.getState();
@@ -905,6 +905,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             )
                 return;
 
+            console.log("valid schema edge", edge)
+
             const s = newNodes.find((n) => n.data.name === edge.source);
             const t = newNodes.find(
                 (n) => n.data.name === edge.references.entity
@@ -958,8 +960,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         edges.forEach((e) => {
             const existingEdge = newEdges.find(
                 (ne) =>
-                    ne.source === e.source &&
-                    ne.target === e.target &&
+                    // ne.source === e.source &&
+                    // ne.target === e.target &&
                     ne.data?.primaryKeyColumn === e.data?.primaryKeyColumn &&
                     ne.data?.primaryKeyTable === e.data?.primaryKeyTable &&
                     ne.data?.foreignKeyColumn === e.data?.foreignKeyColumn &&
@@ -970,8 +972,12 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             }
         });
 
-        const { nodes: layoutedNodes, edges: layoutedEdges } =
-            await getLayoutedElements2(newNodes, newEdges);
+        // console.log({schema, newNodes, newEdges});
+
+        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(newNodes, newEdges);
+
+        // const { nodes: layoutedNodes, edges: layoutedEdges } =
+        //     await getLayoutedElements2(newNodes, newEdges);
 
         set({
             nodes: layoutedNodes,
@@ -1048,7 +1054,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 .filter((e) => e !== null),
         });
     },
-    async setSuggestionsFromSchema(schema: ErdCompletionSchema) {
+    setSuggestionsFromSchema(schema: ErdCompletionSchema) {
         const { nodes, edges, getMarkersName } = get();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
@@ -1194,7 +1200,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
 
         const { nodes: layoutedNodes, edges: layoutedEdges } =
-            await getLayoutedElements2(
+            getLayoutedElements(
                 newNodes,
                 newEdges,
                 new Set(nodes.map((n) => n.id))

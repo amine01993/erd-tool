@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const prompt = await req.json();
 
     const result = await streamObject({
-        model: "google/gemini-2.0-flash",
+        model: "openai/gpt-4.1-mini",
         system:
             "You are a helpful assistant to a Database Engineer. " +
             "Generate an Entity-Relationship Diagram (ERD) with different entities and relationships. " +
@@ -19,6 +19,7 @@ export async function POST(req: Request) {
         } as TelemetrySettings,
         prompt,
         schema: erdSchema,
+        abortSignal: AbortSignal.timeout(50000),
     });
 
     return result.toTextStreamResponse();
