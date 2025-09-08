@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Panel } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import LocationFilledIcon from "@iconify/icons-tabler/location-filled";
@@ -14,6 +14,7 @@ const ErdItemsPanel = () => {
     const selectItem = useErdItemsStore((state) => state.selectItem);
     const isReadOnly = useDiagramStore(isReadOnlySelector);
     const isAnyModalOrMenuOpen = useUserStore(isAnyModalOrMenuOpenSelector);
+    const [isInputFocused, setIsInputFocused] = useState(false);
 
     const handleSelection = useCallback(
         (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -29,7 +30,7 @@ const ErdItemsPanel = () => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if(!isAnyModalOrMenuOpen) {
+            if (!isAnyModalOrMenuOpen && !isInputFocused) {
                 if (e.shiftKey && e.key.toLowerCase() === "s") {
                     e.preventDefault();
                     selectItem("selector");
@@ -48,13 +49,36 @@ const ErdItemsPanel = () => {
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    }, [isAnyModalOrMenuOpen, selectItem]);
+    }, [isAnyModalOrMenuOpen, isInputFocused, selectItem]);
 
     useEffect(() => {
         if (isReadOnly) {
             selectItem("selector");
         }
     }, [isReadOnly]);
+
+    useEffect(() => {
+        function handleFocusIn(e: FocusEvent) {
+            if (
+                ["INPUT", "TEXTAREA", "SELECT"].includes(
+                    (e.target as HTMLElement).tagName
+                )
+            ) {
+                setIsInputFocused(true);
+            }
+        }
+        function handleFocusOut(e: FocusEvent) {
+            setIsInputFocused(false);
+        }
+
+        document.addEventListener("focusin", handleFocusIn);
+        document.addEventListener("focusout", handleFocusOut);
+
+        return () => {
+            document.removeEventListener("focusin", handleFocusIn);
+            document.removeEventListener("focusout", handleFocusOut);
+        };
+    }, []);
 
     return (
         <Panel
