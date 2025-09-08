@@ -7,13 +7,16 @@ import {
     signIn,
     signOut,
     signUp,
+    UpdateUserAttributesOutput,
 } from "@aws-amplify/auth";
 import { Sha256 } from "@aws-crypto/sha256-js";
 import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { HttpRequest } from "@aws-sdk/protocol-http";
 import { create } from "zustand";
+import { UseMutationResult } from "@tanstack/react-query";
 import { DiagramsAuthStack } from "../../outputs.json";
 import useDiagramStore from "./diagram";
+import { queryClient } from "../helper/variables";
 
 const host = "9nnhrbiki6.execute-api.us-east-1.amazonaws.com";
 const url = `https://${host}/prod/diagrams`;
@@ -33,11 +36,19 @@ Amplify.configure({
 
 export type AppTheme = "system" | "dark" | "light";
 export type AuthType = "login" | "register" | "confirm_sign_up";
+type UpdateUserAttributeMutation = UseMutationResult<
+    UpdateUserAttributesOutput,
+    Error,
+    {
+        attribute: string;
+        value: string;
+    },
+    unknown
+>;
 
 export interface UserState {
     offLine: boolean;
     fetchingSession: boolean;
-    theme: AppTheme;
     isThemeMenuOpen: boolean;
     isSettingsMenuOpen: boolean;
     isAuthModalOpen: boolean;
@@ -45,7 +56,6 @@ export interface UserState {
     isReadOnlyModalOpen: boolean;
     isAiPromptOpen: boolean;
     isFeedbackModalOpen: boolean;
-    aiSuggestionsEnabled: boolean;
     authType: AuthType;
     authDetail: any;
     isGuest: boolean;
@@ -54,7 +64,8 @@ export interface UserState {
     jwtToken: string | "";
     setOffLine: (offline: boolean) => void;
     setFetchingSession: (fetching: boolean) => void;
-    setTheme: (theme: AppTheme) => void;
+    handleCachedMutationsForUserAttributes(attribute: string): void;
+    setTheme: (theme: AppTheme, mutation: UpdateUserAttributeMutation) => void;
     toggleThemeMenu: () => void;
     openThemeMenu: () => void;
     closeThemeMenu: () => void;
@@ -71,7 +82,7 @@ export interface UserState {
     closeAiPrompt: () => void;
     openFeedbackModal: () => void;
     closeFeedbackModal: () => void;
-    toggleAiSuggestions: () => void;
+    toggleAiSuggestions: (mutation: UpdateUserAttributeMutation) => void;
     setAuthType: (authType: AuthType) => void;
     login: (userName: string, password: string) => Promise<void>;
     signup: (
@@ -94,7 +105,6 @@ export interface UserState {
 }
 
 const useUserStore = create<UserState>((set, get) => ({
-    theme: "system",
     fetchingSession: false,
     offLine: false,
     isThemeMenuOpen: false,
@@ -104,7 +114,6 @@ const useUserStore = create<UserState>((set, get) => ({
     isReadOnlyModalOpen: false,
     isAiPromptOpen: false,
     isFeedbackModalOpen: false,
-    aiSuggestionsEnabled: true,
     authType: "login",
     authDetail: null,
     isGuest: true,
@@ -117,8 +126,47 @@ const useUserStore = create<UserState>((set, get) => ({
     setFetchingSession(fetching: boolean) {
         set({ fetchingSession: fetching });
     },
-    setTheme(theme: AppTheme) {
-        set({ theme });
+    handleCachedMutationsForUserAttributes(attribute: string) {
+        const mutationCache = queryClient.getMutationCache();
+        const mutations = mutationCache.getAll();
+
+        // Remove previous mutations for the same attribute
+        mutations.forEach((m) => {
+            const { mutationKey } = m.options;
+            const data = m.state.variables as any;
+            
+            if (
+                mutationKey?.[0] === "update-user-attribute" &&
+                data.attribute === attribute
+            ) {
+                mutationCache.remove(m);
+            }
+        });
+
+    },
+    setTheme(theme: AppTheme, mutation: UpdateUserAttributeMutation) {
+        const { authData, handleCachedMutationsForUserAttributes } = get();
+        let updatedAuthData = { ...authData, ["custom:theme"]: theme };
+        set({ authData: updatedAuthData });
+        
+        localStorage.setItem("authData", JSON.stringify(updatedAuthData));
+
+        handleCachedMutationsForUserAttributes("custom:theme");
+
+        mutation.mutate(
+            {
+                attribute: "custom:theme",
+                value: theme,
+            },
+            {
+                onSuccess(data, variables, context) {
+                    console.log("Successfully updated user attribute", data);
+                },
+                onError(error, variables, context) {
+                    console.error("Failed to update user attribute", error);
+                },
+            }
+        );
     },
     toggleThemeMenu() {
         set({
@@ -200,10 +248,34 @@ const useUserStore = create<UserState>((set, get) => ({
             isFeedbackModalOpen: false,
         });
     },
-    toggleAiSuggestions() {
-        set({
-            aiSuggestionsEnabled: !get().aiSuggestionsEnabled,
-        });
+    toggleAiSuggestions(mutation: UpdateUserAttributeMutation) {
+        const { authData, handleCachedMutationsForUserAttributes } = get();
+        let aiSuggestionsEnabled =
+            authData?.["custom:aiSuggestionsEnabled"] === "false"
+                ? false
+                : true;
+        let updatedAuthData = {
+            ...authData,
+            ["custom:aiSuggestionsEnabled"]: String(!aiSuggestionsEnabled),
+        };
+        set({ authData: updatedAuthData });
+        localStorage.setItem("authData", JSON.stringify(updatedAuthData));
+
+        handleCachedMutationsForUserAttributes("custom:aiSuggestionsEnabled");
+        mutation.mutate(
+            {
+                attribute: "custom:aiSuggestionsEnabled",
+                value: String(!aiSuggestionsEnabled),
+            },
+            {
+                onSuccess(data, variables, context) {
+                    console.log("Successfully updated user attribute", data);
+                },
+                onError(error, variables, context) {
+                    console.error("Failed to update user attribute", error);
+                },
+            }
+        );
     },
     setAuthType(authType: AuthType) {
         set({
@@ -228,6 +300,8 @@ const useUserStore = create<UserState>((set, get) => ({
                 userAttributes: {
                     email: userName,
                     name: fullName,
+                    "custom:theme": "system",
+                    "custom:aiSuggestionsEnabled": "true",
                 },
                 autoSignIn: {
                     authFlowType: "USER_PASSWORD_AUTH",
@@ -272,10 +346,10 @@ const useUserStore = create<UserState>((set, get) => ({
     getAuthData() {
         const { isGuest, credentials, authData, jwtToken } = get();
 
-        if ((isGuest && !credentials) || (!isGuest && !authData)) {
+        if ((isGuest && !credentials) || (!isGuest && !jwtToken)) {
             let creds = localStorage.getItem("credentials");
-            let payload = localStorage.getItem("authData");
             let token = localStorage.getItem("jwtToken");
+            let payload = localStorage.getItem("authData");
 
             const parsedCredentials = creds ? JSON.parse(creds) : null;
             const parsedPayload = payload ? JSON.parse(payload) : null;
@@ -321,9 +395,10 @@ const useUserStore = create<UserState>((set, get) => ({
 
         const payload = session.tokens?.idToken?.payload;
         const token = session.tokens?.idToken?.toString();
+        
         set({
             isGuest: Boolean(!token),
-            credentials: credentials ?? null,
+            credentials: sessionCreds ?? null,
             authData: payload ?? null,
             jwtToken: token ?? "",
             fetchingSession: false,
@@ -426,7 +501,6 @@ const useUserStore = create<UserState>((set, get) => ({
         }
 
         let response;
-
         if (isGuest) {
             const request = new HttpRequest({
                 method,
@@ -497,3 +571,9 @@ const isMenuOpenSelector = (state: UserState) =>
 
 export const isAnyModalOrMenuOpenSelector = (state: UserState) =>
     isModalOpenSelector(state) || isMenuOpenSelector(state);
+
+export const themeSelector = (state: UserState) =>
+    String(state.authData?.["custom:theme"] ?? "system") as AppTheme;
+
+export const aiSuggestionsEnabledSelector = (state: UserState) =>
+    state.authData?.["custom:aiSuggestionsEnabled"] === "false" ? false : true;

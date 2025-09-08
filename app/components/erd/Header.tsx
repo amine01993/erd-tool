@@ -96,8 +96,9 @@ const Header = () => {
     }, [recoverDiagram]);
 
     const handleOpenAiPrompt = useCallback(() => {
+        if (offLine) return;
         openAiPrompt();
-    }, []);
+    }, [offLine]);
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
@@ -121,7 +122,7 @@ const Header = () => {
                 } else if (e.ctrlKey && e.key?.toLowerCase() === "d") {
                     e.preventDefault();
                     handleDuplicateDiagram();
-                } else if (e.ctrlKey && e.key?.toLowerCase() === "i") {
+                } else if (e.ctrlKey && e.key?.toLowerCase() === "i" && !offLine) {
                     e.preventDefault();
                     handleOpenAiPrompt();
                 } else if (e.key?.toLowerCase() === "delete") {
@@ -143,6 +144,7 @@ const Header = () => {
         handleDiagramsRefresh,
         handleNewDiagram,
         handleDuplicateDiagram,
+        handleOpenAiPrompt,
         handleDeleteDiagram,
     ]);
 

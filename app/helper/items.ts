@@ -6,6 +6,8 @@ import {
     type Node,
 } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
+import ELK from "elkjs/lib/elk.bundled.js";
+// import ELK from "elkjs";
 import { ErdEdgeData } from "../type/EdgeType";
 import { AttributeData, EntityData } from "../type/EntityType";
 
@@ -424,4 +426,90 @@ export function getLayoutedElements(
     });
 
     return { nodes: newNodes, edges };
+}
+
+export async function getLayoutedElements2(
+    nodes: Node<EntityData>[],
+    edges: Edge<ErdEdgeData>[],
+    fixedNodeIds: Set<string> | null = null
+): Promise<{
+    nodes: Node<EntityData>[];
+    edges: Edge<ErdEdgeData>[];
+}> {
+    const elk = new ELK();
+    const layoutedElements = await elk.layout({
+        id: "root",
+        children: nodes.map((node) => {
+            const cn: any = {
+                id: node.id,
+                width: node.measured?.width ?? defaultWidth,
+                height: node.measured?.height ?? defaultHeight,
+                // x: node.position.x,
+                // y: node.position.y,
+                // layoutOptions: {
+                //     "elk.position": fixedNodeIds?.has(node.id)
+                //         ? "fixed"
+                //         : "layered",
+                // },
+            };
+            // if (fixedNodeIds?.has(node.id)) {
+            //     cn.x = node.position.x;
+            //     cn.y = node.position.y;
+            //     cn.layoutOptions = { "elk.position": "fixed" };
+            // } else {
+            //     cn.layoutOptions = {
+            //         "elk.algorithm": "layered", // hierarchical layout
+            //         "elk.direction": "DOWN", // top → bottom
+            //         "org.eclipse.elk.spacing.componentComponent": "50",
+            //         "org.eclipse.elk.spacing.nodeNode": "50",
+            //         "org.eclipse.elk.spacing.nodeSelfLoop": "25",
+            //         "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers":
+            //             "50",
+            //     };
+            // }
+            console.log("Node layout options", { cn });
+            return cn;
+        }),
+        edges: edges.map((edge) => ({
+            id: edge.id,
+            sources: [edge.source],
+            targets: [edge.target],
+        })),
+        layoutOptions: {
+            "elk.algorithm": "layered", // hierarchical layout
+            "elk.direction": "DOWN", // top → bottom
+            "org.eclipse.elk.spacing.componentComponent": "50",
+            "org.eclipse.elk.spacing.nodeNode": "50",
+            "org.eclipse.elk.spacing.nodeSelfLoop": "25",
+            "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "50",
+        },
+        // options: {
+        //     "elk.algorithm": "layered",
+        //     // "elk.direction": "RIGHT",
+        //     "elk.spacing.nodeNode": "500",
+        //     // "elk.layered.spacing.nodeNodeBetweenLayers": "500",
+        //     // "elk.layered.spacing.nodeNodeBetweenLayers": "500", // spacing between nodes in different layers
+        //     "org.eclipse.elk.spacing.nodeNode": 100, // horizontal spacing between nodes in same layer
+        // },
+    });
+
+    // layoutedElements.children
+
+    const newNodes = layoutedElements.children?.map((child) => {
+        const originalNode = nodes.find((node) => node.id === child.id);
+        console.log("Node position", {
+            name: originalNode?.data.name,
+            x: child.x,
+            y: child.y,
+        });
+        return {
+            ...originalNode!,
+            position: {
+                x: child.x,
+                y: child.y,
+            },
+        };
+    });
+
+    return { nodes: newNodes!, edges };
 }

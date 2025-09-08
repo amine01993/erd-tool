@@ -16,7 +16,7 @@ export const defaultDiagramValues: DiagramData = {
     id: "",
     name: "",
     viewport: { x: 0, y: 0, zoom: 1 },
-    createAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     lastUpdate: new Date().toISOString(),
     loaded: false,
     history: {

@@ -16,12 +16,13 @@ import { erdSchema } from "@/app/erd-suggestion/schema";
 import cc from "classcat";
 import { useReactFlow } from "@xyflow/react";
 import useErdStore from "@/app/store/erd";
-import { ErdSchema } from "@/app/type/EntityType";
 import useAlertStore from "@/app/store/alert";
+import { ErdSchema } from "@/app/type/EntityType";
 
 const AiPrompt = () => {
     const { fitView } = useReactFlow();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
     const isAiPromptOpen = useUserStore((state) => state.isAiPromptOpen);
     const closeAiPrompt = useUserStore((state) => state.closeAiPrompt);
     const setErdFromSchema = useErdStore((state) => state.setErdFromSchema);
@@ -82,8 +83,9 @@ const AiPrompt = () => {
                 nodes: [],
                 edges: [],
                 ...object,
-            } as ErdSchema);
-            fitView({ padding: 0.1 });
+            } as ErdSchema).then(() => {
+                fitView({ padding: 0.1 });
+            });
         }
     }, [object]);
 

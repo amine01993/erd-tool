@@ -30,7 +30,10 @@ import "@xyflow/react/dist/style.css";
 import useErdStore, { ErdState } from "../../store/erd";
 import useErdItemsStore from "@/app/store/erd-items";
 import useDiagramStore from "@/app/store/diagram";
-import useUserStore, { isAnyModalOrMenuOpenSelector } from "@/app/store/user";
+import useUserStore, {
+    aiSuggestionsEnabledSelector,
+    isAnyModalOrMenuOpenSelector,
+} from "@/app/store/user";
 import EntityNode from "./EntityNode";
 import ErdEdge from "./ErdEdge";
 import ErdItemsPanel from "./ErdItemsPanel";
@@ -103,9 +106,8 @@ const ERD = () => {
     const persistDiagramViewport = useDiagramStore(
         (state) => state.persistDiagramViewport
     );
-    const aiSuggestionsEnabled = useUserStore(
-        (state) => state.aiSuggestionsEnabled
-    );
+    const aiSuggestionsEnabled = useUserStore(aiSuggestionsEnabledSelector);
+    const offLine = useUserStore((state) => state.offLine);
 
     const {
         suggestionsAvailable,
@@ -428,7 +430,7 @@ const ERD = () => {
                     if (suggestionExist) {
                         saveSuggestions();
                     }
-                } else if (!isLoadingSuggestion) {
+                } else if (!isLoadingSuggestion && !offLine) {
                     autoCompleteSuggestion({ nodes, edges }, submit);
                 }
             }

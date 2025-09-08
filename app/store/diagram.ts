@@ -361,7 +361,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 y: 0,
                 zoom: 1,
             },
-            createAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             lastUpdate: new Date().toISOString(),
             loaded: true,
             history: {
@@ -472,6 +472,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 });
             }
             cd.history.current = cd.history.states.length - 1;
+            cd.history.states = cd.history.states.slice(-25);
             cd.lastUpdate = new Date().toISOString();
             return cd;
         });

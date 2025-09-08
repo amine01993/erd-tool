@@ -19,10 +19,10 @@ import useFeedbackForm, {
 } from "@/app/hooks/FeedbackForm";
 import InputField from "../widgets/InputField";
 import TextAreaField from "../widgets/TextAreaField";
+import useAddFeedback from "@/app/hooks/FeedbackAdd";
 
 const Feedback = () => {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const controller = useRef<AbortController>(new AbortController());
 
     const [state, dispatch] = useReducer(
         feedbackFormReducer,
@@ -48,6 +48,7 @@ const Feedback = () => {
         (state) => state.closeFeedbackModal
     );
     const showToast = useAlertStore((state) => state.showToast);
+    const mutationAddFeedback = useAddFeedback();
 
     const handleClose = useCallback(() => {
         closeFeedbackModal();
@@ -64,32 +65,29 @@ const Feedback = () => {
             setIsSubmitting(true);
             dispatch({ type: "SET_SUBMITTED" });
 
-            feedbackApiCall({
-                body: {
+            mutationAddFeedback.mutate(
+                {
                     id: nanoid(),
                     name: state.values.name.trim(),
                     email: state.values.email.trim(),
                     message: state.values.message.trim(),
                 },
-                controller: controller.current,
-            })
-                .then((data) => {
-                    closeFeedbackModal();
-                    showToast("Thank you for your feedback!", "success");
-                })
-                .catch((err) => {
-                    if (err.name === "AbortError") {
-                        console.log("Feedback submission aborted");
-                    } else {
+                {
+                    onSuccess(data, variables, context) {
+                        closeFeedbackModal();
+                        showToast("Thank you for your feedback!", "success");
+                    },
+                    onError(error, variables, context) {
                         showToast(
                             "Failed to send feedback. Please try again later.",
                             "error"
                         );
-                    }
-                })
-                .finally(() => {
-                    setIsSubmitting(false);
-                });
+                    },
+                    onSettled(data, error, variables, context) {
+                        setIsSubmitting(false);
+                    },
+                }
+            );
         },
         [
             isValid,
@@ -100,11 +98,6 @@ const Feedback = () => {
             closeFeedbackModal,
         ]
     );
-
-    const handleCancel = useCallback(() => {
-        controller.current.abort();
-        closeFeedbackModal();
-    }, [closeFeedbackModal]);
 
     useEffect(() => {
         if (isFeedbackModalOpen) {
@@ -160,7 +153,7 @@ const Feedback = () => {
                     />
 
                     <div className="action-btns justify-between! mt-0!">
-                        <button className="cancel-btn" onClick={handleCancel}>
+                        <button className="cancel-btn" onClick={handleClose}>
                             Cancel
                         </button>
                         <button

@@ -30,7 +30,7 @@ import {
     defaultAttributeValues,
     defaultEdgeOptions,
 } from "../helper/variables";
-import { getLayoutedElements } from "../helper/items";
+import { getLayoutedElements, getLayoutedElements2 } from "../helper/items";
 
 export type ErdState = {
     selectedNodeId: string | null;
@@ -78,12 +78,12 @@ export type ErdState = {
         onUpdate: string,
         edgePosition: string
     ) => void;
-    setErdFromSchema: (schema: ErdSchema) => void;
+    setErdFromSchema: (schema: ErdSchema) => Promise<void>;
     autoCompleteSuggestion: (
         selected: { nodes: Node<EntityData>[]; edges: Edge<ErdEdgeData>[] },
         submit: (input: any) => void
     ) => void;
-    setSuggestionsFromSchema: (schema: ErdCompletionSchema) => void;
+    setSuggestionsFromSchema: (schema: ErdCompletionSchema) => Promise<void>;
     clearSuggestions: () => void;
     saveSuggestions: () => void;
 };
@@ -846,7 +846,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
 
         saveDiagram(newNodes, newEdges);
     },
-    setErdFromSchema(schema: ErdSchema) {
+    async setErdFromSchema(schema: ErdSchema) {
         const { nodes, edges, getMarkersName } = get();
         const { saveDiagram } = useDiagramStore.getState();
         const { openReadOnlyModal } = useUserStore.getState();
@@ -971,7 +971,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
 
         const { nodes: layoutedNodes, edges: layoutedEdges } =
-            getLayoutedElements(newNodes, newEdges);
+            await getLayoutedElements2(newNodes, newEdges);
 
         set({
             nodes: layoutedNodes,
@@ -1048,7 +1048,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
                 .filter((e) => e !== null),
         });
     },
-    setSuggestionsFromSchema(schema: ErdCompletionSchema) {
+    async setSuggestionsFromSchema(schema: ErdCompletionSchema) {
         const { nodes, edges, getMarkersName } = get();
         const isReadOnly = isReadOnlySelector(useDiagramStore.getState());
 
@@ -1194,10 +1194,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         });
 
         const { nodes: layoutedNodes, edges: layoutedEdges } =
-            getLayoutedElements(
+            await getLayoutedElements2(
                 newNodes,
-                newEdges
-                // new Set(nodes.map((n) => n.id))
+                newEdges,
+                new Set(nodes.map((n) => n.id))
             );
 
         set({

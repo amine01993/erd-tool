@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import useUserStore from "@/app/store/user";
+import useUserStore, { themeSelector } from "@/app/store/user";
 import ThemeMenu from "./ThemeMenu";
 import Tooltip from "../erd/Tooltip";
 
@@ -89,7 +89,7 @@ export const LightIcon = memo(({ theme, fontSize }: IconProps) => {
 });
 
 const Theme = () => {
-    const theme = useUserStore((state) => state.theme);
+    const theme = useUserStore(themeSelector);
     const toggleThemeMenu = useUserStore((state) => state.toggleThemeMenu);
     const [isDark, setIsDark] = useState(false);
 
