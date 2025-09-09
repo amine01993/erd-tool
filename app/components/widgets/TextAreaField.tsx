@@ -13,7 +13,7 @@ const TextAreaField = ({
     onChange,
     onBlur,
 }: {
-    label: string;
+    label?: string;
     value: string | number;
     placeholder?: string;
     error?: string;
@@ -30,10 +30,12 @@ const TextAreaField = ({
 
     return (
         <div className="text-area-field">
-            <label htmlFor={id}>
-                {label}
-                {required && <span className="required">*</span>}
-            </label>
+            {label && (
+                <label htmlFor={id}>
+                    {label}
+                    {required && <span className="required">*</span>}
+                </label>
+            )}
             <textarea
                 id={id}
                 value={value}

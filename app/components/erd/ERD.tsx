@@ -47,6 +47,7 @@ import { defaultEdgeOptions } from "@/app/helper/variables";
 import { EntityData } from "@/app/type/EntityType";
 import AiPrompt from "../diagram/AiPrompt";
 import { erdCompletionSchema } from "@/app/erd-completion/schema";
+import Export from "../diagram/Export";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -560,6 +561,8 @@ const ERD = () => {
                 {loading && <Loading />}
                 {mainWrapper.current &&
                     createPortal(<AiPrompt />, mainWrapper.current)}
+                {mainWrapper.current &&
+                    createPortal(<Export />, mainWrapper.current)}
             </ReactFlow>
         </div>
     );

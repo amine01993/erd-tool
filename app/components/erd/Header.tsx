@@ -38,6 +38,7 @@ const Header = () => {
     const emptyAuthData = useUserStore((state) => state.emptyAuthData);
     const openConfirmModal = useUserStore((state) => state.openConfirmModal);
     const openAiPrompt = useUserStore((state) => state.openAiPrompt);
+    const openExportModal = useUserStore((state) => state.openExportModal);
     const mutationAdd = useAddDiagram();
     const mutationDelete = useDeleteDiagram();
     const mutationRecover = useRecoverDiagram();
@@ -99,6 +100,10 @@ const Header = () => {
         if (offLine) return;
         openAiPrompt();
     }, [offLine]);
+
+    const handleExportDiagram = useCallback(() => {
+        openExportModal();
+    }, []);
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
@@ -329,6 +334,7 @@ const Header = () => {
                     <button
                         className="flex items-center gap-2 header-btn relative"
                         id="export-diagram-button"
+                        onClick={handleExportDiagram}
                         disabled={selectedDiagram === "" || loading}
                     >
                         <Icon icon={DatabaseExportIcon} fontSize={21} />

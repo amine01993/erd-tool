@@ -1,16 +1,24 @@
-import { memo, MouseEvent, ReactNode, useCallback, useEffect } from "react";
+import { memo, MouseEvent, ReactNode, useCallback, useEffect, useMemo } from "react";
 import cc from "classcat";
 
 interface ModalProps {
     isOpen: boolean;
+    className?: string;
     children?: ReactNode;
     handleClose: () => void;
 }
 
-const Modal = ({ isOpen, children, handleClose }: ModalProps) => {
+const Modal = ({ isOpen, children, handleClose, className }: ModalProps) => {
     const stopPropagation = useCallback((e: MouseEvent<HTMLDivElement>) => {
         e.stopPropagation();
     }, []);
+
+    const modalClasses = useMemo(() => {
+        return cc(["modal-container", { open: isOpen }]);
+    }, [isOpen]);
+    const modalContentClasses = useMemo(() => {
+        return cc(["modal-content", className]);
+    }, [className]);
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
@@ -31,10 +39,10 @@ const Modal = ({ isOpen, children, handleClose }: ModalProps) => {
 
     return (
         <div
-            className={cc(["modal-container", { open: isOpen }])}
+            className={modalClasses}
             onClick={handleClose}
         >
-            <div className="modal-content" onClick={stopPropagation}>
+            <div className={modalContentClasses} onClick={stopPropagation}>
                 {children}
             </div>
         </div>

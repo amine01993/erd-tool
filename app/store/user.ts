@@ -56,6 +56,7 @@ export interface UserState {
     isReadOnlyModalOpen: boolean;
     isAiPromptOpen: boolean;
     isFeedbackModalOpen: boolean;
+    isExportModalOpen: boolean;
     authType: AuthType;
     authDetail: any;
     isGuest: boolean;
@@ -82,6 +83,8 @@ export interface UserState {
     closeAiPrompt: () => void;
     openFeedbackModal: () => void;
     closeFeedbackModal: () => void;
+    openExportModal: () => void;
+    closeExportModal: () => void;
     toggleAiSuggestions: (mutation: UpdateUserAttributeMutation) => void;
     setAuthType: (authType: AuthType) => void;
     login: (userName: string, password: string) => Promise<void>;
@@ -114,6 +117,7 @@ const useUserStore = create<UserState>((set, get) => ({
     isReadOnlyModalOpen: false,
     isAiPromptOpen: false,
     isFeedbackModalOpen: false,
+    isExportModalOpen: false,
     authType: "login",
     authDetail: null,
     isGuest: true,
@@ -134,7 +138,7 @@ const useUserStore = create<UserState>((set, get) => ({
         mutations.forEach((m) => {
             const { mutationKey } = m.options;
             const data = m.state.variables as any;
-            
+
             if (
                 mutationKey?.[0] === "update-user-attribute" &&
                 data.attribute === attribute
@@ -142,13 +146,12 @@ const useUserStore = create<UserState>((set, get) => ({
                 mutationCache.remove(m);
             }
         });
-
     },
     setTheme(theme: AppTheme, mutation: UpdateUserAttributeMutation) {
         const { authData, handleCachedMutationsForUserAttributes } = get();
         let updatedAuthData = { ...authData, ["custom:theme"]: theme };
         set({ authData: updatedAuthData });
-        
+
         localStorage.setItem("authData", JSON.stringify(updatedAuthData));
 
         handleCachedMutationsForUserAttributes("custom:theme");
@@ -246,6 +249,16 @@ const useUserStore = create<UserState>((set, get) => ({
     closeFeedbackModal() {
         set({
             isFeedbackModalOpen: false,
+        });
+    },
+    openExportModal() {
+        set({
+            isExportModalOpen: true,
+        });
+    },
+    closeExportModal() {
+        set({
+            isExportModalOpen: false,
         });
     },
     toggleAiSuggestions(mutation: UpdateUserAttributeMutation) {
@@ -395,7 +408,7 @@ const useUserStore = create<UserState>((set, get) => ({
 
         const payload = session.tokens?.idToken?.payload;
         const token = session.tokens?.idToken?.toString();
-        
+
         set({
             isGuest: Boolean(!token),
             credentials: sessionCreds ?? null,
@@ -564,7 +577,8 @@ const isModalOpenSelector = (state: UserState) =>
     state.isConfirmModalOpen ||
     state.isReadOnlyModalOpen ||
     state.isAiPromptOpen ||
-    state.isFeedbackModalOpen;
+    state.isFeedbackModalOpen ||
+    state.isExportModalOpen;
 
 const isMenuOpenSelector = (state: UserState) =>
     state.isThemeMenuOpen || state.isSettingsMenuOpen;

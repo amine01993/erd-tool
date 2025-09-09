@@ -429,22 +429,6 @@
             }
         }
 
-        .text-area-field {
-            @apply flex flex-col;
-
-            label {
-                @apply font-medium;
-            }
-
-            textarea {
-                @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
-            }
-
-            .required {
-                @apply text-[#640D14] ml-0.5;
-            }
-        }
-
         .select-field {
             @apply flex flex-col;
 
@@ -454,18 +438,6 @@
 
             select {
                 @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
-            }
-        }
-
-        .checkbox-field {
-            @apply flex gap-2;
-
-            label {
-                @apply font-medium;
-            }
-
-            input {
-                @apply p-2;
             }
         }
 
@@ -535,18 +507,6 @@
                 @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
             }
         }
-
-        .radio-field {
-            @apply flex gap-2;
-
-            label {
-                @apply font-medium;
-            }
-
-            input {
-                @apply p-2;
-            }
-        }
     }
 }
 
@@ -577,6 +537,42 @@
 
     .required {
         @apply text-[#640D14] ml-0.5;
+    }
+}
+
+.text-area-field {
+    @apply flex flex-col;
+
+    label {
+        @apply font-medium;
+    }
+
+    textarea {
+        @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
+    }
+
+    .required {
+        @apply text-[#640D14] ml-0.5;
+    }
+}
+
+.radio-field,
+.checkbox-field {
+    @apply flex gap-2;
+
+    label {
+        @apply font-medium;
+    }
+
+    input {
+        @apply p-2;
+    }
+}
+
+.export-options {
+    .radio-field,
+    .checkbox-field {
+        @apply flex-row-reverse justify-end;
     }
 }
 
@@ -641,6 +637,16 @@
         @apply bg-[#fefbfb] text-[#640D14] rounded-md w-[min(500px,_90vw)];
         @apply absolute top-[10vw] left-1/2 -translate-x-1/2 transform-[translateY(20px)] opacity-0;
         @apply max-h-[calc(80vw)];
+
+        &.export-diagram {
+            @apply w-[min(1024px,_90vw)] top-[57px] max-h-[calc(100vh-2*57px)] overflow-y-auto overflow-x-hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #640d14 #fefbfb;
+
+            &.has-scrollbar {
+                @apply -mr-2.5;
+            }
+        }
     }
 
     &.open {
@@ -696,10 +702,31 @@
                 @apply outline-[#f7dee0];
             }
         }
+
+        &.highlighter-btn {
+            @apply p-1 rounded-[2px] cursor-pointer hover:bg-[#fce8ea] duration-200 transition-colors;
+        }
     }
 
     .server-error-message {
         @apply flex gap-2 items-center border rounded-md p-3 text-white bg-[#640D14];
+    }
+}
+
+.export-db, .generate-db {
+    @apply border-1 rounded-[2px] border-gray-300;
+
+    &.collapsed {
+        @apply max-h-[200px] overflow-hidden;
+
+        &::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 30px;
+            bottom: 0;
+            background-image: linear-gradient(to top, var(--color-gray-700), transparent);
+        }
     }
 }
 
