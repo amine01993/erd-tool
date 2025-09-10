@@ -48,6 +48,7 @@ type UpdateUserAttributeMutation = UseMutationResult<
 
 export interface UserState {
     offLine: boolean;
+    fullscreenMode: boolean;
     fetchingSession: boolean;
     isThemeMenuOpen: boolean;
     isSettingsMenuOpen: boolean;
@@ -64,6 +65,7 @@ export interface UserState {
     authData: any;
     jwtToken: string | "";
     setOffLine: (offline: boolean) => void;
+    setFullscreenMode: (fullscreen: boolean) => void;
     setFetchingSession: (fetching: boolean) => void;
     handleCachedMutationsForUserAttributes(attribute: string): void;
     setTheme: (theme: AppTheme, mutation: UpdateUserAttributeMutation) => void;
@@ -108,8 +110,9 @@ export interface UserState {
 }
 
 const useUserStore = create<UserState>((set, get) => ({
-    fetchingSession: false,
     offLine: false,
+    fullscreenMode: false,
+    fetchingSession: false,
     isThemeMenuOpen: false,
     isSettingsMenuOpen: false,
     isAuthModalOpen: false,
@@ -126,6 +129,9 @@ const useUserStore = create<UserState>((set, get) => ({
     jwtToken: "",
     setOffLine: (offline: boolean) => {
         set({ offLine: offline });
+    },
+    setFullscreenMode: (fullscreen: boolean) => {
+        set({ fullscreenMode: fullscreen });
     },
     setFetchingSession(fetching: boolean) {
         set({ fetchingSession: fetching });

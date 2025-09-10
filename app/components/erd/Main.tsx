@@ -40,6 +40,8 @@ export default memo(function Main() {
     const isSettingsMenuOpen = useUserStore(
         (state) => state.isSettingsMenuOpen
     );
+    const fullscreenMode = useUserStore((state) => state.fullscreenMode);
+
     const closeThemeMenu = useUserStore((state) => state.closeThemeMenu);
     const closeSettingsMenu = useUserStore((state) => state.closeSettingsMenu);
     const [entityPanelWidth, setEntityPanelWidth] = useState(300);
@@ -102,49 +104,57 @@ export default memo(function Main() {
         >
             <div
                 id="main-wrapper"
-                className="h-screen w-full flex flex-col"
+                className={`h-screen w-full flex flex-col${
+                    fullscreenMode ? " fullscreen" : ""
+                }`}
                 onClick={handleOutsideClick}
             >
-                <Header />
+                {!fullscreenMode && <Header />}
                 <main
-                    className={`grid flex-1 h-[calc(100vh-57px)]`}
+                    className={`grid flex-1`}
                     style={{
-                        gridTemplateColumns: `50px 250px 1fr ${entityPanelWidth}px`,
+                        gridTemplateColumns: fullscreenMode
+                            ? "1fr"
+                            : `50px 250px 1fr ${entityPanelWidth}px`,
                     }}
                 >
-                    <div className="bg-[#fefbfb] text-[#640D14] p-0.5 border-r border-[#640D14] h-[calc(100vh-57px)]">
-                        <DiagramCategories />
-                    </div>
-                    <div className="sidebar">
-                        <Sidebar />
-                    </div>
+                    {!fullscreenMode && (
+                        <>
+                            <div className="bg-[#fefbfb] text-[#640D14] p-0.5 border-r border-[#640D14] h-[calc(100vh-57px)]">
+                                <DiagramCategories />
+                            </div>
+                            <div className="sidebar">
+                                <Sidebar />
+                            </div>
+                        </>
+                    )}
 
-                    <div className="h-[calc(100vh-57px)]">
                         <ReactFlowProvider>
                             <ERD />
                         </ReactFlowProvider>
-                    </div>
 
-                    <Resizable
-                        defaultSize={{ width: 298 }}
-                        minWidth={200}
-                        maxWidth={500}
-                        maxHeight={"calc(100vh - 57px)"}
-                        enable={{
-                            left: true,
-                            right: false,
-                            top: false,
-                            bottom: false,
-                        }}
-                        grid={[10, 0]}
-                        onResize={handleResize}
-                        handleClasses={{ left: "resize-handle" }}
-                    >
-                        <div className="bg-[#fefbfb] text-black p-3 pb-0 border-l border-gray-400 h-full">
-                            <EntityInfo />
-                            <EdgeInfo />
-                        </div>
-                    </Resizable>
+                    {!fullscreenMode && (
+                        <Resizable
+                            defaultSize={{ width: 298 }}
+                            minWidth={200}
+                            maxWidth={500}
+                            maxHeight={"calc(100vh - 57px)"}
+                            enable={{
+                                left: true,
+                                right: false,
+                                top: false,
+                                bottom: false,
+                            }}
+                            grid={[10, 0]}
+                            onResize={handleResize}
+                            handleClasses={{ left: "resize-handle" }}
+                        >
+                            <div className="bg-[#fefbfb] text-black p-3 pb-0 border-l border-gray-400 h-full">
+                                <EntityInfo />
+                                <EdgeInfo />
+                            </div>
+                        </Resizable>
+                    )}
                 </main>
                 <Authentication />
                 <ConfirmationPermanentDelete />

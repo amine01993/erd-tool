@@ -279,6 +279,15 @@
     }
 }
 
+.screen-mode-panel {
+    @apply select-none rounded-sm overflow-hidden h-[32px];
+    @apply hover:bg-gray-100 transition-colors duration-300;
+
+    button {
+        @apply p-1 cursor-pointer;
+    }
+}
+
 .react-flow__node-entity {
     @apply border border-gray-800 bg-white;
 

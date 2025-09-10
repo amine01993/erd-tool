@@ -8,13 +8,14 @@ import useErdItemsStore from "@/app/store/erd-items";
 import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
 import useUserStore, { isAnyModalOrMenuOpenSelector } from "@/app/store/user";
 import Tooltip from "./Tooltip";
+import useInputFocused from "@/app/hooks/InputFocused";
 
 const ErdItemsPanel = () => {
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
     const selectItem = useErdItemsStore((state) => state.selectItem);
     const isReadOnly = useDiagramStore(isReadOnlySelector);
     const isAnyModalOrMenuOpen = useUserStore(isAnyModalOrMenuOpenSelector);
-    const [isInputFocused, setIsInputFocused] = useState(false);
+    const isInputFocused = useInputFocused();
 
     const handleSelection = useCallback(
         (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -56,29 +57,6 @@ const ErdItemsPanel = () => {
             selectItem("selector");
         }
     }, [isReadOnly]);
-
-    useEffect(() => {
-        function handleFocusIn(e: FocusEvent) {
-            if (
-                ["INPUT", "TEXTAREA", "SELECT"].includes(
-                    (e.target as HTMLElement).tagName
-                )
-            ) {
-                setIsInputFocused(true);
-            }
-        }
-        function handleFocusOut(e: FocusEvent) {
-            setIsInputFocused(false);
-        }
-
-        document.addEventListener("focusin", handleFocusIn);
-        document.addEventListener("focusout", handleFocusOut);
-
-        return () => {
-            document.removeEventListener("focusin", handleFocusIn);
-            document.removeEventListener("focusout", handleFocusOut);
-        };
-    }, []);
 
     return (
         <Panel

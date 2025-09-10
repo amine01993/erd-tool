@@ -48,6 +48,7 @@ import { EntityData } from "@/app/type/EntityType";
 import AiPrompt from "../diagram/AiPrompt";
 import { erdCompletionSchema } from "@/app/erd-completion/schema";
 import Export from "../diagram/Export";
+import ScreenModePanel from "./ScreenModePanel";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -558,6 +559,7 @@ const ERD = () => {
                 <Background />
                 <Controls showInteractive={false} />
                 <ErdItemsPanel />
+                <ScreenModePanel />
                 {loading && <Loading />}
                 {mainWrapper.current &&
                     createPortal(<AiPrompt />, mainWrapper.current)}
