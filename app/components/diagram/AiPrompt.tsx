@@ -94,7 +94,7 @@ const AiPrompt = () => {
                 <form className="contents" onSubmit={handleSubmit}>
                     <textarea
                         placeholder="Describe your diagram..."
-                        className="w-full bg-white outline-2 outline-white p-2 rounded-md focus:outline-[#640D14] transition-colors duration-200"
+                        className="w-full bg-white outline-1 outline-gray-300 p-2 rounded-md focus:outline-[#640D14] transition-colors duration-200"
                         rows={3}
                         ref={textareaRef}
                         value={prompt}

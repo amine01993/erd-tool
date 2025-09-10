@@ -33,6 +33,15 @@ import TextAreaField from "../widgets/TextAreaField";
 import { EntityData } from "@/app/type/EntityType";
 import { ErdEdgeData } from "@/app/type/EdgeType";
 import Tooltip from "../erd/Tooltip";
+import {
+    generateInsertsMySql,
+    generateMySql,
+} from "@/app/helper/mysql-generator";
+import {
+    generateInsertsSqlServer,
+    generateSqlServer,
+} from "@/app/helper/sqlserver-generator";
+import { generateDataTs, generateTs } from "@/app/helper/typescript-generator";
 
 interface ExportDbProps {
     option: string;
@@ -47,6 +56,7 @@ interface GenerateDbProps {
 }
 
 interface CodeSnippetActionsProps {
+    idPrefix: string;
     isCopied: boolean;
     isCollapsed: boolean;
     handleCopied: () => void;
@@ -55,6 +65,7 @@ interface CodeSnippetActionsProps {
 
 const CodeSnippetActions = memo(
     ({
+        idPrefix,
         isCopied,
         isCollapsed,
         handleCopied,
@@ -63,7 +74,7 @@ const CodeSnippetActions = memo(
         return (
             <div className="export-db-actions absolute top-0.5 right-0.5 flex gap-2">
                 <button
-                    id="export-db-copy-btn"
+                    id={`${idPrefix}-copy-btn`}
                     className="relative highlighter-btn"
                     aria-label="Copy to clipboard"
                     onClick={handleCopied}
@@ -84,14 +95,14 @@ const CodeSnippetActions = memo(
                             />
                             <Tooltip
                                 message="Copy to clipboard"
-                                selector="#export-db-copy-btn"
+                                selector={`#${idPrefix}-copy-btn`}
                                 position="left"
                             />
                         </>
                     )}
                 </button>
                 <button
-                    id="export-db-collapse-btn"
+                    id={`${idPrefix}-collapse-btn`}
                     className="relative highlighter-btn"
                     aria-label={
                         isCollapsed
@@ -118,7 +129,7 @@ const CodeSnippetActions = memo(
                                 ? "Expand the snippet"
                                 : "Collapse the snippet"
                         }
-                        selector="#export-db-collapse-btn"
+                        selector={`#${idPrefix}-collapse-btn`}
                         position="left"
                     />
                 </button>
@@ -147,6 +158,7 @@ const ExportDB = memo(({ option, language }: ExportDbProps) => {
     const sql = useMemo(() => {
         const diagram = getSelectedDiagram();
 
+        let _sql = "";
         let nodesData: EntityData[] = [];
         let edgesData: ErdEdgeData[] = [];
 
@@ -157,10 +169,25 @@ const ExportDB = memo(({ option, language }: ExportDbProps) => {
             edgesData = diagram.history.states[
                 diagram.history.current
             ].edges.map((edge) => edge.data as ErdEdgeData);
+
+            switch (option) {
+                case "mysql":
+                    _sql = generateMySql(nodesData, edgesData);
+                    break;
+                case "sqlserver":
+                    _sql = generateSqlServer(nodesData, edgesData);
+                    break;
+                case "postgresql":
+                    _sql = generatePostgreSql(nodesData, edgesData);
+                    break;
+                case "typescript":
+                    _sql = generateTs(nodesData, edgesData);
+                    break;
+                default:
+                    break;
+            }
         }
 
-        const _sql = generatePostgreSql(nodesData, edgesData);
-        console.log("sql", _sql);
         return _sql;
     }, [isExportModalOpen, option, getSelectedDiagram]);
 
@@ -195,15 +222,20 @@ const ExportDB = memo(({ option, language }: ExportDbProps) => {
                     language={language}
                     style={oneLight}
                     showLineNumbers={true}
-                    // wrapLongLines={true}
+                    PreTag="div"
                     wrapLines={true}
                     lineProps={{
-                        style: { flexWrap: "wrap" },
+                        style: {
+                            display: "flex",
+                            flexWrap: "wrap",
+                            contentVisibility: "auto",
+                        },
                     }}
                 >
                     {sql}
                 </SyntaxHighlighter>
                 <CodeSnippetActions
+                    idPrefix="export-db"
                     isCopied={isCopied}
                     isCollapsed={isCollapsed}
                     handleCopied={handleCopied}
@@ -241,10 +273,24 @@ const GenerateDB = memo(
             let _sql = "";
 
             if (generateData && diagram && isExportModalOpen && object) {
-                _sql = generateInsertsPostgreSql(object);
+                switch (option) {
+                    case "mysql":
+                        _sql = generateInsertsMySql(object);
+                        break;
+                    case "sqlserver":
+                        _sql = generateInsertsSqlServer(object);
+                        break;
+                    case "postgresql":
+                        _sql = generateInsertsPostgreSql(object);
+                        break;
+                    case "typescript":
+                        _sql = generateDataTs(object);
+                        break;
+                    default:
+                        break;
+                }
             }
 
-            console.log("insertsSql", _sql);
             return _sql;
         }, [
             isExportModalOpen,
@@ -286,15 +332,20 @@ const GenerateDB = memo(
                             language={language}
                             style={oneLight}
                             showLineNumbers={true}
-                            // wrapLongLines={true}
+                            PreTag="div"
                             wrapLines={true}
                             lineProps={{
-                                style: { flexWrap: "wrap" },
+                                style: {
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    contentVisibility: "auto",
+                                },
                             }}
                         >
                             {insertsSql}
                         </SyntaxHighlighter>
                         <CodeSnippetActions
+                            idPrefix="generate-db"
                             isCopied={isCopied}
                             isCollapsed={isCollapsed}
                             handleCopied={handleCopied}
@@ -311,6 +362,7 @@ const Export = () => {
     const [option, setOption] = useState("postgresql");
     const [generateData, setGenerateData] = useState(false);
     const [additionalRequirements, setAdditionalRequirements] = useState("");
+    const offLine = useUserStore((state) => state.offLine);
     const isExportModalOpen = useUserStore((state) => state.isExportModalOpen);
     const closeExportModal = useUserStore((state) => state.closeExportModal);
     const getSelectedDiagram = useDiagramStore(
@@ -457,6 +509,7 @@ const Export = () => {
                             label="Generate Data"
                             checked={generateData}
                             onChange={handleGenerateDataChange}
+                            disabled={offLine}
                         />
                         {generateData && (
                             <>
@@ -480,7 +533,7 @@ const Export = () => {
                                     </button>
                                     <button
                                         className="confirm-btn"
-                                        disabled={isLoading}
+                                        disabled={isLoading || offLine}
                                         onClick={handleGenerateData}
                                     >
                                         {isLoading

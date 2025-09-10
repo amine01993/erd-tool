@@ -429,18 +429,6 @@
             }
         }
 
-        .select-field {
-            @apply flex flex-col;
-
-            label {
-                @apply font-medium;
-            }
-
-            select {
-                @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
-            }
-        }
-
         .edit-attribute-btn {
             @apply p-2 flex items-center justify-self-end;
             @apply bg-[#335c67] hover:bg-[#2a4c55] text-white;
@@ -495,18 +483,6 @@
             @apply flex flex-col gap-2 relative;
             @apply overflow-y-auto overflow-x-hidden h-full;
         }
-
-        .select-field {
-            @apply flex flex-col;
-
-            label {
-                @apply font-medium;
-            }
-
-            select {
-                @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
-            }
-        }
     }
 }
 
@@ -548,7 +524,8 @@
     }
 
     textarea {
-        @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
+        @apply border-1 border-gray-400 bg-white text-black p-2 rounded-md;
+        @apply focus:outline-[#640D14];
     }
 
     .required {
@@ -565,7 +542,19 @@
     }
 
     input {
-        @apply p-2;
+        @apply p-2 disabled:cursor-not-allowed;
+    }
+}
+
+.select-field {
+    @apply flex flex-col;
+
+    label {
+        @apply font-medium;
+    }
+
+    select {
+        @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
     }
 }
 
@@ -582,19 +571,7 @@
     }
 
     .text-area-field {
-        @apply flex flex-col w-full;
-
-        label {
-            @apply font-medium;
-        }
-
-        textarea {
-            @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
-        }
-
-        .required {
-            @apply text-[#640D14] ml-0.5;
-        }
+        @apply w-full;
     }
 }
 
@@ -713,7 +690,8 @@
     }
 }
 
-.export-db, .generate-db {
+.export-db,
+.generate-db {
     @apply border-1 rounded-[2px] border-gray-300;
 
     &.collapsed {
@@ -725,7 +703,11 @@
             width: 100%;
             height: 30px;
             bottom: 0;
-            background-image: linear-gradient(to top, var(--color-gray-700), transparent);
+            background-image: linear-gradient(
+                to top,
+                var(--color-gray-700),
+                transparent
+            );
         }
     }
 }

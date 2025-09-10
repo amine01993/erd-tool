@@ -45,6 +45,7 @@ export async function POST(req: Request) {
             "The Entity-Relationship Diagram (ERD) has already been created. " +
             "The user wishes to fill the database with rich and accurate data." +
             "Generate the relevant data based on the user's needs (by following the provided entities and relationships). " +
+            "When generating date, time, datetime, and timestamp fields, the values must follow the ISO 8601 standard formatting. " +
             "You may also be given in the prompt additional requirements for the data generation. make sure to follow them.",
         temperature: 0,
         experimental_telemetry: {

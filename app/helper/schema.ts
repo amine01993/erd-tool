@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { AttributeData, EntityData } from "../type/EntityType";
-import { ErdEdgeData } from "../type/EdgeType";
 
 function attributeSchema(attr: AttributeData) {
     let schema: any;
@@ -85,3 +84,6 @@ export function generateZodSchema(nodesData: EntityData[]) {
     return entities;
 }
 
+export function escapeSingleQuotes(str: string): string {
+    return str.replace(/'/g, "\\'");
+}

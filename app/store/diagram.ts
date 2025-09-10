@@ -222,9 +222,15 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         mutation: UseMutationResult<void, Error, DiagramData, unknown>
     ) {
         const { apiCall } = useUserStore.getState();
-        const { category, clientOnly, diagrams, createDiagram } = get();
+        const {
+            loadingDiagrams,
+            category,
+            clientOnly,
+            diagrams,
+            createDiagram,
+        } = get();
 
-        if (!clientOnly && diagrams.length > 0) return;
+        if (loadingDiagrams || (!clientOnly && diagrams.length > 0)) return;
 
         set({ loadingDiagrams: true });
         let _diagrams: DiagramData[] = [];
@@ -937,27 +943,33 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 ...d.history,
                 states: d.history.states.map((s) => {
                     return {
-                        nodes: s.nodes.map((n) => {
-                            return {
-                                ...n,
-                                position: { ...n.position },
-                                measured: { ...n.measured },
-                                data: {
-                                    ...n.data,
-                                    attributes: n.data.attributes.map((a) => ({
-                                        ...a,
-                                    })).filter((a) => !a.isSuggestion),
-                                } as EntityData,
-                            };
-                        }).filter((n) => !n.data.isSuggestion),
-                        edges: s.edges.map((e) => {
-                            return {
-                                ...e,
-                                data: {
-                                    ...e.data,
-                                } as ErdEdgeData,
-                            };
-                        }).filter((e) => !e.data.isSuggestion),
+                        nodes: s.nodes
+                            .map((n) => {
+                                return {
+                                    ...n,
+                                    position: { ...n.position },
+                                    measured: { ...n.measured },
+                                    data: {
+                                        ...n.data,
+                                        attributes: n.data.attributes
+                                            .map((a) => ({
+                                                ...a,
+                                            }))
+                                            .filter((a) => !a.isSuggestion),
+                                    } as EntityData,
+                                };
+                            })
+                            .filter((n) => !n.data.isSuggestion),
+                        edges: s.edges
+                            .map((e) => {
+                                return {
+                                    ...e,
+                                    data: {
+                                        ...e.data,
+                                    } as ErdEdgeData,
+                                };
+                            })
+                            .filter((e) => !e.data.isSuggestion),
                     };
                 }),
             },
