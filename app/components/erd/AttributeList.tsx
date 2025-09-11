@@ -22,7 +22,7 @@ const AttributeList = ({
         <ul className="mt-3 flex flex-col gap-2">
             {selectedData.attributes.map((attr, index) => (
                 <li key={index} className="flex items-center gap-2">
-                    <div className="flex-1">
+                    <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                         {attr.name} ({attr.type})
                     </div>
                     <button

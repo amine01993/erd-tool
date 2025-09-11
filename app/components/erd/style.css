@@ -21,6 +21,9 @@
     --color-16: #f3f4f6;
     --color-17: #fbeff0;
     --color-highlighter: #fce8ea;
+    --color-scrollable: rgb(56 4 14 / 20%);
+    --entity-icon-url: url("/entity-icon-light.svg");
+    --edge-icon-url: url("/edge-icon-light.svg");
 }
 
 .dark {
@@ -41,6 +44,9 @@
     --color-16: #3e3e3e;
     --color-17: #611705;
     --color-highlighter: #252122;
+    --color-scrollable: rgb(255 255 255 / 20%);
+    --entity-icon-url: url("/entity-icon-dark.svg");
+    --edge-icon-url: url("/edge-icon-dark.svg");
 }
 
 @media (prefers-color-scheme: dark) {
@@ -62,6 +68,9 @@
         --color-16: #3e3e3e;
         --color-17: #611705;
         --color-highlighter: #252122;
+        --color-scrollable: rgb(255 255 255 / 20%);
+        --entity-icon-url: url("/entity-icon-dark.svg");
+        --edge-icon-url: url("/edge-icon-dark.svg");
     }
 }
 
@@ -69,13 +78,25 @@
     --inset-shadow-md: inset 0 1px 5px rgb(from var(--color-12) r g b / 40%);
 }
 
+.header,
+.sidebar,
+.diagram-categories-container,
+.feedback-toast,
+.tooltip,
+.theme-menu,
+.settings-menu,
+.info-container {
+    @apply transition-colors duration-200;
+}
+
 .header {
     @apply bg-(--color-3) text-(--color-1) border-b border-(--color-1);
 }
 
 .header-btn {
-    @apply p-2 rounded-md hover:not-disabled:bg-(--color-2) cursor-pointer transition-colors duration-200;
+    @apply p-2 rounded-md hover:not-disabled:bg-(--color-2) cursor-pointer;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
+    @apply transition-colors duration-200;
 }
 
 .ai-prompt {
@@ -87,8 +108,9 @@
 .ai-prompt-btn {
     @apply w-[170px] bg-(--color-13) flex justify-between items-center;
     @apply border-1 border-(--color-1) rounded-md p-1 outline-none focus:bg-(--color-2);
-    @apply hover:not-disabled:bg-(--color-2) cursor-pointer transition-colors duration-200;
+    @apply hover:not-disabled:bg-(--color-2) cursor-pointer;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
+    @apply transition-colors duration-200;
 
     .placeholder {
         @apply font-semibold;
@@ -96,6 +118,7 @@
 
     .shortcut {
         @apply text-xs bg-(--color-1) text-(--color-13) p-0.5 rounded-[2px];
+        @apply transition-colors duration-200;
     }
 }
 
@@ -104,9 +127,9 @@
 
     mask-image: linear-gradient(
         130deg,
-        rgb(0, 0, 0) 45%,
-        rgba(0, 0, 0, 0.6) 70%,
-        rgb(0, 0, 0) 95%
+        rgb(from var(--color-12) r g b) 45%,
+        rgb(from var(--color-12) r g b / 60%) 70%,
+        rgb(from var(--color-12) r g b) 95%
     );
     animation: 1s linear 0s infinite normal none running placeholder-wave;
 }
@@ -145,7 +168,7 @@
 
 .search-bar {
     @apply border-1 rounded-md py-1 px-2 w-full;
-    @apply border-(--color-1) outline-none focus:bg-(--color-2) transition-colors duration-200;
+    @apply border-(--color-1) outline-none focus:bg-(--color-2);
     @apply transition-colors duration-200;
 }
 
@@ -233,7 +256,7 @@
 }
 
 .theme-menu {
-    @apply absolute top-full right-0 z-1 transition duration-300 overflow-hidden opacity-0;
+    @apply absolute top-full right-0 z-1 overflow-hidden opacity-0;
     @apply hidden flex-col gap-3 p-2 border border-(--color-1) bg-(--color-3);
     @apply font-medium;
 
@@ -256,7 +279,7 @@
 }
 
 .settings-menu {
-    @apply absolute top-full right-0 z-1 transition duration-3000 overflow-hidden opacity-0;
+    @apply absolute top-full right-0 z-1 overflow-hidden opacity-0;
     @apply hidden flex-col gap-2 p-2 border border-(--color-1) bg-(--color-3);
     @apply font-medium;
 
@@ -285,13 +308,13 @@
 .react-flow-container {
     &.entity {
         .react-flow__pane {
-            cursor: url("/entity-cursor.png") 16 16, default;
+            cursor: var(--entity-icon-url) 12 12, default;
         }
     }
 
     &.edge {
         .react-flow__pane {
-            cursor: url("/edge-cursor.png") 16 16, default;
+            cursor: var(--edge-icon-url) 12 12, default;
         }
 
         .entity-node {
@@ -308,6 +331,10 @@
     }
 
     &.selector {
+        * {
+            @apply transition-colors duration-200;
+        }
+
         .react-flow__node-entity {
             &.selected {
                 .entity-node {
@@ -359,14 +386,14 @@
     @apply flex flex-col gap-2 cursor-default;
 
     button {
-        @apply p-1 rounded-sm cursor-pointer hover:not-disabled:bg-(--color-16) transition-colors duration-300;
+        @apply p-1 rounded-sm cursor-pointer hover:not-disabled:bg-(--color-16) transition-colors duration-200;
         @apply disabled:cursor-not-allowed disabled:opacity-50;
     }
 }
 
 .screen-mode-panel {
     @apply select-none rounded-sm overflow-hidden h-[32px];
-    @apply hover:bg-(--color-16) transition-colors duration-300;
+    @apply hover:bg-(--color-16) transition-colors duration-200;
 
     button {
         @apply p-1 cursor-pointer;
@@ -454,7 +481,8 @@
 }
 
 .erd-connection-line {
-    @apply stroke-(--color-black);
+    @apply stroke-(--color-12);
+    @apply transition-colors duration-200;
 }
 
 .edge-label {
@@ -470,14 +498,14 @@
 }
 
 .info-container {
-    @apply bg-(--color-3) text-(--color-12) border-l;
+    @apply bg-(--color-3) text-(--color-12) border-l overflow-x-hidden;
 }
 
 .entity-info {
     @apply flex flex-col h-full;
 
     button {
-        @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
+        @apply transition-colors duration-200 cursor-pointer font-medium rounded-md;
     }
 
     .error {
@@ -512,7 +540,7 @@
                 &::before {
                     @apply top-0 -mb-2;
                     background-image: linear-gradient(
-                        rgb(56 4 14 / 20%),
+                        var(--color-scrollable),
                         transparent
                     );
                 }
@@ -520,7 +548,7 @@
                     @apply bottom-0 -mt-2;
                     background-image: linear-gradient(
                         0,
-                        rgb(56 4 14 / 20%),
+                        var(--color-scrollable),
                         transparent
                     );
                 }
@@ -569,7 +597,7 @@
     @apply flex flex-col h-full;
 
     button {
-        @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
+        @apply transition-colors duration-200 cursor-pointer font-medium rounded-md;
     }
 
     .details {
@@ -672,7 +700,7 @@
     li {
         @apply flex-1 hover:bg-(--color-2) border-b border-(--color-1);
         @apply flex justify-center;
-        @apply transition-colors duration-300;
+        @apply transition-colors duration-200;
         &.active {
             @apply border-b-2 bg-(--color-1) text-(--color-13) font-semibold;
         }
@@ -685,7 +713,7 @@
 .auth-btn {
     @apply flex gap-2 py-2 px-2.5 border-1 items-center w-fit self-end;
     @apply bg-(--color-1) hover:not-disabled:bg-(--color-7) text-(--color-13) font-semibold;
-    @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
+    @apply transition-colors duration-200 cursor-pointer font-medium rounded-md;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
 }
 
@@ -701,6 +729,10 @@
 .modal-container {
     @apply hidden opacity-0 perspective-normal transform-3d;
     @apply fixed h-screen w-full z-1 bg-(--color-12)/50;
+
+    * {
+        @apply transition-colors duration-200;
+    }
 
     .modal-content {
         @apply bg-(--color-3) text-(--color-1) rounded-md w-[min(500px,_90vw)];
@@ -737,7 +769,7 @@
 
         &.close-modal {
             @apply absolute top-2 right-2 outline-2 outline-(--color-3) -outline-offset-2;
-            @apply p-2 rounded-md text-(--color-1) cursor-pointer transition-colors duration-200;
+            @apply p-2 rounded-md text-(--color-1) cursor-pointer;
             &:hover {
                 @apply not-disabled:bg-(--color-2) not-disabled:outline-(--color-2);
             }
@@ -748,7 +780,7 @@
 
         &.cancel-btn,
         &.confirm-btn {
-            @apply px-5 py-2 rounded-md font-semibold cursor-pointer transition-all duration-200;
+            @apply px-5 py-2 rounded-md font-semibold cursor-pointer transition-all;
             @apply disabled:opacity-50 disabled:cursor-not-allowed;
         }
 
@@ -773,7 +805,7 @@
         }
 
         &.highlighter-btn {
-            @apply p-1 rounded-[2px] cursor-pointer duration-200 transition-colors;
+            @apply p-1 rounded-[2px] cursor-pointer;
             @apply hover:bg-(--color-highlighter);
         }
     }
