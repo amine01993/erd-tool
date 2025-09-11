@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { memo, SVGProps, useCallback, useEffect } from "react";
 import { Hub } from "@aws-amplify/core";
 import { Icon } from "@iconify/react";
@@ -26,7 +27,9 @@ import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import Tooltip from "./Tooltip";
 import AiSuggestions from "../widgets/AiSuggestions";
-import Link from "next/link";
+import NavigationBtn from "../widgets/NavigationBtn";
+import NavigationMenu from "../widgets/NavigationMenu";
+import useInputFocused from "@/app/hooks/InputFocused";
 
 const Logo = memo((props: SVGProps<SVGSVGElement>) => {
     return (
@@ -71,6 +74,7 @@ const Logo = memo((props: SVGProps<SVGSVGElement>) => {
 const Header = () => {
     const offLine = useUserStore((state) => state.offLine);
     const isAnyModalOrMenuOpen = useUserStore(isAnyModalOrMenuOpenSelector);
+    const isInputFocused = useInputFocused();
     const setFetchingSession = useUserStore(
         (state) => state.setFetchingSession
     );
@@ -114,7 +118,7 @@ const Header = () => {
         startRefreshing();
         emptyDiagrams();
         queryClient.invalidateQueries({ queryKey: ["diagrams"] });
-    }, [offLine, refreshing, emptyDiagrams]);
+    }, [offLine, refreshing, startRefreshing, emptyDiagrams]);
 
     const handleNewDiagram = useCallback(() => {
         createDiagram(mutationAdd);
@@ -147,7 +151,7 @@ const Header = () => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            if (!isAnyModalOrMenuOpen) {
+            if (!isAnyModalOrMenuOpen && !isInputFocused) {
                 if (e.ctrlKey && !e.shiftKey && e.key?.toLowerCase() === "z") {
                     e.preventDefault();
                     handleUndo();
@@ -188,6 +192,7 @@ const Header = () => {
         };
     }, [
         isAnyModalOrMenuOpen,
+        isInputFocused,
         handleUndo,
         handleRedo,
         handleDiagramsRefresh,
@@ -243,7 +248,7 @@ const Header = () => {
     }, []);
 
     return (
-        <header className="header flex items-center justify-between px-3 py-2">
+        <header className="header">
             <div className="flex items-center gap-1">
                 <Link href="/" title="Entity Relational Diagram Tool logo">
                     <Logo className="mr-1" width={40} height={35} />
@@ -415,7 +420,16 @@ const Header = () => {
                 <AiSuggestions />
                 <Theme />
                 <Settings />
+                <NavigationBtn />
             </div>
+            <NavigationMenu
+                handleDiagramsRefresh={handleDiagramsRefresh}
+                handleNewDiagram={handleNewDiagram}
+                handleDuplicateDiagram={handleDuplicateDiagram}
+                handleDeleteDiagram={handleDeleteDiagram}
+                handleRecoverDiagram={handleRecoverDiagram}
+                handleExportDiagram={handleExportDiagram}
+            />
         </header>
     );
 };

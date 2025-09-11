@@ -51,7 +51,7 @@ const ScreenModePanel = () => {
     }, []);
     return (
         <Panel
-            position="top-right"
+            position="bottom-right"
             className="screen-mode-panel bg-(--color-13) shadow-md"
         >
             <button

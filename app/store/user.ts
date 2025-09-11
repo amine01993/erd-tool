@@ -58,6 +58,9 @@ export interface UserState {
     isAiPromptOpen: boolean;
     isFeedbackModalOpen: boolean;
     isExportModalOpen: boolean;
+    isLeftPanelOpen: boolean;
+    isRightPanelOpen: boolean;
+    isNavigationOpen: boolean;
     authType: AuthType;
     authDetail: any;
     isGuest: boolean;
@@ -87,6 +90,12 @@ export interface UserState {
     closeFeedbackModal: () => void;
     openExportModal: () => void;
     closeExportModal: () => void;
+    openLeftPanel: () => void;
+    closeLeftPanel: () => void;
+    openRightPanel: () => void;
+    closeRightPanel: () => void;
+    openNavigation: () => void;
+    closeNavigation: () => void;
     toggleAiSuggestions: (mutation: UpdateUserAttributeMutation) => void;
     setAuthType: (authType: AuthType) => void;
     login: (userName: string, password: string) => Promise<void>;
@@ -121,6 +130,9 @@ const useUserStore = create<UserState>((set, get) => ({
     isAiPromptOpen: false,
     isFeedbackModalOpen: false,
     isExportModalOpen: false,
+    isLeftPanelOpen: false,
+    isRightPanelOpen: false,
+    isNavigationOpen: false,
     authType: "login",
     authDetail: null,
     isGuest: true,
@@ -265,6 +277,36 @@ const useUserStore = create<UserState>((set, get) => ({
     closeExportModal() {
         set({
             isExportModalOpen: false,
+        });
+    },
+    openLeftPanel() {
+        set({
+            isLeftPanelOpen: true,
+        });
+    },
+    closeLeftPanel() {
+        set({
+            isLeftPanelOpen: false,
+        });
+    },
+    openRightPanel() {
+        set({
+            isRightPanelOpen: true,
+        });
+    },
+    closeRightPanel() {
+        set({
+            isRightPanelOpen: false,
+        });
+    },
+    openNavigation() {
+        set({
+            isNavigationOpen: true,
+        });
+    },
+    closeNavigation() {
+        set({
+            isNavigationOpen: false,
         });
     },
     toggleAiSuggestions(mutation: UpdateUserAttributeMutation) {

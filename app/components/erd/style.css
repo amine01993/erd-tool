@@ -90,13 +90,140 @@
 }
 
 .header {
-    @apply bg-(--color-3) text-(--color-1) border-b border-(--color-1);
+    @apply flex items-center justify-between px-3 py-2;
+    @apply fixed z-1 bg-(--color-3) text-(--color-1) border-(--color-1) border rounded-md;
+    @apply top-2 self-center w-[min(390px,calc(100vw-16px))];
+
+    @media (min-width: 1024px) {
+        @apply static justify-between w-full rounded-none border-t-0 border-l-0 border-r-0;
+    }
 }
 
 .header-btn {
     @apply p-2 rounded-md hover:not-disabled:bg-(--color-2) cursor-pointer;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
     @apply transition-colors duration-200;
+}
+
+.navigation-menu {
+    @apply fixed z-1 top-[calc(58px+16px)] w-[min(390px,calc(100vw-16px))];
+    @apply translate-x-[-13px] overflow-hidden scale-0 opacity-0 origin-top;
+    @apply bg-(--color-3) text-(--color-1) border-(--color-1) border rounded-md;
+    @apply transition-all duration-200;
+
+    &.open {
+        @apply scale-100 opacity-100;
+    }
+
+    .theme-menu {
+        @apply flex flex-row gap-0 relative opacity-100 border-0 p-0;
+        label {
+            @apply flex-1;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        @apply hidden;
+    }
+}
+
+.navigation-btn {
+    @apply p-2 cursor-pointer hover:not-disabled:bg-(--color-2);
+    @apply flex gap-2 items-center w-full;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+    @apply transition-colors duration-200;
+}
+
+#refresh-button,
+#new-diagram-button,
+#duplicate-diagram-button,
+#delete-diagram-button,
+#recover-diagram-button,
+#export-diagram-button,
+#ai-suggestions-btn,
+#theme-settings-btn {
+    @apply hidden;
+
+    @media (min-width: 1024px) {
+        @apply flex;
+    }
+}
+
+#navigation-btn {
+    path {
+        transition-property: opacity;
+        transition-duration: 200ms;
+
+        &:first-child {
+            transform-origin: 4px 6px;
+        }
+        &:last-child {
+            transform-origin: 3px 18px;
+        }
+    }
+
+    svg:not(.x) {
+        path:first-child {
+            animation: unrotate-1 0.2s forwards;
+        }
+        path:last-child {
+            animation: unrotate-2 0.2s forwards;
+        }
+    }
+
+    svg.x {
+        path:first-child {
+            animation: rotate-1 0.2s forwards;
+        }
+        path:nth-child(2) {
+            opacity: 0;
+        }
+        path:last-child {
+            animation: rotate-2 0.2s forwards;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        @apply hidden;
+    }
+}
+
+@keyframes rotate-1 {
+    0% {
+        transform: translateX(0) rotate(0);
+    }
+    100% {
+        transform: translateX(2.5px) rotate(45deg);
+    }
+}
+
+@keyframes rotate-2 {
+    0% {
+        transform: translateX(0) rotate(0);
+    }
+    100% {
+        transform: translateX(2.5px) rotate(-45deg);
+    }
+}
+
+@keyframes unrotate-1 {
+    0% {
+        transform: translateX(var(--path-1-translate))
+            rotate(var(--path-1-rotate));
+    }
+    100% {
+        transform: translateX(0) rotate(0);
+    }
+}
+
+@keyframes unrotate-2 {
+    0% {
+        transform: translateX(var(--path-2-translate))
+            rotate(var(--path-2-rotate));
+    }
+    100% {
+        transform: translateX(0) rotate(0);
+    }
 }
 
 .ai-prompt {
@@ -106,11 +233,15 @@
 }
 
 .ai-prompt-btn {
-    @apply w-[170px] bg-(--color-13) flex justify-between items-center;
+    @apply hidden w-[170px] bg-(--color-13) justify-between items-center;
     @apply border-1 border-(--color-1) rounded-md p-1 outline-none focus:bg-(--color-2);
     @apply hover:not-disabled:bg-(--color-2) cursor-pointer;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
     @apply transition-colors duration-200;
+
+    @media (min-width: 1024px) {
+        @apply flex;
+    }
 
     .placeholder {
         @apply font-semibold;
@@ -119,6 +250,70 @@
     .shortcut {
         @apply text-xs bg-(--color-1) text-(--color-13) p-0.5 rounded-[2px];
         @apply transition-colors duration-200;
+    }
+}
+
+#main-wrapper {
+    &.fullscreen {
+        > main {
+            @media (min-width: 1024px) {
+                @apply grid-cols-[1fr];
+            }
+        }
+    }
+
+    > main {
+        @apply grid flex-1 grid-cols-1;
+
+        @media (min-width: 1024px) {
+            @apply grid-cols-[50px_250px_1fr_var(--entity-panel-width)];
+        }
+    }
+}
+
+.main-left-panel,
+.main-right-panel {
+    @apply fixed z-1 top-[calc(58px+16px)];
+    @apply max-h-[calc(100vh-58px-24px)] w-[min(calc(100%_-_2_*_8px_-_15px),_300px)];
+    @apply transition-transform duration-200;
+
+    &.open {
+        @apply transform-[translateX(0)];
+    }
+
+    .collapse-button {
+        @apply bg-(--color-3) hover:bg-(--color-2) text-(--color-1) border-(--color-1) border;
+        @apply h-fit absolute;
+        @apply transition-colors duration-200 cursor-pointer;
+        @media (min-width: 1024px) {
+            @apply hidden;
+        }
+    }
+}
+
+.main-left-panel {
+    @apply flex left-2;
+    @apply transform-[translateX(calc(-100%_-_8px))];
+
+    @media (min-width: 1024px) {
+        @apply contents transform-none;
+    }
+
+    .collapse-button {
+        @apply left-full border-l-0 rounded-r-md;
+    }
+}
+
+.main-right-panel {
+    @apply right-2 border rounded-md rounded-tl-none;
+    @apply transform-[translateX(calc(100%_+_8px))];
+
+    @media (min-width: 1024px) {
+        @apply contents transform-none;
+    }
+
+    .collapse-button {
+        @apply top-[-1px] right-[calc(100%+1px)] border-r-0 rounded-l-md;
     }
 }
 
@@ -141,12 +336,26 @@
 }
 
 .sidebar {
-    @apply bg-(--color-3) text-(--color-1) p-3 border-r border-(--color-1);
-    @apply flex flex-col;
+    @apply bg-(--color-3) text-(--color-1) p-3 border-(--color-1) border;
+    @apply flex flex-col rounded-br-md flex-auto;
+
+    @media (min-width: 1024px) {
+        @apply border-l-0 border-t-0 border-b-0 rounded-none;
+        @apply h-[calc(100vh-57px)];
+    }
 }
 
 .diagram-categories-container {
-    @apply bg-(--color-3) text-(--color-1) p-0.5 border-r border-(--color-1);
+    @apply bg-(--color-3) text-(--color-1) p-0.5 border-(--color-1) border border-r-0;
+    @apply rounded-l-md;
+
+    @media (min-width: 1024px) {
+        @apply border-l-0 border-t-0 border-b-0 border-r-1 rounded-none;
+    }
+}
+
+.info-container {
+    @apply bg-(--color-3) border-(--color-1) text-(--color-12) border-l;
 }
 
 .diagram-categories {
@@ -220,7 +429,7 @@
 }
 
 .tooltip {
-    @apply absolute bg-(--color-12) text-(--color-13) rounded-md py-1 px-2 z-1 whitespace-nowrap text-sm;
+    @apply absolute bg-(--color-12) text-(--color-13) rounded-md py-1 px-2 z-2 whitespace-nowrap text-sm;
     &.top {
         @apply -translate-x-1/2 -translate-y-full;
         @apply left-1/2 -top-2;
@@ -497,10 +706,6 @@
     }
 }
 
-.info-container {
-    @apply bg-(--color-3) text-(--color-12) border-l overflow-x-hidden;
-}
-
 .entity-info {
     @apply flex flex-col h-full;
 
@@ -736,8 +941,8 @@
 
     .modal-content {
         @apply bg-(--color-3) text-(--color-1) rounded-md w-[min(500px,_90vw)];
-        @apply absolute top-[10vw] left-1/2 -translate-x-1/2 transform-[translateY(20px)] opacity-0;
-        @apply max-h-[calc(80vw)];
+        @apply absolute top-[10vh] left-1/2 -translate-x-1/2 transform-[translateY(20px)] opacity-0;
+        @apply max-h-[calc(80vh)];
 
         &.export-diagram {
             @apply w-[min(1024px,_90vw)] top-[57px] max-h-[calc(100vh-2*57px)] overflow-y-auto overflow-x-hidden;

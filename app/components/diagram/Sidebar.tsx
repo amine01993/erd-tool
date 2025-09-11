@@ -7,11 +7,11 @@ import {
     useRef,
     useState,
 } from "react";
+import cc from "classcat";
 import useDiagramStore from "../../store/diagram";
 import SearchBar from "./SearchBar";
 import DiagramItem, { DiagramItemPlaceHolder } from "./DiagramItem";
 import { DiagramData } from "@/app/type/DiagramType";
-import cc from "classcat";
 
 const Sidebar = () => {
     const listRef = useRef<HTMLUListElement>(null);
