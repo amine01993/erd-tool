@@ -1,18 +1,93 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root,
+.light {
+    --color-1: #640d14;
+    --color-2: #f7dee0;
+    --color-3: #fefbfb;
+    --color-4: #800e13;
+    --color-5: #335c67;
+    --color-6: #2a4c55;
+    --color-7: #44090e;
+    --color-8: #003049;
+    --color-9: #000305;
+    --color-10: #ad2831;
+    --color-12: black;
+    --color-13: white;
+    --color-14: #4a5565;
+    --color-15: #364153;
+    --color-16: #f3f4f6;
+    --color-17: #fbeff0;
+    --color-highlighter: #fce8ea;
+}
+
+.dark {
+    --color-1: #fce8ea;
+    --color-2: #3f0f03;
+    --color-3: #250902;
+    --color-4: #e9a5a9;
+    --color-5: #98c1cd;
+    --color-6: #75acbd;
+    --color-7: #f7c4c9;
+    --color-8: #80d2ff;
+    --color-9: #57c4ff;
+    --color-10: #efbdc0;
+    --color-12: #f8f8f8;
+    --color-13: #2b2b2b;
+    --color-14: #d1d5dc;
+    --color-15: #99a1af;
+    --color-16: #3e3e3e;
+    --color-17: #611705;
+    --color-highlighter: #252122;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-1: #fce8ea;
+        --color-2: #3f0f03;
+        --color-3: #250902;
+        --color-4: #e9a5a9;
+        --color-5: #98c1cd;
+        --color-6: #75acbd;
+        --color-7: #f7c4c9;
+        --color-8: #80d2ff;
+        --color-9: #57c4ff;
+        --color-10: #efbdc0;
+        --color-12: #f8f8f8;
+        --color-13: #2b2b2b;
+        --color-14: #d1d5dc;
+        --color-15: #99a1af;
+        --color-16: #3e3e3e;
+        --color-17: #611705;
+        --color-highlighter: #252122;
+    }
+}
+
 @theme {
-    --inset-shadow-md: inset 0 1px 5px rgba(0, 0, 0, 0.4);
+    --inset-shadow-md: inset 0 1px 5px rgb(from var(--color-12) r g b / 40%);
+}
+
+.header {
+    @apply bg-(--color-3) text-(--color-1) border-b border-(--color-1);
 }
 
 .header-btn {
-    @apply p-2 rounded-md hover:not-disabled:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+    @apply p-2 rounded-md hover:not-disabled:bg-(--color-2) cursor-pointer transition-colors duration-200;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
 }
 
+.ai-prompt {
+    .text-area-field {
+        @apply w-full;
+    }
+}
+
 .ai-prompt-btn {
-    @apply w-[170px] bg-white flex justify-between items-center;
-    @apply border-1 border-[#640D14] rounded-md p-1 outline-none focus:bg-[#f7dee0];
-    @apply hover:not-disabled:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+    @apply w-[170px] bg-(--color-13) flex justify-between items-center;
+    @apply border-1 border-(--color-1) rounded-md p-1 outline-none focus:bg-(--color-2);
+    @apply hover:not-disabled:bg-(--color-2) cursor-pointer transition-colors duration-200;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
 
     .placeholder {
@@ -20,7 +95,7 @@
     }
 
     .shortcut {
-        @apply text-xs bg-[#640D14] text-white p-0.5 rounded-[2px];
+        @apply text-xs bg-(--color-1) text-(--color-13) p-0.5 rounded-[2px];
     }
 }
 
@@ -43,8 +118,12 @@
 }
 
 .sidebar {
-    @apply bg-[#fefbfb] text-[#640D14] p-3 border-r border-[#640D14] h-[calc(100vh-57px)];
+    @apply bg-(--color-3) text-(--color-1) p-3 border-r border-(--color-1);
     @apply flex flex-col;
+}
+
+.diagram-categories-container {
+    @apply bg-(--color-3) text-(--color-1) p-0.5 border-r border-(--color-1);
 }
 
 .diagram-categories {
@@ -53,21 +132,27 @@
         @apply text-center;
     }
     button {
-        @apply p-2 text-left rounded-md text-[#640D14] cursor-pointer transition-colors duration-200;
+        @apply p-2 text-left rounded-md text-(--color-1) cursor-pointer transition-colors duration-200;
         @apply disabled:cursor-not-allowed disabled:opacity-50;
         &:hover {
-            @apply not-disabled:bg-[#f7dee0];
+            @apply not-disabled:bg-(--color-2);
         }
         &.active {
-            @apply bg-[#f7dee0];
+            @apply bg-(--color-2);
         }
     }
+}
+
+.search-bar {
+    @apply border-1 rounded-md py-1 px-2 w-full;
+    @apply border-(--color-1) outline-none focus:bg-(--color-2) transition-colors duration-200;
+    @apply transition-colors duration-200;
 }
 
 .diagram-list {
     @apply flex flex-col gap-1 overflow-auto -mb-3 pb-3;
     scrollbar-width: thin;
-    scrollbar-color: #640d14 #fefbfb;
+    scrollbar-color: var(--color-1) var(--color-3);
 
     &.has-scrollbar {
         @apply -mr-2.5;
@@ -75,15 +160,15 @@
 }
 
 .diagram-item {
-    @apply px-2 py-1 text-left rounded-md text-[#640D14] hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+    @apply px-2 py-1 text-left rounded-md text-(--color-1) hover:bg-(--color-2) cursor-pointer transition-colors duration-200;
 
     &.selected {
-        @apply bg-[#f7dee0];
+        @apply bg-(--color-2);
 
         .diagram-name {
             &:hover,
             &:focus {
-                @apply border-1 border-[#640d14] px-[1px] -mt-[1px] -ml-[2px] -mb-[1px] rounded-md;
+                @apply border-1 border-(--color-1) px-[1px] -mt-[1px] -ml-[2px] -mb-[1px] rounded-md;
                 @apply outline-none;
             }
         }
@@ -91,14 +176,14 @@
 
     .diagram-name-form {
         input {
-            @apply border-1 border-[#640D14] rounded-md px-[1px] -mt-[1px] -ml-[2px] -mb-[1px] w-full outline-none bg-[#fefbfb];
+            @apply border-1 border-(--color-1) rounded-md px-[1px] -mt-[1px] -ml-[2px] -mb-[1px] w-full outline-none bg-(--color-3);
             @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
         }
     }
 }
 
 .feedback-toast {
-    @apply fixed px-6 py-3 rounded-full bg-[#640D14] text-white bottom-3;
+    @apply fixed px-6 py-3 rounded-full bg-(--color-1) text-(--color-13) bottom-3;
     @apply left-1/2 -translate-x-1/2;
     @apply hidden gap-2 items-center;
 
@@ -112,7 +197,7 @@
 }
 
 .tooltip {
-    @apply absolute bg-black text-white rounded-md py-1 px-2 z-1 whitespace-nowrap text-sm;
+    @apply absolute bg-(--color-12) text-(--color-13) rounded-md py-1 px-2 z-1 whitespace-nowrap text-sm;
     &.top {
         @apply -translate-x-1/2 -translate-y-full;
         @apply left-1/2 -top-2;
@@ -149,7 +234,7 @@
 
 .theme-menu {
     @apply absolute top-full right-0 z-1 transition duration-300 overflow-hidden opacity-0;
-    @apply hidden flex-col gap-3 p-2 border border-[#640d14] bg-[#fefbfb];
+    @apply hidden flex-col gap-3 p-2 border border-(--color-1) bg-(--color-3);
     @apply font-medium;
 
     &.open {
@@ -158,10 +243,10 @@
 
     label {
         @apply flex items-center gap-2 px-2 py-1 rounded-md;
-        @apply hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+        @apply hover:bg-(--color-2) cursor-pointer transition-colors duration-200;
 
         &.selected {
-            @apply bg-[#f7dee0];
+            @apply bg-(--color-2);
         }
     }
 
@@ -172,7 +257,7 @@
 
 .settings-menu {
     @apply absolute top-full right-0 z-1 transition duration-3000 overflow-hidden opacity-0;
-    @apply hidden flex-col gap-2 p-2 border border-[#640d14] bg-[#fefbfb];
+    @apply hidden flex-col gap-2 p-2 border border-(--color-1) bg-(--color-3);
     @apply font-medium;
 
     &.open {
@@ -191,7 +276,7 @@
         li {
             button {
                 @apply flex gap-2 items-center px-2 py-1 rounded-md text-nowrap w-full;
-                @apply hover:bg-[#f7dee0] cursor-pointer transition-colors duration-200;
+                @apply hover:bg-(--color-2) cursor-pointer transition-colors duration-200;
             }
         }
     }
@@ -242,7 +327,7 @@
 
                 .attributes {
                     li.connected {
-                        @apply bg-(--color-blue-400) text-white;
+                        @apply bg-(--color-blue-400) text-(--color-13);
                     }
                 }
             }
@@ -274,14 +359,14 @@
     @apply flex flex-col gap-2 cursor-default;
 
     button {
-        @apply p-1 rounded-sm cursor-pointer hover:not-disabled:bg-gray-100 transition-colors duration-300;
+        @apply p-1 rounded-sm cursor-pointer hover:not-disabled:bg-(--color-16) transition-colors duration-300;
         @apply disabled:cursor-not-allowed disabled:opacity-50;
     }
 }
 
 .screen-mode-panel {
     @apply select-none rounded-sm overflow-hidden h-[32px];
-    @apply hover:bg-gray-100 transition-colors duration-300;
+    @apply hover:bg-(--color-16) transition-colors duration-300;
 
     button {
         @apply p-1 cursor-pointer;
@@ -289,7 +374,7 @@
 }
 
 .react-flow__node-entity {
-    @apply border border-gray-800 bg-white;
+    @apply border border-(--color-15) bg-(--color-13);
 
     &.selected {
         @apply shadow-md border-blue-600;
@@ -301,7 +386,7 @@
 
             .attributes {
                 li.connected {
-                    @apply bg-(--color-blue-600) text-white;
+                    @apply bg-(--color-blue-600) text-(--color-13);
                 }
             }
         }
@@ -328,7 +413,7 @@
     }
 
     path {
-        @apply stroke-(--color-black) stroke-1;
+        @apply stroke-(--color-12) stroke-1;
     }
 }
 
@@ -336,11 +421,11 @@
     @apply text-[12px] h-full flex flex-col min-w-[199px] min-h-[99px];
 
     &.suggested {
-        @apply opacity-60 brightness-50 text-gray-700;
+        @apply opacity-60 brightness-50 text-(--color-15);
     }
 
     .title {
-        @apply font-semibold border-b text-center flex items-center;
+        @apply font-semibold border-b text-center flex items-center text-(--color-12);
 
         .drag-handle {
             @apply flex items-center relative z-1 p-1 pr-0 w-[24px];
@@ -352,17 +437,17 @@
     }
 
     .attributes {
-        @apply text-[12px] text-gray-600 flex flex-col gap-1 p-2 cursor-default flex-1;
+        @apply text-[12px] text-(--color-14) flex flex-col gap-1 p-2 cursor-default flex-1;
 
         li {
             @apply -mx-2 px-2 transition-colors duration-200;
             &:hover,
             .hover {
-                @apply bg-(--color-blue-400) text-white;
+                @apply bg-(--color-blue-400) text-(--color-13);
             }
 
             &.suggested {
-                @apply opacity-60 brightness-50 text-gray-700;
+                @apply opacity-60 brightness-50 text-(--color-15);
             }
         }
     }
@@ -373,15 +458,19 @@
 }
 
 .edge-label {
-    @apply absolute bg-gray-700/5 backdrop-blur-xs text-xs text-gray-800 cursor-pointer pointer-events-auto;
+    @apply absolute bg-(--color-14)/5 backdrop-blur-xs text-xs text-(--color-14) cursor-pointer pointer-events-auto;
 
     button {
-        @apply bg-transparent border-none hover:bg-gray-700/7 px-1 py-0.5 h-5;
+        @apply bg-transparent border-none hover:bg-(--color-14)/7 px-1 py-0.5 h-5;
     }
 
     select {
-        @apply outline-1 -outline-offset-1 bg-gray-50 hover:bg-gray-100 px-1 py-0.5 h-5 w-12 appearance-none;
+        @apply outline-1 -outline-offset-1 bg-(--color-13) hover:bg-(--color-16) px-1 py-0.5 h-5 w-12 appearance-none;
     }
+}
+
+.info-container {
+    @apply bg-(--color-3) text-(--color-12) border-l;
 }
 
 .entity-info {
@@ -392,11 +481,11 @@
     }
 
     .error {
-        @apply text-sm text-[#800E13] font-medium;
+        @apply text-sm text-(--color-4) font-medium;
     }
 
     .details {
-        @apply flex-1 h-full flex flex-col text-[#640D14];
+        @apply flex-1 h-full flex flex-col text-(--color-1);
 
         ul {
             li {
@@ -408,7 +497,7 @@
 
         .attribute-form {
             scrollbar-width: thin;
-            scrollbar-color: #640d14 #fefbfb;
+            scrollbar-color: var(--color-1) var(--color-3);
             @apply flex flex-col border-t border-gray-400 gap-2 relative;
             @apply -ml-3 pl-3 mt-3 pr-3 py-3 -mr-3;
             @apply overflow-y-auto overflow-x-hidden h-full;
@@ -440,17 +529,17 @@
 
         .edit-attribute-btn {
             @apply p-2 flex items-center justify-self-end;
-            @apply bg-[#335c67] hover:bg-[#2a4c55] text-white;
+            @apply bg-(--color-5) hover:bg-(--color-6) text-(--color-13);
         }
 
         .remove-attribute-btn {
             @apply p-2 flex items-center justify-self-end;
-            @apply bg-[#640D14] hover:bg-[#44090e] text-white;
+            @apply bg-(--color-1) hover:bg-(--color-7) text-(--color-13);
         }
 
         .add-attribute-btn {
             @apply p-2 flex gap-1 items-center justify-self-end;
-            @apply bg-[#003049] hover:bg-[#000305] text-white;
+            @apply bg-(--color-8) hover:bg-(--color-9) text-(--color-13);
         }
     }
 
@@ -459,7 +548,7 @@
 
         .back-btn {
             @apply flex gap-2 py-2 px-2.5 border-1 items-center;
-            @apply bg-[#003049] hover:bg-[#000305] text-white font-semibold;
+            @apply bg-(--color-8) hover:bg-(--color-9) text-(--color-13) font-semibold;
 
             svg {
                 @apply -ml-[7.5px];
@@ -467,7 +556,7 @@
         }
         .submit-btn {
             @apply flex gap-2 py-2 px-2.5 border-1 items-center;
-            @apply bg-[#AD2831] hover:bg-[#800E13] text-white font-semibold;
+            @apply bg-(--color-10) hover:bg-(--color-4) text-(--color-13) font-semibold;
 
             svg {
                 @apply -ml-[3.34px];
@@ -484,11 +573,11 @@
     }
 
     .details {
-        @apply flex-1 h-full flex flex-col text-[#640D14];
+        @apply flex-1 h-full flex flex-col text-(--color-1);
 
         .edge-form {
             scrollbar-width: thin;
-            scrollbar-color: #640d14 #fefbfb;
+            scrollbar-color: var(--color-1) var(--color-3);
             @apply flex flex-col gap-2 relative;
             @apply overflow-y-auto overflow-x-hidden h-full;
         }
@@ -496,15 +585,9 @@
 }
 
 .resize-handle {
-    &::before,
     &::after {
-        @apply content-[""] absolute top-1/2 -translate-y-1/2 w-[1px] h-15 bg-gray-400;
-    }
-    &::before {
-        @apply right-[2.5px];
-    }
-    &::after {
-        @apply right-[0];
+        @apply content-[""] rounded-md w-1.5 h-6 bg-(--color-1);
+        @apply absolute top-1/2 -translate-y-1/2 left-0 translate-x-[2.5px];
     }
 }
 
@@ -516,12 +599,12 @@
     }
 
     input {
-        @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md;
+        @apply border-1 border-gray-400 bg-(--color-13) text-(--color-12) p-1 rounded-md;
         @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
     }
 
     .required {
-        @apply text-[#640D14] ml-0.5;
+        @apply text-(--color-1) ml-0.5;
     }
 }
 
@@ -533,12 +616,12 @@
     }
 
     textarea {
-        @apply border-1 border-gray-400 bg-white text-black p-2 rounded-md;
-        @apply focus:outline-[#640D14];
+        @apply border-1 border-gray-400 bg-(--color-13) text-(--color-12) p-2 rounded-md;
+        @apply focus:outline-(--color-1);
     }
 
     .required {
-        @apply text-[#640D14] ml-0.5;
+        @apply text-(--color-1) ml-0.5;
     }
 }
 
@@ -551,7 +634,7 @@
     }
 
     input {
-        @apply p-2 disabled:cursor-not-allowed;
+        @apply p-2 disabled:cursor-not-allowed accent-(--color-1);
     }
 }
 
@@ -563,7 +646,7 @@
     }
 
     select {
-        @apply border-1 border-gray-400 bg-white text-black p-1 rounded-md appearance-none;
+        @apply border-1 border-gray-400 bg-(--color-13) text-(--color-12) p-1 rounded-md appearance-none;
     }
 }
 
@@ -587,11 +670,11 @@
 .auth-header {
     @apply flex rounded-t-md justify-around font-medium mb-4 overflow-hidden;
     li {
-        @apply flex-1 hover:bg-[#fce8ea] border-b border-[#640d14];
+        @apply flex-1 hover:bg-(--color-2) border-b border-(--color-1);
         @apply flex justify-center;
         @apply transition-colors duration-300;
         &.active {
-            @apply border-b-2 bg-[#640d14] text-white font-semibold;
+            @apply border-b-2 bg-(--color-1) text-(--color-13) font-semibold;
         }
         button {
             @apply p-4 cursor-pointer flex-1;
@@ -601,7 +684,7 @@
 
 .auth-btn {
     @apply flex gap-2 py-2 px-2.5 border-1 items-center w-fit self-end;
-    @apply bg-[#640d14] hover:not-disabled:bg-[#44090e] text-white font-semibold;
+    @apply bg-(--color-1) hover:not-disabled:bg-(--color-7) text-(--color-13) font-semibold;
     @apply transition-colors duration-300 cursor-pointer font-medium rounded-md;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
 }
@@ -617,17 +700,17 @@
 
 .modal-container {
     @apply hidden opacity-0 perspective-normal transform-3d;
-    @apply fixed h-screen w-full z-1 bg-black/50;
+    @apply fixed h-screen w-full z-1 bg-(--color-12)/50;
 
     .modal-content {
-        @apply bg-[#fefbfb] text-[#640D14] rounded-md w-[min(500px,_90vw)];
+        @apply bg-(--color-3) text-(--color-1) rounded-md w-[min(500px,_90vw)];
         @apply absolute top-[10vw] left-1/2 -translate-x-1/2 transform-[translateY(20px)] opacity-0;
         @apply max-h-[calc(80vw)];
 
         &.export-diagram {
             @apply w-[min(1024px,_90vw)] top-[57px] max-h-[calc(100vh-2*57px)] overflow-y-auto overflow-x-hidden;
             scrollbar-width: thin;
-            scrollbar-color: #640d14 #fefbfb;
+            scrollbar-color: var(--color-1) var(--color-3);
 
             &.has-scrollbar {
                 @apply -mr-2.5;
@@ -649,17 +732,17 @@
 
     button {
         &.link {
-            @apply underline cursor-pointer hover:text-[#44090e];
+            @apply underline cursor-pointer hover:text-(--color-7);
         }
 
         &.close-modal {
-            @apply absolute top-2 right-2 outline-2 outline-[#fefbfb] -outline-offset-2;
-            @apply p-2 rounded-md text-[#640D14] cursor-pointer transition-colors duration-200;
+            @apply absolute top-2 right-2 outline-2 outline-(--color-3) -outline-offset-2;
+            @apply p-2 rounded-md text-(--color-1) cursor-pointer transition-colors duration-200;
             &:hover {
-                @apply not-disabled:bg-[#f7dee0] not-disabled:outline-[#f7dee0];
+                @apply not-disabled:bg-(--color-2) not-disabled:outline-(--color-2);
             }
             &:focus {
-                @apply outline-[#44090e];
+                @apply outline-(--color-7);
             }
         }
 
@@ -670,32 +753,33 @@
         }
 
         &.cancel-btn {
-            @apply text-[#44090e] bg-[#f7dee0] outline-2 outline-[#f7dee0] -outline-offset-2;
+            @apply text-(--color-7) bg-(--color-2) outline-2 outline-(--color-2) -outline-offset-2;
             &:hover {
-                @apply not-disabled:bg-[#fbeff0] not-disabled:outline-[#fbeff0];
+                @apply not-disabled:bg-(--color-17) not-disabled:outline-(--color-17);
             }
             &:focus {
-                @apply outline-[#44090e];
+                @apply outline-(--color-7);
             }
         }
 
         &.confirm-btn {
-            @apply text-white bg-[#640D14] outline-2 outline-[#640D14] -outline-offset-2;
+            @apply text-(--color-13) bg-(--color-1) outline-2 outline-(--color-1) -outline-offset-2;
             &:hover {
-                @apply not-disabled:bg-[#44090e] not-disabled:outline-[#44090e];
+                @apply not-disabled:bg-(--color-7) not-disabled:outline-(--color-7);
             }
             &:focus {
-                @apply outline-[#f7dee0];
+                @apply outline-(--color-2);
             }
         }
 
         &.highlighter-btn {
-            @apply p-1 rounded-[2px] cursor-pointer hover:bg-[#fce8ea] duration-200 transition-colors;
+            @apply p-1 rounded-[2px] cursor-pointer duration-200 transition-colors;
+            @apply hover:bg-(--color-highlighter);
         }
     }
 
     .server-error-message {
-        @apply flex gap-2 items-center border rounded-md p-3 text-white bg-[#640D14];
+        @apply flex gap-2 items-center border rounded-md p-3 text-(--color-13) bg-(--color-1);
     }
 }
 
@@ -714,7 +798,7 @@
             bottom: 0;
             background-image: linear-gradient(
                 to top,
-                var(--color-gray-700),
+                var(--color-14),
                 transparent
             );
         }

@@ -24,11 +24,9 @@ const ScreenModePanel = () => {
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
-            console.log("handleKeyDown ScreenModePanel:", e.key);
             if (!isAnyModalOrMenuOpen && !isInputFocused) {
                 if (e.key === "F11") {
                     e.preventDefault();
-                    console.log("F11 pressed");
                     handleFullscreenMode();
                 }
             }
@@ -44,10 +42,8 @@ const ScreenModePanel = () => {
     useEffect(() => {
         function onFullScreenChange() {
             if (!document.fullscreenElement) {
-                console.log("Fullscreen mode was disabled");
                 setFullscreenMode(false);
             } else {
-                console.log("Entered fullscreen mode");
                 setFullscreenMode(true);
             }
         }
@@ -56,11 +52,12 @@ const ScreenModePanel = () => {
     return (
         <Panel
             position="top-right"
-            className="screen-mode-panel bg-white shadow-md"
+            className="screen-mode-panel bg-(--color-13) shadow-md"
         >
             <button
                 title="Fullscreen mode"
                 id="fullscreen-button"
+                className="text-(--color-12)"
                 onClick={handleFullscreenMode}
             >
                 {fullscreenMode && (

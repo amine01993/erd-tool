@@ -18,6 +18,7 @@ import { useReactFlow } from "@xyflow/react";
 import useErdStore from "@/app/store/erd";
 import useAlertStore from "@/app/store/alert";
 import { ErdSchema } from "@/app/type/EntityType";
+import TextAreaField from "../widgets/TextAreaField";
 
 const AiPrompt = () => {
     const { fitView } = useReactFlow();
@@ -89,18 +90,17 @@ const AiPrompt = () => {
     }, [object]);
 
     return (
-        <Modal isOpen={isAiPromptOpen} handleClose={handleClose}>
+        <Modal isOpen={isAiPromptOpen} handleClose={handleClose} className="ai-prompt">
             <div className="flex flex-col items-center gap-4 p-4 mt-9">
                 <form className="contents" onSubmit={handleSubmit}>
-                    <textarea
+                    <TextAreaField
                         placeholder="Describe your diagram..."
-                        className="w-full bg-white outline-1 outline-gray-300 p-2 rounded-md focus:outline-[#640D14] transition-colors duration-200"
                         rows={3}
                         ref={textareaRef}
                         value={prompt}
                         onChange={handleChange}
                         required
-                    ></textarea>
+                    />
 
                     <div className="action-btns justify-between! mt-0!">
                         <button

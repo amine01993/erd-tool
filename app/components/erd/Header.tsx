@@ -1,5 +1,4 @@
-import Image from "next/image";
-import { memo, useCallback, useEffect } from "react";
+import { memo, SVGProps, useCallback, useEffect } from "react";
 import { Hub } from "@aws-amplify/core";
 import { Icon } from "@iconify/react";
 import cc from "classcat";
@@ -27,6 +26,47 @@ import useRecoverDiagram from "@/app/hooks/DiagramRecover";
 import useAddDiagram from "@/app/hooks/DiagramAdd";
 import Tooltip from "./Tooltip";
 import AiSuggestions from "../widgets/AiSuggestions";
+import Link from "next/link";
+
+const Logo = memo((props: SVGProps<SVGSVGElement>) => {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 332 290"
+            xmlSpace="preserve"
+            {...props}
+        >
+            <path
+                d="M290 233h32.2c3.8 0 6.8-6.7 6.8-15v-86c0-8.3-3-15-6.8-15H290"
+                style={{
+                    fillRule: "evenodd",
+                    clipRule: "evenodd",
+                    fill: "none",
+                    stroke: "var(--color-1)",
+                    strokeWidth: 5,
+                    strokeMiterlimit: 10,
+                }}
+            />
+            <path
+                d="M306 105v24m0 104-17-12m0 24 17-12"
+                style={{
+                    fill: "none",
+                    stroke: "var(--color-1)",
+                    strokeWidth: 5,
+                    strokeMiterlimit: 10,
+                }}
+            />
+            <path
+                d="M260 290H30c-16.6 0-30-13.4-30-30V82h290v178c0 16.6-13.4 30-30 30"
+                style={{ fill: "var(--color-10)" }}
+            />
+            <path
+                d="M290 82H0V30C0 13.4 13.4 0 30 0h230c16.6 0 30 13.4 30 30zm-38.5 52h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5m0 48h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5m0 48h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5"
+                style={{ fill: "var(--color-1)" }}
+            />
+        </svg>
+    );
+});
 
 const Header = () => {
     const offLine = useUserStore((state) => state.offLine);
@@ -127,7 +167,11 @@ const Header = () => {
                 } else if (e.ctrlKey && e.key?.toLowerCase() === "d") {
                     e.preventDefault();
                     handleDuplicateDiagram();
-                } else if (e.ctrlKey && e.key?.toLowerCase() === "i" && !offLine) {
+                } else if (
+                    e.ctrlKey &&
+                    e.key?.toLowerCase() === "i" &&
+                    !offLine
+                ) {
                     e.preventDefault();
                     handleOpenAiPrompt();
                 } else if (e.key?.toLowerCase() === "delete") {
@@ -199,16 +243,11 @@ const Header = () => {
     }, []);
 
     return (
-        <header className="flex items-center justify-between px-3 py-2 bg-[#fefbfb] text-[#640D14] border-b border-[#640D14]">
+        <header className="header flex items-center justify-between px-3 py-2">
             <div className="flex items-center gap-1">
-                <Image
-                    className="mr-1"
-                    src="/logo-light.svg"
-                    alt="Entity Relational Diagram Tool logo"
-                    width={40}
-                    height={35}
-                    priority
-                />
+                <Link href="/" title="Entity Relational Diagram Tool logo">
+                    <Logo className="mr-1" width={40} height={35} />
+                </Link>
 
                 {category === "all" && (
                     <>
@@ -255,11 +294,13 @@ const Header = () => {
                     disabled={offLine || refreshing}
                 >
                     <Icon icon={RefreshIcon} fontSize={21} />
-                    <Tooltip
-                        message="Refresh (Ctrl + R)"
-                        selector="#refresh-button"
-                        position="bottom"
-                    />
+                    {!refreshing && (
+                        <Tooltip
+                            message="Refresh (Ctrl + R)"
+                            selector="#refresh-button"
+                            position="bottom"
+                        />
+                    )}
                 </button>
 
                 {category === "all" && (

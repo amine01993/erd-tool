@@ -1,17 +1,22 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import {
+    memo,
+    SVGProps,
+    useCallback,
+} from "react";
 import useUserStore, { themeSelector } from "@/app/store/user";
 import ThemeMenu from "./ThemeMenu";
 import Tooltip from "../erd/Tooltip";
+import useComputedTheme from "@/app/hooks/ComputedTheme";
 
 interface IconProps {
     theme: "light" | "dark";
-    fontSize: number;
+    props: SVGProps<SVGSVGElement>;
 }
 
-const lightGrey = "#fefbfb";
-const darkGrey = "#640d14";
+const lightGrey = "var(--color-3)";
+const darkGrey = "var(--color-1)";
 
-export const OsDefault = memo(({ theme, fontSize }: IconProps) => {
+export const OsDefault = memo(({ theme, props }: IconProps) => {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -19,7 +24,7 @@ export const OsDefault = memo(({ theme, fontSize }: IconProps) => {
             xmlSpace="preserve"
             width="1em"
             height="1em"
-            fontSize={fontSize}
+            {...props}
         >
             <path
                 d="M13.1 1 13 24.9h.1c6.6 0 12-5.4 12-12S19.7 1 13.1 1"
@@ -44,15 +49,12 @@ export const OsDefault = memo(({ theme, fontSize }: IconProps) => {
     );
 });
 
-export const DarkIcon = memo(({ theme, fontSize }: IconProps) => {
+export const DarkIcon = memo(({ props }: Omit<IconProps, "theme">) => {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            xmlnsXlink="http://www.w3.org/1999/xlink"
-            aria-hidden="true"
-            role="img"
-            className="iconify iconify--tabler"
-            fontSize={fontSize}
+            xmlSpace="preserve"
+            {...props}
             width="1em"
             height="1em"
             viewBox="0 0 24 24"
@@ -69,13 +71,12 @@ export const DarkIcon = memo(({ theme, fontSize }: IconProps) => {
     );
 });
 
-export const LightIcon = memo(({ theme, fontSize }: IconProps) => {
+export const LightIcon = memo(({ props }: Omit<IconProps, "theme">) => {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            role="img"
-            className="iconify iconify--tabler"
-            fontSize={fontSize}
+            xmlSpace="preserve"
+            {...props}
             width="1em"
             height="1em"
             viewBox="0 0 24 24"
@@ -91,36 +92,11 @@ export const LightIcon = memo(({ theme, fontSize }: IconProps) => {
 const Theme = () => {
     const theme = useUserStore(themeSelector);
     const toggleThemeMenu = useUserStore((state) => state.toggleThemeMenu);
-    const [isDark, setIsDark] = useState(false);
-
-    const computedTheme = useMemo(() => {
-        if (theme === "system") {
-            return isDark ? "dark" : "light";
-        }
-        return theme;
-    }, [theme, isDark]);
+    const computedTheme = useComputedTheme();
 
     const handleThemeClick = useCallback(() => {
         toggleThemeMenu();
-    }, []);
-
-    useEffect(() => {
-        // if (computedTheme === "dark") {
-        //     document.body.classList.add("dark");
-        // } else {
-        //     document.body.classList.remove("dark");
-        // }
-        window
-            .matchMedia("(prefers-color-scheme: dark)")
-            .addEventListener("change", (e) => {
-                // console.log("System theme changed:", e.matches ? "dark" : "light");
-                setIsDark(e.matches);
-            });
-    }, [computedTheme]);
-
-    useEffect(() => {
-        setIsDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-    }, []);
+    }, [toggleThemeMenu]);
 
     return (
         <div className="relative">
@@ -131,10 +107,14 @@ const Theme = () => {
                 onClick={handleThemeClick}
             >
                 {theme === "system" && (
-                    <OsDefault theme="light" fontSize={21} />
+                    <OsDefault theme={computedTheme} props={{ fontSize: 21 }} />
                 )}
-                {theme === "dark" && <DarkIcon theme="light" fontSize={21} />}
-                {theme === "light" && <LightIcon theme="light" fontSize={21} />}
+                {theme === "dark" && (
+                    <DarkIcon props={{ fontSize: 21 }} />
+                )}
+                {theme === "light" && (
+                    <LightIcon props={{ fontSize: 21 }} />
+                )}
             </button>
             <ThemeMenu />
             <Tooltip

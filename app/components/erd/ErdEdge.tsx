@@ -69,7 +69,11 @@ const EdgeLabel = memo(
                 }}
                 className="nodrag nopan edge-label"
             >
-                {!editing && <button onClick={toggleEdit}>{label}</button>}
+                {!editing && (
+                    <button aria-label="Edit edge label" onClick={toggleEdit}>
+                        {label}
+                    </button>
+                )}
                 {editing && (
                     <>
                         <select
@@ -108,8 +112,8 @@ function ErdEdge({
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
     const edgeStyle = useMemo(() => {
-        const _style = {...style};
-        if(data?.isSuggestion) {
+        const _style = { ...style };
+        if (data?.isSuggestion) {
             _style.strokeDasharray = "5,5";
             _style.opacity = 0.6;
             _style.stroke = "var(--color-gray-700)";

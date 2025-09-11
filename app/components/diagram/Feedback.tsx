@@ -101,16 +101,20 @@ const Feedback = () => {
 
     useEffect(() => {
         if (isFeedbackModalOpen) {
-            dispatch({
-                type: "SET_VALUE",
-                field: "email",
-                value: authData.email,
-            });
-            dispatch({
-                type: "SET_VALUE",
-                field: "name",
-                value: authData.name,
-            });
+            if (authData?.email) {
+                dispatch({
+                    type: "SET_VALUE",
+                    field: "email",
+                    value: authData.email,
+                });
+            }
+            if (authData?.name) {
+                dispatch({
+                    type: "SET_VALUE",
+                    field: "name",
+                    value: authData.name,
+                });
+            }
             textareaRef.current?.focus();
         }
     }, [isFeedbackModalOpen, authData]);

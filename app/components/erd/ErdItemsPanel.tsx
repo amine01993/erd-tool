@@ -1,5 +1,4 @@
-import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { memo, SVGProps, useCallback, useEffect } from "react";
 import { Panel } from "@xyflow/react";
 import { Icon } from "@iconify/react";
 import LocationFilledIcon from "@iconify/icons-tabler/location-filled";
@@ -9,6 +8,60 @@ import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
 import useUserStore, { isAnyModalOrMenuOpenSelector } from "@/app/store/user";
 import Tooltip from "./Tooltip";
 import useInputFocused from "@/app/hooks/InputFocused";
+
+const EntityIcon = memo((props: SVGProps<SVGSVGElement>) => {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 290 290"
+            xmlSpace="preserve"
+            {...props}
+        >
+            <path
+                d="M260 290H30c-16.6 0-30-13.4-30-30V82h290v178c0 16.6-13.4 30-30 30"
+                style={{ fill: "var(--color-12)" }}
+            />
+            <path
+                d="M290 82H0V30C0 13.4 13.4 0 30 0h230c16.6 0 30 13.4 30 30zm-38.5 52h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5m0 48h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5m0 48h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5"
+                style={{ fill: "var(--color-3)" }}
+            />
+        </svg>
+    );
+});
+
+const EdgeIcon = memo((props: SVGProps<SVGSVGElement>) => {
+    const lineStyle = {
+        fill: "none",
+        stroke: "var(--color-12)",
+        strokeWidth: 25,
+        strokeMiterlimit: 10,
+    };
+    const line2Style = {
+        stroke: "var(--color-12)",
+        strokeWidth: 25,
+        strokeMiterlimit: 10,
+    };
+
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 290 290"
+            xmlSpace="preserve"
+            {...props}
+        >
+            <line style={lineStyle} x1="70.5" y1="221.5" x2="70.5" y2="80.5" />
+            <line style={lineStyle} x1="264.5" y1="82.5" x2="198" y2="150.5" />
+            <line style={lineStyle} x1="264.5" y1="212.5" x2="198" y2="144.5" />
+            <line
+                style={line2Style}
+                x1="16.5"
+                y1="147.5"
+                x2="272.5"
+                y2="147.5"
+            />
+        </svg>
+    );
+});
 
 const ErdItemsPanel = () => {
     const selectedItem = useErdItemsStore((state) => state.selectedItem);
@@ -61,7 +114,7 @@ const ErdItemsPanel = () => {
     return (
         <Panel
             position="center-left"
-            className="erd-items-panel bg-white p-1 shadow-md"
+            className="erd-items-panel bg-(--color-13) p-1 shadow-md"
         >
             <ul className="erd-items select-none">
                 <li id="selector-erd-item" className="relative">
@@ -70,6 +123,7 @@ const ErdItemsPanel = () => {
                         data-id="selector"
                         onClick={handleSelection}
                         className={cc([
+                            "text-(--color-12)",
                             { "inset-shadow-md": selectedItem === "selector" },
                         ])}
                         disabled={isReadOnly}
@@ -96,12 +150,7 @@ const ErdItemsPanel = () => {
                         ])}
                         disabled={isReadOnly}
                     >
-                        <Image
-                            src="/entity-icon.svg"
-                            alt="Entity Icon"
-                            width={24}
-                            height={24}
-                        />
+                        <EntityIcon width={24} height={24} />
                     </button>
                     <Tooltip
                         message="Entity (Shift + E)"
@@ -119,12 +168,7 @@ const ErdItemsPanel = () => {
                         ])}
                         disabled={isReadOnly}
                     >
-                        <Image
-                            src="/edge-icon.svg"
-                            alt="Edge Icon"
-                            width={24}
-                            height={24}
-                        />
+                        <EdgeIcon width={24} height={24} />
                     </button>
                     <Tooltip
                         message="Edge (Shift + D)"
@@ -137,4 +181,4 @@ const ErdItemsPanel = () => {
     );
 };
 
-export default ErdItemsPanel;
+export default memo(ErdItemsPanel);

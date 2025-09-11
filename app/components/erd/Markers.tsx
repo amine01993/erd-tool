@@ -124,15 +124,15 @@ const Markers = () => {
     return (
         <svg style={{ position: "absolute", top: 0, left: 0, zIndex: -1 }}>
             <defs>
-                <ZeroMarkers fill="#000" suffix="" />
+                <ZeroMarkers fill="var(--color-12)" suffix="" />
                 <ZeroMarkers fill="#51a2ff" suffix="-hover" />
                 <ZeroMarkers fill="#155dfc" suffix="-selected" />
 
-                <OneMarkers fill="#000" suffix="" />
+                <OneMarkers fill="var(--color-12)" suffix="" />
                 <OneMarkers fill="#51a2ff" suffix="-hover" />
                 <OneMarkers fill="#155dfc" suffix="-selected" />
 
-                <ManyMarkers fill="#000" suffix="" />
+                <ManyMarkers fill="var(--color-12)" suffix="" />
                 <ManyMarkers fill="#51a2ff" suffix="-hover" />
                 <ManyMarkers fill="#155dfc" suffix="-selected" />
             </defs>

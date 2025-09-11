@@ -120,7 +120,7 @@ export default memo(function Main() {
                 >
                     {!fullscreenMode && (
                         <>
-                            <div className="bg-[#fefbfb] text-[#640D14] p-0.5 border-r border-[#640D14] h-[calc(100vh-57px)]">
+                            <div className="diagram-categories-container">
                                 <DiagramCategories />
                             </div>
                             <div className="sidebar">
@@ -149,7 +149,7 @@ export default memo(function Main() {
                             onResize={handleResize}
                             handleClasses={{ left: "resize-handle" }}
                         >
-                            <div className="bg-[#fefbfb] text-black p-3 pb-0 border-l border-gray-400 h-full">
+                            <div className="info-container p-3 pb-0 h-full">
                                 <EntityInfo />
                                 <EdgeInfo />
                             </div>

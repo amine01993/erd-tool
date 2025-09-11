@@ -33,6 +33,7 @@ import useDiagramStore from "@/app/store/diagram";
 import useUserStore, {
     aiSuggestionsEnabledSelector,
     isAnyModalOrMenuOpenSelector,
+    themeSelector,
 } from "@/app/store/user";
 import EntityNode from "./EntityNode";
 import ErdEdge from "./ErdEdge";
@@ -110,6 +111,7 @@ const ERD = () => {
     );
     const aiSuggestionsEnabled = useUserStore(aiSuggestionsEnabledSelector);
     const offLine = useUserStore((state) => state.offLine);
+    const theme = useUserStore(themeSelector);
 
     const {
         suggestionsAvailable,
@@ -555,6 +557,7 @@ const ERD = () => {
                 connectionLineComponent={ErdConnectionLine}
                 className={cc(["react-flow-container", selectedItem])}
                 onClick={handlePaneClick}
+                colorMode={theme}
             >
                 <Background />
                 <Controls showInteractive={false} />

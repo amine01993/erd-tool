@@ -36,7 +36,7 @@ const HighlightedName = memo(
                     <>
                         {name.slice(0, startIndex)}
                         {endIndex > startIndex && (
-                            <span className="bg-[#640d14] text-white">
+                            <span className="bg-(--color-1) text-(--color-13)">
                                 {name.slice(startIndex, endIndex)}
                             </span>
                         )}

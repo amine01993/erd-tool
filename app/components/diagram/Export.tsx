@@ -42,13 +42,16 @@ import {
     generateSqlServer,
 } from "@/app/helper/sqlserver-generator";
 import { generateDataTs, generateTs } from "@/app/helper/typescript-generator";
+import useComputedTheme from "@/app/hooks/ComputedTheme";
 
 interface ExportDbProps {
+    isDarkMode: boolean;
     option: string;
     language: string;
 }
 
 interface GenerateDbProps {
+    isDarkMode: boolean;
     option: string;
     language: string;
     generateData: boolean;
@@ -138,7 +141,7 @@ const CodeSnippetActions = memo(
     }
 );
 
-const ExportDB = memo(({ option, language }: ExportDbProps) => {
+const ExportDB = memo(({ isDarkMode, option, language }: ExportDbProps) => {
     const isExportModalOpen = useUserStore((state) => state.isExportModalOpen);
     const getSelectedDiagram = useDiagramStore(
         (state) => state.getSelectedDiagram
@@ -220,7 +223,8 @@ const ExportDB = memo(({ option, language }: ExportDbProps) => {
             <div className={exportDbClasses}>
                 <SyntaxHighlighter
                     language={language}
-                    style={oneLight}
+                    style={isDarkMode ? oneDark : oneLight}
+                    customStyle={{ margin: 0, paddingTop: 20 }}
                     showLineNumbers={true}
                     PreTag="div"
                     wrapLines={true}
@@ -247,7 +251,13 @@ const ExportDB = memo(({ option, language }: ExportDbProps) => {
 });
 
 const GenerateDB = memo(
-    ({ option, language, generateData, object }: GenerateDbProps) => {
+    ({
+        isDarkMode,
+        option,
+        language,
+        generateData,
+        object,
+    }: GenerateDbProps) => {
         const isExportModalOpen = useUserStore(
             (state) => state.isExportModalOpen
         );
@@ -330,7 +340,8 @@ const GenerateDB = memo(
                     <div className={generateDbClasses}>
                         <SyntaxHighlighter
                             language={language}
-                            style={oneLight}
+                            style={isDarkMode ? oneDark : oneLight}
+                            customStyle={{ margin: 0, paddingTop: 20 }}
                             showLineNumbers={true}
                             PreTag="div"
                             wrapLines={true}
@@ -368,6 +379,7 @@ const Export = () => {
     const getSelectedDiagram = useDiagramStore(
         (state) => state.getSelectedDiagram
     );
+    const computedTheme = useComputedTheme();
 
     // options: postgresql, mysql, sqlserver, typescript
     const language = useMemo(() => {
@@ -457,11 +469,6 @@ const Export = () => {
             submit({ nodesData, edgesData, additionalRequirements });
         }
     }, [isLoading, additionalRequirements, submit, getSelectedDiagram]);
-
-    useEffect(() => {
-        console.log("generateData", { isLoading, object });
-    }, [isLoading, object]);
-
     return (
         <Modal
             isOpen={isExportModalOpen}
@@ -545,8 +552,13 @@ const Export = () => {
                         )}
                     </div>
                 </div>
-                <ExportDB option={option} language={language} />
+                <ExportDB
+                    isDarkMode={computedTheme === "dark"}
+                    option={option}
+                    language={language}
+                />
                 <GenerateDB
+                    isDarkMode={computedTheme === "dark"}
                     option={option}
                     language={language}
                     generateData={generateData}
