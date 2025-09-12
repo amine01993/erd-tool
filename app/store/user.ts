@@ -166,7 +166,7 @@ const useUserStore = create<UserState>((set, get) => ({
         });
     },
     setTheme(theme: AppTheme, mutation: UpdateUserAttributeMutation) {
-        const { authData, handleCachedMutationsForUserAttributes } = get();
+        const { isGuest, authData, handleCachedMutationsForUserAttributes } = get();
         let updatedAuthData = { ...authData, ["custom:theme"]: theme };
         set({ authData: updatedAuthData });
 
@@ -174,20 +174,22 @@ const useUserStore = create<UserState>((set, get) => ({
 
         handleCachedMutationsForUserAttributes("custom:theme");
 
-        mutation.mutate(
-            {
-                attribute: "custom:theme",
-                value: theme,
-            },
-            {
-                onSuccess(data, variables, context) {
-                    console.log("Successfully updated user attribute", data);
+        if (!isGuest) {
+            mutation.mutate(
+                {
+                    attribute: "custom:theme",
+                    value: theme,
                 },
-                onError(error, variables, context) {
-                    console.error("Failed to update user attribute", error);
-                },
-            }
-        );
+                {
+                    onSuccess(data, variables, context) {
+                        console.log("Successfully updated user attribute", data);
+                    },
+                    onError(error, variables, context) {
+                        console.error("Failed to update user attribute", error);
+                    },
+                }
+            );
+        }
     },
     toggleThemeMenu() {
         set({
@@ -310,7 +312,7 @@ const useUserStore = create<UserState>((set, get) => ({
         });
     },
     toggleAiSuggestions(mutation: UpdateUserAttributeMutation) {
-        const { authData, handleCachedMutationsForUserAttributes } = get();
+        const { isGuest, authData, handleCachedMutationsForUserAttributes } = get();
         let aiSuggestionsEnabled =
             authData?.["custom:aiSuggestionsEnabled"] === "false"
                 ? false
@@ -323,20 +325,23 @@ const useUserStore = create<UserState>((set, get) => ({
         localStorage.setItem("authData", JSON.stringify(updatedAuthData));
 
         handleCachedMutationsForUserAttributes("custom:aiSuggestionsEnabled");
-        mutation.mutate(
-            {
-                attribute: "custom:aiSuggestionsEnabled",
-                value: String(!aiSuggestionsEnabled),
-            },
-            {
-                onSuccess(data, variables, context) {
-                    console.log("Successfully updated user attribute", data);
+
+        if(!isGuest) {
+            mutation.mutate(
+                {
+                    attribute: "custom:aiSuggestionsEnabled",
+                    value: String(!aiSuggestionsEnabled),
                 },
-                onError(error, variables, context) {
-                    console.error("Failed to update user attribute", error);
-                },
-            }
-        );
+                {
+                    onSuccess(data, variables, context) {
+                        console.log("Successfully updated user attribute", data);
+                    },
+                    onError(error, variables, context) {
+                        console.error("Failed to update user attribute", error);
+                    },
+                }
+            );
+        }
     },
     setAuthType(authType: AuthType) {
         set({

@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# ERD Tool
 
-First, run the development server:
+A modern, full-featured Entity-Relationship Diagram (ERD) tool built with Next.js and TypeScript. This application allows users to visually design, manage, and export ER diagrams with advanced features, AI-powered suggestions, and robust authentication.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Visual ERD Editor**: Drag-and-drop interface for creating and editing entities, attributes, and relationships.
+- **Entity & Attribute Management**: Add, edit, and delete entities and their attributes with custom types and constraints.
+- **Relationship (Edge) Management**: Define and visualize relationships between entities.
+- **Undo/Redo & Recovery**: Easily undo/redo changes and recover deleted diagrams.
+- **AI-Powered Suggestions**: Get AI-generated suggestions for diagram improvements and attribute recommendations using [AI SDK](https://ai-sdk.dev/docs/introduction) and Openai ChatGPT 4.1 Mini.
+- **Authentication**: Secure user authentication with registration, login, and confirmation flows. Supporting authenticated users as well as Guest users. Thanks to AWS Cognito.
+- **Export Options**: Export diagrams to various formats (e.g., SQL for MySQL, PostgreSQL, SQL Server, TypeScript). You can copy DDL SQL commands for SQL databases or get TypeScript interfaces for your entities. In addition, you can generate data for your ERD.
+- **Sidebar & Search**: Quickly navigate and search through diagrams.
+- **Feedback System**: Users can submit feedback directly from the app.
+- **Themes**: Switch between system, light and dark themes.
+- **Responsive Design**: Fully responsive UI for different devices, with custom support for touch screens.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🛠️ Technologies Used
 
-To learn more about Next.js, take a look at the following resources:
+- **Frontend**:
+  - [Next.js](https://nextjs.org/) (App Router)
+  - [React](https://react.dev/)
+  - [TypeScript](https://www.typescriptlang.org/)
+  - [React Flow](https://reactflow.dev/) (for diagram rendering)
+  - [Zustand](https://zustand-demo.pmnd.rs/) (for global state management)
+  - [Tanstack Query](https://tanstack.com/query/latest) (for data fetching and create/update/delete data)
+  - [Tailwind CSS](https://tailwindcss.com/)
+  - [Lightning CSS](https://lightningcss.dev/)
+  - [React Syntax Highlighter](https://www.npmjs.com/package/react-syntax-highlighter) (for code export syntax highlighting)
+  - [Cytoscape.js](https://js.cytoscape.org/) (for positioning suggestion nodes)
+- **AI Integration**:
+  - [AI SDK](https://ai-sdk.dev/docs/introduction) (for AI-powered suggestions and full diagram generation)
+- **Backend**:
+  - [Node.js](https://nodejs.org/)
+  - [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/home.html)
+  - [AWS SDK v3](https://aws.amazon.com/sdk-for-javascript/)
+  - [DynamoDB](https://aws.amazon.com/dynamodb/)
+  - [Cognito](https://aws.amazon.com/cognito/)
+  - [Lambda](https://aws.amazon.com/lambda/)
+  - [API Gateway](https://aws.amazon.com/api-gateway/)
+  - [Cloud Watch](https://aws.amazon.com/cloudwatch/)
+  - [SES](https://aws.amazon.com/ses/)
+  - I have another repo for the backend part: [erd-tool-be](https://github.com/amine01993/erd-tool-be)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 Getting Started
 
-## Deploy on Vercel
+1. **Install dependencies:**
+   ```sh
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Run the development server:**
+   ```sh
+   npm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Open in browser:**
+   Visit http://localhost:3000
+
+4. **Demo Website:**
+   Visit https://erd-tool.vercel.app/
+
+## 📝 License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## 🙏 Acknowledgements
+
+Inspired by modern ERD tools, database design best practices and [dbdiagram](https://dbdiagram.io/home).<br>
+Built with ❤️ by [amine01993](https://github.com/amine01993).
+
