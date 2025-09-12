@@ -90,8 +90,8 @@
 }
 
 .header {
-    @apply flex items-center justify-between px-3 py-2;
-    @apply fixed z-1 bg-(--color-3) text-(--color-1) border-(--color-1) border rounded-md;
+    @apply flex items-center justify-between px-3 py-2 z-2;
+    @apply fixed bg-(--color-3) text-(--color-1) border-(--color-1) border rounded-md;
     @apply top-2 self-center w-[min(390px,calc(100vw-16px))];
 
     @media (min-width: 1024px) {
@@ -1280,3 +1280,67 @@
         }
     }
 }
+
+.step-by-step-backdrop {
+    mask: linear-gradient(white, white), linear-gradient(white, white);
+    mask-composite: subtract;
+    mask-position: 0 0, var(--mask-position-x) var(--mask-position-y);
+    mask-size: 100% 100%, var(--mask-width) var(--mask-height);
+    mask-repeat: no-repeat;
+    transition: mask 0.2s ease-in-out;
+
+    @apply hidden opacity-0 fixed inset-0 bg-(--color-12)/50 z-2 backdrop-blur-sm;
+
+    &.open {
+        @apply block animate-[fadeIn_0.2s_linear_forwards];
+    }
+
+    .step-by-step-guide {
+        @apply bg-(--color-13) text-(--color-12) w-fit absolute;
+        @apply p-2 rounded-md w-[min(350px,calc(100vw-24px))] shadow-md;
+
+        transition-property: top left transform;
+        transition-duration: 0.2s;
+        transform-style: ease-in-out;
+
+        @apply overflow-y-auto max-h-[calc(100vh-24px)];
+
+        @media (min-width: 1024px) {
+            @apply w-[min(520px,calc(100vw-24px))];
+        }
+
+        h2 {
+            @apply text-lg font-bold mb-2;
+        }
+
+        ul {
+            @apply pl-5 list-disc;
+        }
+
+        img {
+            @apply my-4 flex justify-self-center rounded-sm;
+        }
+
+        .navigation {
+            @apply flex justify-between items-center mt-2;
+            span {
+                @apply flex-1 flex justify-center;
+            }
+            button {
+                @apply px-5 py-2 rounded-md font-semibold cursor-pointer transition-all;
+                @apply text-(--color-13) bg-(--color-1) outline-2 outline-(--color-1) -outline-offset-2;
+                &:hover {
+                    @apply not-disabled:bg-(--color-7) not-disabled:outline-(--color-7);
+                }
+                &:focus {
+                    @apply outline-(--color-2);
+                }
+
+                @media (pointer: coarse) {
+                    @apply w-[100%];
+                }
+            }
+        }
+    }
+}
+

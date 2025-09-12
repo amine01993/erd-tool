@@ -50,6 +50,7 @@ import AiPrompt from "../diagram/AiPrompt";
 import { erdCompletionSchema } from "@/app/erd-completion/schema";
 import Export from "../diagram/Export";
 import ScreenModePanel from "./ScreenModePanel";
+import StepByStepGuide from "../diagram/StepByStepGuide";
 
 const robotoMono = Roboto_Mono({
     variable: "--font-roboto-mono",
@@ -578,6 +579,8 @@ const ERD = () => {
                     createPortal(<AiPrompt />, mainWrapper.current)}
                 {mainWrapper.current &&
                     createPortal(<Export />, mainWrapper.current)}
+                {mainWrapper.current &&
+                    createPortal(<StepByStepGuide />, mainWrapper.current)}
             </ReactFlow>
         </div>
     );

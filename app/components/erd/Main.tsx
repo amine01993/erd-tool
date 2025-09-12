@@ -30,6 +30,7 @@ import ReadOnlyMode from "../diagram/ReadOnlyMode";
 import EdgeInfo from "./EdgeInfo";
 import { queryClient } from "@/app/helper/variables";
 import Feedback from "../diagram/Feedback";
+import useSmallScreen from "@/app/hooks/SmallScreen";
 import "./style.css";
 
 const persister = createAsyncStoragePersister({
@@ -57,7 +58,7 @@ export default memo(function Main() {
     const closeSettingsMenu = useUserStore((state) => state.closeSettingsMenu);
     const closeNavigation = useUserStore((state) => state.closeNavigation);
     const [entityPanelWidth, setEntityPanelWidth] = useState(300);
-    const [smallScreenMode, setSmallScreenMode] = useState(false);
+    const smallScreenMode = useSmallScreen();
 
     const handleResize = useCallback(
         (
@@ -131,25 +132,6 @@ export default memo(function Main() {
             window.removeEventListener("offline", offLineCb);
         };
     }, [offLine]);
-
-    useEffect(() => {
-        function handleResize() {
-            if (mediaQuery.matches) {
-                setSmallScreenMode(false);
-            } else {
-                setSmallScreenMode(true);
-            }
-        }
-
-        const mediaQuery = window.matchMedia("(min-width: 1024px)");
-        handleResize();
-
-        mediaQuery.addEventListener("change", handleResize);
-
-        return () => {
-            mediaQuery.removeEventListener("change", handleResize);
-        };
-    }, []);
 
     return (
         <PersistQueryClientProvider

@@ -18,6 +18,7 @@ A modern, full-featured Entity-Relationship Diagram (ERD) tool built with Next.j
 - **Feedback System**: Users can submit feedback directly from the app.
 - **Themes**: Switch between system, light and dark themes.
 - **Responsive Design**: Fully responsive UI for different devices, with custom support for touch screens.
+- **Offline Support**: If you lose internet connection, you can still work on your diagrams. Changes will be synced once you're back online.
 
 ---
 

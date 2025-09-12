@@ -12,12 +12,14 @@ const SettingsMenu = () => {
     const isSettingsMenuOpen = useUserStore(
         (state) => state.isSettingsMenuOpen
     );
+    const isGuest = useUserStore((state) => state.isGuest);
     const authData = useUserStore((state) => state.authData);
     const closeSettingsMenu = useUserStore((state) => state.closeSettingsMenu);
     const openAuthModal = useUserStore((state) => state.openAuthModal);
     const openFeedbackModal = useUserStore((state) => state.openFeedbackModal);
     const setAuthType = useUserStore((state) => state.setAuthType);
     const logOut = useUserStore((state) => state.logOut);
+    const openStepByStepGuide = useUserStore((state) => state.openStepByStepGuide);
 
     const handleSignUp = () => {
         setAuthType("register");
@@ -35,9 +37,14 @@ const SettingsMenu = () => {
         openFeedbackModal();
     };
 
+    const handleShowGuide = () => {
+        closeSettingsMenu();
+        openStepByStepGuide();
+    }
+
     return (
         <div className={cc(["settings-menu", { open: isSettingsMenuOpen }])}>
-            {authData && (
+            {!isGuest && (
                 <>
                     <div className="menu-header">
                         <Icon icon={UserCircleIcon} fontSize={21} />
@@ -49,9 +56,9 @@ const SettingsMenu = () => {
                     <hr />
                     <ul className="menu-list">
                         <li>
-                            <button>
+                            <button onClick={handleShowGuide}>
                                 <Icon icon={HelpCircleIcon} fontSize={21} />
-                                Help
+                                Show Guide
                             </button>
                         </li>
                         <li>
@@ -69,12 +76,12 @@ const SettingsMenu = () => {
                     </ul>
                 </>
             )}
-            {!authData && (
+            {isGuest && (
                 <ul className="menu-list">
                     <li>
-                        <button>
+                        <button onClick={handleShowGuide}>
                             <Icon icon={HelpCircleIcon} fontSize={21} />
-                            Help
+                            Show Guide
                         </button>
                     </li>
                     <li>

@@ -61,6 +61,7 @@ export interface UserState {
     isLeftPanelOpen: boolean;
     isRightPanelOpen: boolean;
     isNavigationOpen: boolean;
+    isStepByStepGuideOpen: boolean;
     authType: AuthType;
     authDetail: any;
     isGuest: boolean;
@@ -72,6 +73,7 @@ export interface UserState {
     setFetchingSession: (fetching: boolean) => void;
     handleCachedMutationsForUserAttributes(attribute: string): void;
     setTheme: (theme: AppTheme, mutation: UpdateUserAttributeMutation) => void;
+    setGuideShown: (shown: boolean, mutation: UpdateUserAttributeMutation) => void;
     toggleThemeMenu: () => void;
     openThemeMenu: () => void;
     closeThemeMenu: () => void;
@@ -96,6 +98,8 @@ export interface UserState {
     closeRightPanel: () => void;
     openNavigation: () => void;
     closeNavigation: () => void;
+    openStepByStepGuide: () => void;
+    closeStepByStepGuide: () => void;
     toggleAiSuggestions: (mutation: UpdateUserAttributeMutation) => void;
     setAuthType: (authType: AuthType) => void;
     login: (userName: string, password: string) => Promise<void>;
@@ -133,6 +137,7 @@ const useUserStore = create<UserState>((set, get) => ({
     isLeftPanelOpen: false,
     isRightPanelOpen: false,
     isNavigationOpen: false,
+    isStepByStepGuideOpen: false,
     authType: "login",
     authDetail: null,
     isGuest: true,
@@ -179,6 +184,32 @@ const useUserStore = create<UserState>((set, get) => ({
                 {
                     attribute: "custom:theme",
                     value: theme,
+                },
+                {
+                    onSuccess(data, variables, context) {
+                        console.log("Successfully updated user attribute", data);
+                    },
+                    onError(error, variables, context) {
+                        console.error("Failed to update user attribute", error);
+                    },
+                }
+            );
+        }
+    },
+    setGuideShown(shown: boolean, mutation: UpdateUserAttributeMutation) {
+        const { isGuest, authData, handleCachedMutationsForUserAttributes } = get();
+        let updatedAuthData = { ...authData, ["custom:guideShown"]: shown ? "true" : "false" };
+        set({ authData: updatedAuthData });
+
+        localStorage.setItem("authData", JSON.stringify(updatedAuthData));
+
+        handleCachedMutationsForUserAttributes("custom:guideShown");
+
+        if (!isGuest) {
+            mutation.mutate(
+                {
+                    attribute: "custom:guideShown",
+                    value: shown ? "true" : "false",
                 },
                 {
                     onSuccess(data, variables, context) {
@@ -311,6 +342,16 @@ const useUserStore = create<UserState>((set, get) => ({
             isNavigationOpen: false,
         });
     },
+    openStepByStepGuide() {
+        set({
+            isStepByStepGuideOpen: true,
+        });
+    },
+    closeStepByStepGuide() {
+        set({
+            isStepByStepGuideOpen: false,
+        });
+    },
     toggleAiSuggestions(mutation: UpdateUserAttributeMutation) {
         const { isGuest, authData, handleCachedMutationsForUserAttributes } = get();
         let aiSuggestionsEnabled =
@@ -368,6 +409,7 @@ const useUserStore = create<UserState>((set, get) => ({
                     name: fullName,
                     "custom:theme": "system",
                     "custom:aiSuggestionsEnabled": "true",
+                    "custom:guideShown": "false",
                 },
                 autoSignIn: {
                     authFlowType: "USER_PASSWORD_AUTH",
@@ -472,8 +514,8 @@ const useUserStore = create<UserState>((set, get) => ({
 
         if (sessionCreds)
             localStorage.setItem("credentials", JSON.stringify(sessionCreds));
-        if (payload) localStorage.setItem("authData", JSON.stringify(payload));
         if (token) localStorage.setItem("jwtToken", token ?? "");
+        localStorage.setItem("authData", JSON.stringify(payload ?? {}));
 
         return {
             credentials: sessionCreds,
@@ -644,3 +686,8 @@ export const themeSelector = (state: UserState) =>
 
 export const aiSuggestionsEnabledSelector = (state: UserState) =>
     state.authData?.["custom:aiSuggestionsEnabled"] === "false" ? false : true;
+
+export const guideShownSelector = (state: UserState) => {
+    if(!state.authData) return true;
+    return state.authData?.["custom:guideShown"] === "true" ? true : false;
+}

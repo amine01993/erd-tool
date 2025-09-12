@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 332 290" xml:space="preserve">
-	<path d="M290 233h32.2c3.8 0 6.8-6.7 6.8-15v-86c0-8.3-3-15-6.8-15H290"
-		style="fill-rule:evenodd;clip-rule:evenodd;fill:none;stroke:#640d14;stroke-width:5;stroke-miterlimit:10" />
-	<path d="M306 105v24m0 104-17-12m0 24 17-12" style="fill:none;stroke:#640d14;stroke-width:5;stroke-miterlimit:10" />
-	<path d="M260 290H30c-16.6 0-30-13.4-30-30V82h290v178c0 16.6-13.4 30-30 30" style="fill:#ad2831" />
-	<path
-		d="M290 82H0V30C0 13.4 13.4 0 30 0h230c16.6 0 30 13.4 30 30zm-38.5 52h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5m0 48h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5m0 48h-213c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5h213c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5"
-		style="fill:#640d14" />
-</svg>
