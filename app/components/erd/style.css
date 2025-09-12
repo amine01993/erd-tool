@@ -100,9 +100,16 @@
 }
 
 .header-btn {
-    @apply p-2 rounded-md hover:not-disabled:bg-(--color-2) cursor-pointer;
+    @apply p-2 rounded-md hover:not-disabled:bg-(--color-2) cursor-pointer relative;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
     @apply transition-colors duration-200;
+
+    @media (pointer: coarse) {
+        &::after {
+            @apply content-[""] absolute w-[calc(100%+4px)] h-12;
+            @apply top-1/2 left-1/2 -translate-1/2;
+        }
+    }
 }
 
 .navigation-menu {
@@ -120,10 +127,23 @@
         label {
             @apply flex-1;
         }
+
+        @media (pointer: coarse) {
+            @apply h-10;
+            label {
+                @apply rounded-none;
+            }
+        }
     }
 
     @media (min-width: 1024px) {
         @apply hidden;
+    }
+}
+
+.navigation-btn-container {
+    @media (min-width: 1024px) {
+        @apply -mr-1;
     }
 }
 
@@ -285,8 +305,16 @@
         @apply bg-(--color-3) hover:bg-(--color-2) text-(--color-1) border-(--color-1) border;
         @apply h-fit absolute;
         @apply transition-colors duration-200 cursor-pointer;
+
         @media (min-width: 1024px) {
             @apply hidden;
+        }
+
+        @media (pointer: coarse) and (width < 1024px) {
+            @apply w-7 h-10 grid place-content-center;
+            svg {
+                @apply size-5;
+            }
         }
     }
 }
@@ -474,11 +502,18 @@
     }
 
     label {
-        @apply flex items-center gap-2 px-2 py-1 rounded-md;
+        @apply flex items-center gap-2 px-2 py-1 rounded-md relative;
         @apply hover:bg-(--color-2) cursor-pointer transition-colors duration-200;
 
         &.selected {
             @apply bg-(--color-2);
+        }
+
+        @media (pointer: coarse) {
+            &::after {
+                @apply content-[""] absolute w-[calc(100%+16px)] h-[calc(100%+12px)];
+                @apply top-1/2 left-1/2 -translate-1/2;
+            }
         }
     }
 
@@ -509,6 +544,14 @@
             button {
                 @apply flex gap-2 items-center px-2 py-1 rounded-md text-nowrap w-full;
                 @apply hover:bg-(--color-2) cursor-pointer transition-colors duration-200;
+            }
+        }
+        @media (pointer: coarse) {
+            @apply -mx-2;
+            li {
+                button {
+                    @apply px-4 py-2;
+                }
             }
         }
     }
@@ -597,15 +640,41 @@
     button {
         @apply p-1 rounded-sm cursor-pointer hover:not-disabled:bg-(--color-16) transition-colors duration-200;
         @apply disabled:cursor-not-allowed disabled:opacity-50;
+
+        @media (pointer: coarse) {
+            &::after {
+                @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                @apply size-10;
+            }
+        }
     }
 }
 
 .screen-mode-panel {
-    @apply select-none rounded-sm overflow-hidden h-[32px];
+    @apply select-none rounded-sm h-[32px] z-6;
     @apply hover:bg-(--color-16) transition-colors duration-200;
 
     button {
-        @apply p-1 cursor-pointer;
+        @apply p-1 cursor-pointer relative;
+
+        @media (pointer: coarse) {
+            &::after {
+                @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                @apply size-14;
+            }
+        }
+    }
+}
+
+.react-flow__panel.react-flow__controls {
+    button {
+        @apply size-8;
+        @media (pointer: coarse) {
+            @apply size-10;
+            svg {
+                @apply scale-110;
+            }
+        }
     }
 }
 
@@ -631,12 +700,37 @@
     .react-flow__resize-control {
         @apply hidden;
 
-        .line {
+        &.line {
             @apply border-blue-600;
+
+            @media (pointer: coarse) {
+                &::after {
+                    @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                }
+
+                &.top,
+                &.bottom {
+                    &::after {
+                        @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                        @apply w-full h-2;
+                    }
+                }
+                &.left,
+                &.right {
+                    &::after {
+                        @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                        @apply h-full w-2;
+                    }
+                }
+            }
         }
 
-        .handle {
+        &.handle {
             @apply bg-blue-600;
+
+            @media (pointer: coarse) {
+                @apply size-3;
+            }
         }
     }
 }
@@ -684,6 +778,15 @@
 
             &.suggested {
                 @apply opacity-60 brightness-50 text-(--color-15);
+            }
+
+            @media (pointer: coarse) {
+                @apply relative;
+
+                &::after {
+                    @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                    @apply w-full h-[calc(100%+4px)];
+                }
             }
         }
     }
@@ -760,19 +863,51 @@
             }
         }
 
+        @media (pointer: coarse) {
+            .checkbox-field {
+                @apply relative;
+
+                label {
+                    &::after {
+                        @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                        @apply w-full h-[calc(100%+8px)];
+                    }
+                }
+            }
+        }
+
+        .edit-attribute-btn,
+        .remove-attribute-btn,
+        .add-attribute-btn {
+            @apply p-2 flex items-center justify-self-end text-(--color-13);
+        }
+
         .edit-attribute-btn {
-            @apply p-2 flex items-center justify-self-end;
-            @apply bg-(--color-5) hover:bg-(--color-6) text-(--color-13);
+            @apply bg-(--color-5) hover:bg-(--color-6);
         }
 
         .remove-attribute-btn {
-            @apply p-2 flex items-center justify-self-end;
-            @apply bg-(--color-1) hover:bg-(--color-7) text-(--color-13);
+            @apply bg-(--color-1) hover:bg-(--color-7);
+        }
+
+        @media (pointer: coarse) {
+            .edit-attribute-btn,
+            .remove-attribute-btn {
+                @apply relative;
+                &::after {
+                    @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                    @apply size-11;
+                }
+            }
         }
 
         .add-attribute-btn {
-            @apply p-2 flex gap-1 items-center justify-self-end;
-            @apply bg-(--color-8) hover:bg-(--color-9) text-(--color-13);
+            @apply gap-1;
+            @apply bg-(--color-8) hover:bg-(--color-9);
+
+            @media (pointer: coarse) {
+                @apply w-full justify-center;
+            }
         }
     }
 
@@ -795,6 +930,13 @@
                 @apply -ml-[3.34px];
             }
         }
+
+        @media (pointer: coarse) {
+            .back-btn,
+            .submit-btn {
+                @apply w-[45%] justify-center;
+            }
+        }
     }
 }
 
@@ -815,12 +957,29 @@
             @apply overflow-y-auto overflow-x-hidden h-full;
         }
     }
+
+    @media (pointer: coarse) {
+        .radio-field {
+            @apply relative;
+
+            label {
+                &::after {
+                    @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                    @apply w-full h-[calc(100%+8px)];
+                }
+            }
+        }
+    }
 }
 
 .resize-handle {
     &::after {
         @apply content-[""] rounded-md w-1.5 h-6 bg-(--color-1);
         @apply absolute top-1/2 -translate-y-1/2 left-0 translate-x-[2.5px];
+
+        @media (pointer: coarse) {
+            @apply w-2.5 h-8 -left-0.5;
+        }
     }
 }
 
@@ -887,6 +1046,34 @@
     .radio-field,
     .checkbox-field {
         @apply flex-row-reverse justify-end;
+
+        @media (pointer: coarse) {
+            @apply relative;
+
+            label {
+                @apply flex-1;
+            }
+            input,
+            label {
+                &::after {
+                    @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                    @apply w-full h-[calc(100%+16px)];
+                }
+            }
+        }
+    }
+}
+
+.export-db-actions {
+    @apply absolute top-0.5 right-0.5 flex gap-2;
+
+    @media (pointer: coarse) {
+        .highlighter-btn {
+            &::after {
+                @apply content-[""] absolute top-1/2 left-1/2 -translate-1/2;
+                @apply size-9;
+            }
+        }
     }
 }
 
@@ -920,6 +1107,10 @@
     @apply bg-(--color-1) hover:not-disabled:bg-(--color-7) text-(--color-13) font-semibold;
     @apply transition-colors duration-200 cursor-pointer font-medium rounded-md;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
+
+    @media (pointer: coarse) {
+        @apply w-full justify-center;
+    }
 }
 
 .auth-body {
@@ -981,12 +1172,23 @@
             &:focus {
                 @apply outline-(--color-7);
             }
+
+            @media (pointer: coarse) {
+                &::after {
+                    @apply content-[""] absolute size-12;
+                    @apply top-1/2 left-1/2 -translate-1/2;
+                }
+            }
         }
 
         &.cancel-btn,
         &.confirm-btn {
             @apply px-5 py-2 rounded-md font-semibold cursor-pointer transition-all;
             @apply disabled:opacity-50 disabled:cursor-not-allowed;
+
+            @media (pointer: coarse) {
+                @apply w-[45%];
+            }
         }
 
         &.cancel-btn {

@@ -217,7 +217,7 @@ export default memo(function Main() {
 
                     {!fullscreenMode && !smallScreenMode && (
                         <Resizable
-                            defaultSize={{ width: 298 }}
+                            defaultSize={{ width: 300 }}
                             minWidth={200}
                             maxWidth={500}
                             enable={{

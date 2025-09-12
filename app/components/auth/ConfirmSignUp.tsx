@@ -100,7 +100,7 @@ const ConfirmSignUp = ({ active }: { active: boolean }) => {
                 </button>
             </div>
 
-            <button type="submit" className="auth-btn">
+            <button type="submit" disabled={loading} className="auth-btn">
                 Confirm
             </button>
         </form>

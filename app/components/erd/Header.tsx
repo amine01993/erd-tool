@@ -258,7 +258,7 @@ const Header = () => {
                     <>
                         <button
                             aria-label="Undo last action"
-                            className="header-btn relative"
+                            className="header-btn"
                             id="undo-button"
                             onClick={handleUndo}
                             disabled={disableUndo}
@@ -273,7 +273,7 @@ const Header = () => {
 
                         <button
                             aria-label="Redo"
-                            className="header-btn relative"
+                            className="header-btn"
                             id="redo-button"
                             onClick={handleRedo}
                             disabled={disableRedo}
@@ -291,7 +291,7 @@ const Header = () => {
                 <button
                     aria-label="Refresh diagrams' list"
                     className={cc([
-                        "header-btn relative",
+                        "header-btn",
                         { "animate-spin": refreshing },
                     ])}
                     id="refresh-button"
@@ -312,7 +312,7 @@ const Header = () => {
                     <>
                         <button
                             aria-label="Create new diagram"
-                            className="header-btn relative"
+                            className="header-btn"
                             id="new-diagram-button"
                             onClick={handleNewDiagram}
                         >
@@ -325,7 +325,7 @@ const Header = () => {
                         </button>
                         <button
                             aria-label="Duplicate selected diagram"
-                            className="header-btn relative"
+                            className="header-btn"
                             id="duplicate-diagram-button"
                             onClick={handleDuplicateDiagram}
                             disabled={selectedDiagram === "" || loading}
@@ -342,7 +342,7 @@ const Header = () => {
 
                 <button
                     aria-label="Delete selected diagram"
-                    className="header-btn relative"
+                    className="header-btn"
                     id="delete-diagram-button"
                     onClick={handleDeleteDiagram}
                     disabled={selectedDiagram === "" || loading}
@@ -362,7 +362,7 @@ const Header = () => {
                 {category === "deleted" && (
                     <button
                         aria-label="Recover selected diagram"
-                        className="header-btn relative"
+                        className="header-btn"
                         id="recover-diagram-button"
                         onClick={handleRecoverDiagram}
                         disabled={selectedDiagram === "" || loading}
@@ -378,7 +378,7 @@ const Header = () => {
 
                 {category === "all" && (
                     <button
-                        className="flex items-center gap-2 header-btn relative"
+                        className="flex items-center gap-2 header-btn"
                         id="export-diagram-button"
                         onClick={handleExportDiagram}
                         disabled={selectedDiagram === "" || loading}
@@ -416,7 +416,7 @@ const Header = () => {
                     )}
                 </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center gap-1">
                 <AiSuggestions />
                 <Theme />
                 <Settings />

@@ -94,6 +94,7 @@ const EdgeInfo = () => {
                 .map((n) => n.data);
 
             for (const nd of connectedNodesData) {
+                uniqueTables.add(nd.name);
                 const attrs = nd.attributes;
                 for (const attr of attrs) {
                     if (attr.isPrimaryKey) {
@@ -101,11 +102,11 @@ const EdgeInfo = () => {
                             column: attr,
                             tableName: nd.name,
                         });
-                        uniqueTables.add(nd.name);
                     }
                 }
             }
             for (const nd of connectedNodesData) {
+                uniqueTables.add(nd.name);
                 const attrs = nd.attributes;
                 for (const attr of attrs) {
                     if (attr.isPrimaryKey) continue;
@@ -117,7 +118,6 @@ const EdgeInfo = () => {
                             column: attr,
                             tableName: nd.name,
                         });
-                        uniqueTables.add(nd.name);
                     }
                 }
             }

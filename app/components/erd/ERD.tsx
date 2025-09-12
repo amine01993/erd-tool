@@ -203,10 +203,20 @@ const ERD = () => {
                 return;
             }
 
+            let target: Element;
+
+            if ((event as TouchEvent).changedTouches) {
+                const touch = (event as TouchEvent).changedTouches[0];
+                target = document.elementFromPoint(
+                    touch.clientX,
+                    touch.clientY
+                ) as Element;
+            } else {
+                target = event.target as Element;
+            }
+
             // we only want to create a new node if the connection ends on the pane
-            const targetIsPane = (event.target as Element).classList.contains(
-                "react-flow__pane"
-            );
+            const targetIsPane = target?.classList.contains("react-flow__pane");
 
             if (!targetIsPane || !connectingNodeId.current) {
                 return;

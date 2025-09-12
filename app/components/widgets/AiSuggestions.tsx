@@ -40,7 +40,7 @@ const AiSuggestions = () => {
                     </button>
                     <button
                         aria-label="Toggle ai suggestions"
-                        className="header-btn relative"
+                        className="header-btn"
                         id="ai-suggestions-btn"
                         onClick={handleAiSuggestions}
                     >

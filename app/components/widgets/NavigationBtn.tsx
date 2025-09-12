@@ -23,7 +23,7 @@ const NavigationBtn = () => {
     }, [isNavigationOpen, closeNavigation, openNavigation]);
 
     return (
-        <div className="relative">
+        <div className="navigation-btn-container relative">
             <button
                 aria-label="Toggle navigation menu"
                 className="header-btn"

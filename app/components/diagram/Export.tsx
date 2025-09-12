@@ -4,6 +4,7 @@ import {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
 import { Icon } from "@iconify/react";
@@ -370,6 +371,7 @@ const GenerateDB = memo(
 );
 
 const Export = () => {
+    const additionalTextAreaRef = useRef<HTMLTextAreaElement>(null);
     const [option, setOption] = useState("postgresql");
     const [generateData, setGenerateData] = useState(false);
     const [additionalRequirements, setAdditionalRequirements] = useState("");
@@ -469,6 +471,13 @@ const Export = () => {
             submit({ nodesData, edgesData, additionalRequirements });
         }
     }, [isLoading, additionalRequirements, submit, getSelectedDiagram]);
+
+    useEffect(() => {
+        if (generateData && additionalTextAreaRef.current) {
+            additionalTextAreaRef.current.focus();
+        }
+    }, [generateData]);
+
     return (
         <Modal
             isOpen={isExportModalOpen}
@@ -521,6 +530,7 @@ const Export = () => {
                         {generateData && (
                             <>
                                 <TextAreaField
+                                    ref={additionalTextAreaRef}
                                     placeholder="Any additional requirements or specifications for the data generation?"
                                     value={additionalRequirements}
                                     onChange={
