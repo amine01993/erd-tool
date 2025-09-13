@@ -905,8 +905,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             )
                 return;
 
-            console.log("valid schema edge", edge);
-
             const s = newNodes.find((n) => n.data.name === edge.source);
             const t = newNodes.find(
                 (n) => n.data.name === edge.references.entity

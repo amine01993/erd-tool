@@ -110,10 +110,9 @@ export interface UserState {
     ) => Promise<void>;
     confirmSignUp: (code: string) => void;
     resendCode: () => void;
-    getAuthData: () => { credentials: any; authData: any; jwtToken: string };
+    getAuthData: () => { credentials: any; jwtToken: string };
     retrieveAuthData: () => Promise<{
         credentials: any;
-        authData: any;
         jwtToken: string;
     }>;
     logOut: () => void;
@@ -452,7 +451,7 @@ const useUserStore = create<UserState>((set, get) => ({
         await signOut();
     },
     getAuthData() {
-        const { isGuest, credentials, authData, jwtToken } = get();
+        const { isGuest, credentials, jwtToken } = get();
 
         if ((isGuest && !credentials) || (!isGuest && !jwtToken)) {
             const creds = localStorage.getItem("credentials");
@@ -471,12 +470,11 @@ const useUserStore = create<UserState>((set, get) => ({
 
             return {
                 credentials: parsedCredentials,
-                authData: parsedPayload,
                 jwtToken: token ?? "",
             };
         }
 
-        return { credentials, authData, jwtToken };
+        return { credentials, jwtToken };
     },
     /**
      * Gets auth data from the store,
@@ -486,11 +484,11 @@ const useUserStore = create<UserState>((set, get) => ({
     async retrieveAuthData() {
         const { getAuthData } = get();
 
-        const { credentials, authData, jwtToken } = getAuthData();
+        const { credentials, jwtToken } = getAuthData();
 
         // only fetch new session when credentials are expired
         if (credentials && new Date(credentials.expiration) > new Date()) {
-            return { credentials, authData, jwtToken };
+            return { credentials, jwtToken };
         }
 
         set({ fetchingSession: true });
@@ -507,7 +505,7 @@ const useUserStore = create<UserState>((set, get) => ({
         set({
             isGuest: Boolean(!token),
             credentials: sessionCreds ?? null,
-            authData: payload ?? null,
+            authData: payload ?? {},
             jwtToken: token ?? "",
             fetchingSession: false,
         });
@@ -519,7 +517,6 @@ const useUserStore = create<UserState>((set, get) => ({
 
         return {
             credentials: sessionCreds,
-            authData: payload ?? null,
             jwtToken: token ?? "",
         };
     },
