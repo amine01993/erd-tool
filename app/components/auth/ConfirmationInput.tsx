@@ -49,7 +49,7 @@ export default function ConfirmationInput({
                 setError(validation.errors[0]);
             }
         }
-    }, [submitted]);
+    }, [submitted, setError]);
 
     const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         const input = event.target;
@@ -118,7 +118,7 @@ export default function ConfirmationInput({
                 handleArrowRight(event);
                 break;
         }
-    }, [handleBackspace]);
+    }, [handleBackspace, handleArrowLeft, handleArrowRight]);
 
     return (
         <div className="confirmation-input-container">

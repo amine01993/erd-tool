@@ -1,4 +1,4 @@
-import { generateObject, streamObject, TelemetrySettings } from "ai";
+import { generateObject, TelemetrySettings } from "ai";
 import "dotenv/config";
 import { erdCompletionSchema } from "./schema";
 

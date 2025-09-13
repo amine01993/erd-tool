@@ -146,7 +146,7 @@ const ERD = () => {
     const mutation = useUpdateDiagram();
     const mutationAdd = useAddDiagram();
 
-    const { isSuccess, isError, isPending, error } = useQuery({
+    useQuery({
         queryKey: ["diagrams"],
         queryFn: async () => {
             await loadDiagrams(mutationAdd);
@@ -154,7 +154,7 @@ const ERD = () => {
         },
     });
 
-    const { isError: isErrorDiagram, error: errorDiagram } = useQuery({
+    useQuery({
         queryKey: ["diagram", { selectedDiagram }],
         queryFn: async () => {
             const diagram = await loadDiagram();

@@ -196,7 +196,7 @@ export const edgeFormReducer = (
             return newValues;
         }
         case "SET_FIELD": {
-            let values = { ...state.values, [action.field]: action.value };
+            const values = { ...state.values, [action.field]: action.value };
             if (action.field === "foreignKey") {
                 values.oldForeignKey = state.values.foreignKey;
             }

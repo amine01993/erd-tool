@@ -25,35 +25,39 @@ interface DiagramItemProps {
     diagram: DiagramData;
 }
 
-const HighlightedName = memo(
-    ({ name, searchTerm }: { name: string; searchTerm: string }) => {
-        const startIndex = name.toLowerCase().indexOf(searchTerm.toLowerCase());
-        const endIndex = startIndex + searchTerm.length;
-        return (
-            <>
-                {startIndex === -1 && name}
-                {startIndex > -1 && (
-                    <>
-                        {name.slice(0, startIndex)}
-                        {endIndex > startIndex && (
-                            <span className="bg-(--color-1) text-(--color-13)">
-                                {name.slice(startIndex, endIndex)}
-                            </span>
-                        )}
-                        {name.slice(endIndex)}
-                    </>
-                )}
-            </>
-        );
-    }
-);
+const HighlightedName = memo(function HighlightedName({
+    name,
+    searchTerm,
+}: {
+    name: string;
+    searchTerm: string;
+}) {
+    const startIndex = name.toLowerCase().indexOf(searchTerm.toLowerCase());
+    const endIndex = startIndex + searchTerm.length;
+    return (
+        <>
+            {startIndex === -1 && name}
+            {startIndex > -1 && (
+                <>
+                    {name.slice(0, startIndex)}
+                    {endIndex > startIndex && (
+                        <span className="bg-(--color-1) text-(--color-13)">
+                            {name.slice(startIndex, endIndex)}
+                        </span>
+                    )}
+                    {name.slice(endIndex)}
+                </>
+            )}
+        </>
+    );
+});
 
 interface DiagramNameFormProps {
     name: string;
     setEditName: Dispatch<SetStateAction<boolean>>;
 }
 
-const DiagramNameForm = memo(({ name, setEditName }: DiagramNameFormProps) => {
+const DiagramNameForm = memo(function DiagramNameForm({ name, setEditName }: DiagramNameFormProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const updateDiagramName = useDiagramStore(
         (state) => state.updateDiagramName
@@ -96,7 +100,7 @@ const DiagramNameForm = memo(({ name, setEditName }: DiagramNameFormProps) => {
             );
             setSubmitting(false);
         },
-        [newName]
+        [newName, updateDiagramName]
     );
 
     useEffect(() => {
@@ -206,7 +210,7 @@ const DiagramItem = ({ diagram, searchTerm }: DiagramItemProps) => {
     );
 };
 
-export const DiagramItemPlaceHolder = memo(() => {
+export const DiagramItemPlaceHolder = memo(function DiagramItemPlaceHolder() {
     return (
         <div className="diagram-item-placeholder h-12 rounded-md bg-gray-200 my-1 cursor-wait"></div>
     );

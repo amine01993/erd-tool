@@ -14,7 +14,7 @@ const useInputFocused = () => {
                 setInputFocused(true);
             }
         }
-        function handleFocusOut(e: FocusEvent) {
+        function handleFocusOut() {
             setInputFocused(false);
         }
 

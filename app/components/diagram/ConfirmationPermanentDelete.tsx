@@ -25,7 +25,7 @@ const ConfirmationPermanentDelete = () => {
 
     const handleConfirm = useCallback(() => {
         deleteDiagramPermanently(mutationDelete);
-        closeConfirmModal()
+        closeConfirmModal();
     }, [deleteDiagramPermanently, closeConfirmModal]);
 
     useEffect(() => {
@@ -47,8 +47,8 @@ const ConfirmationPermanentDelete = () => {
                     Delete Items Cannot Be Recovered
                 </h1>
                 <p className="text-center">
-                    Are you sure you want to permanently delete this diagram "
-                    {currentDiagram?.name}"?
+                    Are you sure you want to permanently delete this diagram
+                    &quot;{currentDiagram?.name}&quot;?
                 </p>
 
                 <div className="action-btns">
@@ -59,10 +59,7 @@ const ConfirmationPermanentDelete = () => {
                     >
                         Cancel
                     </button>
-                    <button
-                        className="confirm-btn"
-                        onClick={handleConfirm}
-                    >
+                    <button className="confirm-btn" onClick={handleConfirm}>
                         Confirm
                     </button>
                 </div>

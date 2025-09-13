@@ -73,17 +73,17 @@ const Feedback = () => {
                     message: state.values.message.trim(),
                 },
                 {
-                    onSuccess(data, variables, context) {
+                    onSuccess() {
                         closeFeedbackModal();
                         showToast("Thank you for your feedback!", "success");
                     },
-                    onError(error, variables, context) {
+                    onError() {
                         showToast(
                             "Failed to send feedback. Please try again later.",
                             "error"
                         );
                     },
-                    onSettled(data, error, variables, context) {
+                    onSettled() {
                         setIsSubmitting(false);
                     },
                 }

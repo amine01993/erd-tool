@@ -14,11 +14,11 @@ import { defaultEdgeDataValues } from "@/app/helper/variables";
 const ErdConnectionLine = ({
     toX,
     toY,
-    connectionStatus,
     fromNode,
     toNode,
 }: ConnectionLineComponentProps) => {
     let edgePath = "";
+    const screenToFlowPosition = useReactFlow().screenToFlowPosition;
 
     if (toNode === null) {
         const { sx, sy, tx, ty } = getConnectionParams(fromNode, {
@@ -33,7 +33,7 @@ const ErdConnectionLine = ({
             targetY: ty,
         });
     } else if (fromNode.id !== toNode.id) {
-        const edges = useErdStore().edges;
+        const edges = useErdStore.getState().edges;
         const existingEdge = edges.find(
             (edge) =>
                 (edge.source === fromNode.id && edge.target === toNode.id) ||
@@ -44,7 +44,7 @@ const ErdConnectionLine = ({
             fromNode,
             toNode,
             existingEdge?.data ?? {...defaultEdgeDataValues},
-            useReactFlow().screenToFlowPosition
+            screenToFlowPosition
         );
 
         [edgePath] = getStraightPath({
@@ -54,7 +54,7 @@ const ErdConnectionLine = ({
             targetY: ty,
         });
     } else {
-        const edges = useErdStore().edges;
+        const edges = useErdStore.getState().edges;
         const existingEdge = edges.find(
             (edge) => edge.source === fromNode.id && edge.target === fromNode.id
         );
@@ -62,7 +62,7 @@ const ErdConnectionLine = ({
         const path = getSelfLoopPath(
             fromNode,
             existingEdge?.data ?? {...defaultEdgeDataValues},
-            useReactFlow().screenToFlowPosition
+            screenToFlowPosition
         );
         edgePath = path.edgePath;
     }

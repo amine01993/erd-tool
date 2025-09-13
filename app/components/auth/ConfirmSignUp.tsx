@@ -94,7 +94,7 @@ const ConfirmSignUp = ({ active }: { active: boolean }) => {
             </div>
 
             <div className="mt-5" style={{ textAlign: "center" }}>
-                Didn't get an email?&nbsp;&nbsp;&nbsp;
+                Didn&apos;t get an email?&nbsp;&nbsp;&nbsp;
                 <button className="link" onClick={handleResend}>
                     Resend
                 </button>

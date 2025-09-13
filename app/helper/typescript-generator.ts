@@ -1,4 +1,3 @@
-import { ErdEdgeData } from "../type/EdgeType";
 import { AttributeData, EntityData } from "../type/EntityType";
 
 function mapDataType(column: AttributeData): string {
@@ -25,7 +24,7 @@ function mapDataType(column: AttributeData): string {
         geography: "string",
     };
 
-    let type = typeMap[column.type.toLowerCase()];
+    const type = typeMap[column.type.toLowerCase()];
 
     return type;
 }
@@ -47,15 +46,12 @@ function createInterfaceTs(entity: EntityData): string {
     const tableName = entity.name;
     const columns = entity.attributes.map(createAttributeTs);
 
-    let tsType = `interface ${tableName} {\n${columns.join("\n")}\n}`;
+    const tsType = `interface ${tableName} {\n${columns.join("\n")}\n}`;
 
     return tsType;
 }
 
-export function generateTs(
-    nodesData: EntityData[],
-    edgesData: ErdEdgeData[]
-): string {
+export function generateTs(nodesData: EntityData[]): string {
     const tsTypes: string[] = [];
     nodesData.forEach((nd) => {
         const createTableSql = createInterfaceTs(nd);

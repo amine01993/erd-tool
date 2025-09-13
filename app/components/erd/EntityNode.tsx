@@ -13,7 +13,9 @@ interface AttributeDataProps {
     data: AttributeData;
 }
 
-const AttributeNode = memo(({ data }: AttributeDataProps) => {
+const AttributeNode = memo(function AttributeNode({
+    data,
+}: AttributeDataProps) {
     const nullable = useMemo(() => {
         return !data.isPrimaryKey && data.isNullable;
     }, [data.isPrimaryKey, data.isNullable]);
@@ -56,7 +58,9 @@ const AttributeNode = memo(({ data }: AttributeDataProps) => {
                     message={data.description}
                     position="right"
                     selector={`#${data.id}`}
-                    props={{ className: "text-[12px]! w-32 whitespace-normal!" }}
+                    props={{
+                        className: "text-[12px]! w-32 whitespace-normal!",
+                    }}
                 />
             )}
         </>

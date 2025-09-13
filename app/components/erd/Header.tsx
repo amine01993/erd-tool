@@ -31,7 +31,7 @@ import NavigationBtn from "../widgets/NavigationBtn";
 import NavigationMenu from "../widgets/NavigationMenu";
 import useInputFocused from "@/app/hooks/InputFocused";
 
-const Logo = memo((props: SVGProps<SVGSVGElement>) => {
+const Logo = memo(function Logo(props: SVGProps<SVGSVGElement>) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"

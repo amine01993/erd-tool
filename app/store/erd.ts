@@ -184,7 +184,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
 
         set({
             selectedNodeId: selectedId,
-            nodes: newNodes as any,
+            nodes: newNodes as Node<EntityData>[],
             loaded: true,
         });
         if (selectedId) {
@@ -192,7 +192,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         }
 
         if (loaded && saving) {
-            saveDiagram(newNodes as any, edges);
+            saveDiagram(newNodes as Node<EntityData>[], edges);
         }
     },
     onEdgesChange: (changes: EdgeChange[]) => {
@@ -269,14 +269,14 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
 
         set({
             selectedEdgeId: selectedId,
-            edges: newEdges as any,
+            edges: newEdges as Edge<ErdEdgeData>[],
             nodes: newNodes,
         });
         if (selectedId) {
             set({ selectedNodeId: null });
         }
         if (saving) {
-            saveDiagram(newNodes, newEdges as any);
+            saveDiagram(newNodes, newEdges as Edge<ErdEdgeData>[]);
         }
     },
     onEdgeHover: (edge: Edge<ErdEdgeData>, hovered: boolean) => {
@@ -453,7 +453,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             return;
         }
 
-        let name = getName();
+        const name = getName();
         const newNode: Node<EntityData> = {
             id: nanoid(),
             position,
@@ -481,14 +481,14 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             return;
         }
 
-        let name = getName();
+        const name = getName();
 
         const sourceNode = nodes.find((n) => n.id === fromId);
 
-        let primaryKeyColumn =
+        const primaryKeyColumn =
             sourceNode?.data.attributes.find((attr) => attr.isPrimaryKey)
                 ?.name ?? "";
-        let primaryKeyTable = sourceNode?.data.name ?? "";
+        const primaryKeyTable = sourceNode?.data.name ?? "";
 
         const newNode: Node<EntityData> = {
             id: nanoid(),
@@ -536,10 +536,10 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
 
         const sourceNode = nodes.find((n) => n.id === nodeId);
 
-        let primaryKeyColumn =
+        const primaryKeyColumn =
             sourceNode?.data.attributes.find((attr) => attr.isPrimaryKey)
                 ?.name ?? "";
-        let primaryKeyTable = sourceNode?.data.name ?? "";
+        const primaryKeyTable = sourceNode?.data.name ?? "";
 
         const newEdge: Edge<ErdEdgeData> = {
             id: nanoid(),
@@ -905,7 +905,7 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             )
                 return;
 
-            console.log("valid schema edge", edge)
+            console.log("valid schema edge", edge);
 
             const s = newNodes.find((n) => n.data.name === edge.source);
             const t = newNodes.find(
@@ -960,8 +960,6 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
         edges.forEach((e) => {
             const existingEdge = newEdges.find(
                 (ne) =>
-                    // ne.source === e.source &&
-                    // ne.target === e.target &&
                     ne.data?.primaryKeyColumn === e.data?.primaryKeyColumn &&
                     ne.data?.primaryKeyTable === e.data?.primaryKeyTable &&
                     ne.data?.foreignKeyColumn === e.data?.foreignKeyColumn &&
@@ -972,12 +970,8 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             }
         });
 
-        // console.log({schema, newNodes, newEdges});
-
-        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(newNodes, newEdges);
-
-        // const { nodes: layoutedNodes, edges: layoutedEdges } =
-        //     await getLayoutedElements2(newNodes, newEdges);
+        const { nodes: layoutedNodes, edges: layoutedEdges } =
+            getLayoutedElements(newNodes, newEdges);
 
         set({
             nodes: layoutedNodes,
@@ -1199,12 +1193,11 @@ const useErdStore = createWithEqualityFn<ErdState>((set, get) => ({
             }
         });
 
-        const { nodes: layoutedNodes, edges: layoutedEdges } =
-            getLayoutedElements(
-                newNodes,
-                newEdges,
-                new Set(nodes.map((n) => n.id))
-            );
+        const { nodes: layoutedNodes } = getLayoutedElements(
+            newNodes,
+            newEdges,
+            new Set(nodes.map((n) => n.id))
+        );
 
         set({
             nodes: layoutedNodes,

@@ -204,9 +204,11 @@ export function getSelfLoopPath(
         }
     ) => XYPosition
 ) {
-    let { order = 1, length = 1, edgePosition } = edgeData;
+    const ed = edgeData;
+    const { order = 1, length = 1 } = ed;
+    let edgePosition = ed.edgePosition;
     const { x, y } = source.internals.positionAbsolute;
-    const { width: W, height: H } = source.measured;
+    const { height: H } = source.measured;
     const dx = 5,
         dy = Math.min(30, H! / length);
     let sx = x;

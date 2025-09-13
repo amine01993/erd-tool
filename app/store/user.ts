@@ -172,7 +172,7 @@ const useUserStore = create<UserState>((set, get) => ({
     },
     setTheme(theme: AppTheme, mutation: UpdateUserAttributeMutation) {
         const { isGuest, authData, handleCachedMutationsForUserAttributes } = get();
-        let updatedAuthData = { ...authData, ["custom:theme"]: theme };
+        const updatedAuthData = { ...authData, ["custom:theme"]: theme };
         set({ authData: updatedAuthData });
 
         localStorage.setItem("authData", JSON.stringify(updatedAuthData));
@@ -186,10 +186,10 @@ const useUserStore = create<UserState>((set, get) => ({
                     value: theme,
                 },
                 {
-                    onSuccess(data, variables, context) {
+                    onSuccess(data, _, __) {
                         console.log("Successfully updated user attribute", data);
                     },
-                    onError(error, variables, context) {
+                    onError(error, _, __) {
                         console.error("Failed to update user attribute", error);
                     },
                 }
@@ -198,7 +198,7 @@ const useUserStore = create<UserState>((set, get) => ({
     },
     setGuideShown(shown: boolean, mutation: UpdateUserAttributeMutation) {
         const { isGuest, authData, handleCachedMutationsForUserAttributes } = get();
-        let updatedAuthData = { ...authData, ["custom:guideShown"]: shown ? "true" : "false" };
+        const updatedAuthData = { ...authData, ["custom:guideShown"]: shown ? "true" : "false" };
         set({ authData: updatedAuthData });
 
         localStorage.setItem("authData", JSON.stringify(updatedAuthData));
@@ -212,10 +212,10 @@ const useUserStore = create<UserState>((set, get) => ({
                     value: shown ? "true" : "false",
                 },
                 {
-                    onSuccess(data, variables, context) {
+                    onSuccess(data, _, __) {
                         console.log("Successfully updated user attribute", data);
                     },
-                    onError(error, variables, context) {
+                    onError(error, _, __) {
                         console.error("Failed to update user attribute", error);
                     },
                 }
@@ -354,11 +354,11 @@ const useUserStore = create<UserState>((set, get) => ({
     },
     toggleAiSuggestions(mutation: UpdateUserAttributeMutation) {
         const { isGuest, authData, handleCachedMutationsForUserAttributes } = get();
-        let aiSuggestionsEnabled =
+        const aiSuggestionsEnabled =
             authData?.["custom:aiSuggestionsEnabled"] === "false"
                 ? false
                 : true;
-        let updatedAuthData = {
+        const updatedAuthData = {
             ...authData,
             ["custom:aiSuggestionsEnabled"]: String(!aiSuggestionsEnabled),
         };
@@ -374,10 +374,10 @@ const useUserStore = create<UserState>((set, get) => ({
                     value: String(!aiSuggestionsEnabled),
                 },
                 {
-                    onSuccess(data, variables, context) {
+                    onSuccess(data, _, __) {
                         console.log("Successfully updated user attribute", data);
                     },
-                    onError(error, variables, context) {
+                    onError(error, _, __) {
                         console.error("Failed to update user attribute", error);
                     },
                 }
@@ -444,7 +444,7 @@ const useUserStore = create<UserState>((set, get) => ({
     },
     async resendCode() {
         const { authDetail } = get();
-        const output = await resendSignUpCode({
+        await resendSignUpCode({
             username: authDetail.email,
         });
     },
@@ -455,9 +455,9 @@ const useUserStore = create<UserState>((set, get) => ({
         const { isGuest, credentials, authData, jwtToken } = get();
 
         if ((isGuest && !credentials) || (!isGuest && !jwtToken)) {
-            let creds = localStorage.getItem("credentials");
-            let token = localStorage.getItem("jwtToken");
-            let payload = localStorage.getItem("authData");
+            const creds = localStorage.getItem("credentials");
+            const token = localStorage.getItem("jwtToken");
+            const payload = localStorage.getItem("authData");
 
             const parsedCredentials = creds ? JSON.parse(creds) : null;
             const parsedPayload = payload ? JSON.parse(payload) : null;

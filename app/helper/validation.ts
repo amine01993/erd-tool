@@ -114,7 +114,6 @@ export function checkCompatibility(pk: AttributeData, fk: AttributeData) {
     if (pk.type === "double" && fk.type === "double") return true;
     if (pk.type === "float" && fk.type === "float") return true;
 
-
     if (pk.type === "numeric" && fk.type === "numeric") {
         const pkPrecision = pk.precision || 38;
         const fkPrecision = fk.precision || 38;

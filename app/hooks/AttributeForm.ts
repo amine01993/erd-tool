@@ -301,7 +301,7 @@ export const attributeFormReducer = (
         }
         case "SET_FIELD": {
             const newValues = { ...state.values, [action.field]: action.value };
-            let errors = { ...state.errors };
+            const errors = { ...state.errors };
             if (
                 [
                     "name",

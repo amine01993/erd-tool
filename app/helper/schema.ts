@@ -42,7 +42,7 @@ function attributeSchema(attr: AttributeData) {
     }
 
     if (attr.description) {
-        let attrPropsDescription = [];
+        const attrPropsDescription = [];
         if (attr.isPrimaryKey) {
             attrPropsDescription.push("This attribute is a Primary Key.");
         }
@@ -64,7 +64,6 @@ function attributeSchema(attr: AttributeData) {
 }
 
 export function generateZodSchema(nodesData: EntityData[]) {
-
     const entitiesObject: Record<string, any> = {};
 
     nodesData.forEach((nd) => {

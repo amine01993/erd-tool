@@ -9,7 +9,7 @@ import useUserStore, { isAnyModalOrMenuOpenSelector } from "@/app/store/user";
 import Tooltip from "./Tooltip";
 import useInputFocused from "@/app/hooks/InputFocused";
 
-const EntityIcon = memo((props: SVGProps<SVGSVGElement>) => {
+const EntityIcon = memo(function EntityIcon(props: SVGProps<SVGSVGElement>) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -29,7 +29,7 @@ const EntityIcon = memo((props: SVGProps<SVGSVGElement>) => {
     );
 });
 
-const EdgeIcon = memo((props: SVGProps<SVGSVGElement>) => {
+const EdgeIcon = memo(function EdgeIcon(props: SVGProps<SVGSVGElement>) {
     const lineStyle = {
         fill: "none",
         stroke: "var(--color-12)",

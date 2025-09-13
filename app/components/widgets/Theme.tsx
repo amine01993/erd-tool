@@ -16,7 +16,7 @@ interface IconProps {
 const lightGrey = "var(--color-3)";
 const darkGrey = "var(--color-1)";
 
-export const OsDefault = memo(({ theme, props }: IconProps) => {
+export const OsDefault = memo(function OsDefault({ theme, props }: IconProps) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -49,7 +49,7 @@ export const OsDefault = memo(({ theme, props }: IconProps) => {
     );
 });
 
-export const DarkIcon = memo(({ props }: Omit<IconProps, "theme">) => {
+export const DarkIcon = memo(function DarkIcon({ props }: Omit<IconProps, "theme">) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -71,7 +71,7 @@ export const DarkIcon = memo(({ props }: Omit<IconProps, "theme">) => {
     );
 });
 
-export const LightIcon = memo(({ props }: Omit<IconProps, "theme">) => {
+export const LightIcon = memo(function LightIcon({ props }: Omit<IconProps, "theme">) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"

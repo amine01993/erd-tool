@@ -63,9 +63,9 @@ export default memo(function Main() {
     const handleResize = useCallback(
         (
             _: MouseEvent | TouchEvent,
-            direction: Direction,
+            __: Direction,
             ref: HTMLElement,
-            d: NumberSize
+            ___: NumberSize
         ) => {
             setEntityPanelWidth(ref.clientWidth);
         },

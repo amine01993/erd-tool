@@ -105,7 +105,7 @@ function createTableMySql(entity: EntityData): string {
     const tableName = entity.name;
     const columns = entity.attributes.map(createFieldMySql);
 
-    let sql = `CREATE TABLE IF NOT EXISTS ${tableName} (\n${columns.join(
+    const sql = `CREATE TABLE IF NOT EXISTS ${tableName} (\n${columns.join(
         ",\n"
     )}\n);`;
 

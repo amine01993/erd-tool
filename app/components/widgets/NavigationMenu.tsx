@@ -63,7 +63,7 @@ const NavigationMenu = ({
                         disabled={offLine || refreshing}
                     >
                         <Icon icon={RefreshIcon} fontSize={21} />
-                        Refresh diagrams' list (Ctrl + R)
+                        Refresh diagrams&apos; list (Ctrl + R)
                     </button>
                 </li>
                 {category === "all" && (

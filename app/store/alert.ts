@@ -8,7 +8,7 @@ interface AlertState {
     hideToast: () => void;
 }
 
-const useAlertStore = create<AlertState>((set, get) => ({
+const useAlertStore = create<AlertState>((set) => ({
     message: "",
     type: "error",
     isVisible: undefined,

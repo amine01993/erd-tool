@@ -31,7 +31,7 @@ const AiPrompt = () => {
     const { isLoading, object, submit, stop } = useObject({
         api: "/erd-suggestion",
         schema: erdSchema,
-        onFinish({ object, error }) {
+        onFinish({ error }) {
             console.log("Schema validation error:", error);
             if (error) {
                 showToast(error.message, "error");

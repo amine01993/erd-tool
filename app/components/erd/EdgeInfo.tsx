@@ -38,7 +38,7 @@ const EdgeInfo = () => {
 
     useEffect(() => {
         if (selectedEdgeId && !isReadOnly) {
-            let currentData = {
+            const currentData = {
                 foreignKey: "",
                 reference: "",
                 onDelete: "RESTRICT",

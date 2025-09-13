@@ -47,7 +47,7 @@ const ReadOnlyMode = () => {
                     Recently deleted diagrams can’t be edited.
                 </h1>
                 <p className="text-center">
-                    To edit this diagram "{currentDiagram?.name}", you’ll need
+                    To edit this diagram `&quot;{currentDiagram?.name}`&quot;, you’ll need
                     to recover it.
                 </p>
 

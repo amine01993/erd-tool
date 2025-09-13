@@ -67,82 +67,71 @@ interface CodeSnippetActionsProps {
     handleCollapse: () => void;
 }
 
-const CodeSnippetActions = memo(
-    ({
-        idPrefix,
-        isCopied,
-        isCollapsed,
-        handleCopied,
-        handleCollapse,
-    }: CodeSnippetActionsProps) => {
-        return (
-            <div className="export-db-actions absolute top-0.5 right-0.5 flex gap-2">
-                <button
-                    id={`${idPrefix}-copy-btn`}
-                    className="relative highlighter-btn"
-                    aria-label="Copy to clipboard"
-                    onClick={handleCopied}
-                >
-                    {isCopied && (
-                        <Icon
-                            icon={ClipboardCheckIcon}
-                            width={20}
-                            height={20}
+const CodeSnippetActions = memo(function CodeSnippetActions({
+    idPrefix,
+    isCopied,
+    isCollapsed,
+    handleCopied,
+    handleCollapse,
+}: CodeSnippetActionsProps) {
+    return (
+        <div className="export-db-actions absolute top-0.5 right-0.5 flex gap-2">
+            <button
+                id={`${idPrefix}-copy-btn`}
+                className="relative highlighter-btn"
+                aria-label="Copy to clipboard"
+                onClick={handleCopied}
+            >
+                {isCopied && (
+                    <Icon icon={ClipboardCheckIcon} width={20} height={20} />
+                )}
+                {!isCopied && (
+                    <>
+                        <Icon icon={ClipboardTextIcon} width={20} height={20} />
+                        <Tooltip
+                            message="Copy to clipboard"
+                            selector={`#${idPrefix}-copy-btn`}
+                            position="left"
                         />
-                    )}
-                    {!isCopied && (
-                        <>
-                            <Icon
-                                icon={ClipboardTextIcon}
-                                width={20}
-                                height={20}
-                            />
-                            <Tooltip
-                                message="Copy to clipboard"
-                                selector={`#${idPrefix}-copy-btn`}
-                                position="left"
-                            />
-                        </>
-                    )}
-                </button>
-                <button
-                    id={`${idPrefix}-collapse-btn`}
-                    className="relative highlighter-btn"
-                    aria-label={
+                    </>
+                )}
+            </button>
+            <button
+                id={`${idPrefix}-collapse-btn`}
+                className="relative highlighter-btn"
+                aria-label={
+                    isCollapsed ? "Expand the snippet" : "Collapse the snippet"
+                }
+                onClick={handleCollapse}
+            >
+                {isCollapsed && (
+                    <Icon
+                        icon={LayoutBottombarCollapseFilledIcon}
+                        fontSize={21}
+                    />
+                )}
+                {!isCollapsed && (
+                    <Icon icon={LayoutNavbarCollapseFilledIcon} fontSize={21} />
+                )}
+                <Tooltip
+                    message={
                         isCollapsed
                             ? "Expand the snippet"
                             : "Collapse the snippet"
                     }
-                    onClick={handleCollapse}
-                >
-                    {isCollapsed && (
-                        <Icon
-                            icon={LayoutBottombarCollapseFilledIcon}
-                            fontSize={21}
-                        />
-                    )}
-                    {!isCollapsed && (
-                        <Icon
-                            icon={LayoutNavbarCollapseFilledIcon}
-                            fontSize={21}
-                        />
-                    )}
-                    <Tooltip
-                        message={
-                            isCollapsed
-                                ? "Expand the snippet"
-                                : "Collapse the snippet"
-                        }
-                        selector={`#${idPrefix}-collapse-btn`}
-                        position="left"
-                    />
-                </button>
-            </div>
-        );
-    }
-);
+                    selector={`#${idPrefix}-collapse-btn`}
+                    position="left"
+                />
+            </button>
+        </div>
+    );
+});
 
-const ExportDB = memo(({ isDarkMode, option, language }: ExportDbProps) => {
+const ExportDB = memo(function ExportDB({
+    isDarkMode,
+    option,
+    language,
+}: ExportDbProps) {
     const isExportModalOpen = useUserStore((state) => state.isExportModalOpen);
     const getSelectedDiagram = useDiagramStore(
         (state) => state.getSelectedDiagram
@@ -185,7 +174,7 @@ const ExportDB = memo(({ isDarkMode, option, language }: ExportDbProps) => {
                     _sql = generatePostgreSql(nodesData, edgesData);
                     break;
                 case "typescript":
-                    _sql = generateTs(nodesData, edgesData);
+                    _sql = generateTs(nodesData);
                     break;
                 default:
                     break;
@@ -251,124 +240,114 @@ const ExportDB = memo(({ isDarkMode, option, language }: ExportDbProps) => {
     );
 });
 
-const GenerateDB = memo(
-    ({
-        isDarkMode,
-        option,
-        language,
-        generateData,
-        object,
-    }: GenerateDbProps) => {
-        const isExportModalOpen = useUserStore(
-            (state) => state.isExportModalOpen
-        );
-        const getSelectedDiagram = useDiagramStore(
-            (state) => state.getSelectedDiagram
-        );
+const GenerateDB = memo(function GenerateDB({
+    isDarkMode,
+    option,
+    language,
+    generateData,
+    object,
+}: GenerateDbProps) {
+    const isExportModalOpen = useUserStore((state) => state.isExportModalOpen);
+    const getSelectedDiagram = useDiagramStore(
+        (state) => state.getSelectedDiagram
+    );
 
-        const [isCopied, setIsCopied] = useState(false);
-        const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCopied, setIsCopied] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
-        const generateDbClasses = useMemo(() => {
-            return cc([
-                "generate-db relative",
-                {
-                    collapsed: isCollapsed,
-                },
-            ]);
-        }, [isCollapsed]);
-
-        const insertsSql = useMemo(() => {
-            const diagram = getSelectedDiagram();
-
-            let _sql = "";
-
-            if (generateData && diagram && isExportModalOpen && object) {
-                switch (option) {
-                    case "mysql":
-                        _sql = generateInsertsMySql(object);
-                        break;
-                    case "sqlserver":
-                        _sql = generateInsertsSqlServer(object);
-                        break;
-                    case "postgresql":
-                        _sql = generateInsertsPostgreSql(object);
-                        break;
-                    case "typescript":
-                        _sql = generateDataTs(object);
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            return _sql;
-        }, [
-            isExportModalOpen,
-            generateData,
-            option,
-            object,
-            getSelectedDiagram,
+    const generateDbClasses = useMemo(() => {
+        return cc([
+            "generate-db relative",
+            {
+                collapsed: isCollapsed,
+            },
         ]);
+    }, [isCollapsed]);
 
-        const handleCopied = useCallback(() => {
-            navigator.clipboard
-                .writeText(insertsSql)
-                .then(() => {
-                    setIsCopied(true);
-                })
-                .catch((err) => {
-                    console.error("Could not copy text: ", err);
-                });
-        }, [insertsSql]);
+    const insertsSql = useMemo(() => {
+        const diagram = getSelectedDiagram();
 
-        const handleCollapse = useCallback(() => {
-            setIsCollapsed(!isCollapsed);
-        }, [isCollapsed]);
+        let _sql = "";
 
-        useEffect(() => {
-            if (isCopied) {
-                const timer = setTimeout(() => {
-                    setIsCopied(false);
-                }, 2000);
-                return () => clearTimeout(timer);
+        if (generateData && diagram && isExportModalOpen && object) {
+            switch (option) {
+                case "mysql":
+                    _sql = generateInsertsMySql(object);
+                    break;
+                case "sqlserver":
+                    _sql = generateInsertsSqlServer(object);
+                    break;
+                case "postgresql":
+                    _sql = generateInsertsPostgreSql(object);
+                    break;
+                case "typescript":
+                    _sql = generateDataTs(object);
+                    break;
+                default:
+                    break;
             }
-        }, [isCopied]);
+        }
 
-        return (
-            <>
-                {generateData && (
-                    <div className={generateDbClasses}>
-                        <SyntaxHighlighter
-                            language={language}
-                            style={isDarkMode ? oneDark : oneLight}
-                            customStyle={{ margin: 0, paddingTop: 20 }}
-                            showLineNumbers={true}
-                            PreTag="div"
-                            wrapLines={true}
-                            lineProps={{
-                                style: {
-                                    display: "flex",
-                                    flexWrap: "wrap",
-                                    contentVisibility: "auto",
-                                },
-                            }}
-                        >
-                            {insertsSql}
-                        </SyntaxHighlighter>
-                        <CodeSnippetActions
-                            idPrefix="generate-db"
-                            isCopied={isCopied}
-                            isCollapsed={isCollapsed}
-                            handleCopied={handleCopied}
-                            handleCollapse={handleCollapse}
-                        />
-                    </div>
-                )}
-            </>
-        );
-    }
-);
+        return _sql;
+    }, [isExportModalOpen, generateData, option, object, getSelectedDiagram]);
+
+    const handleCopied = useCallback(() => {
+        navigator.clipboard
+            .writeText(insertsSql)
+            .then(() => {
+                setIsCopied(true);
+            })
+            .catch((err) => {
+                console.error("Could not copy text: ", err);
+            });
+    }, [insertsSql]);
+
+    const handleCollapse = useCallback(() => {
+        setIsCollapsed(!isCollapsed);
+    }, [isCollapsed]);
+
+    useEffect(() => {
+        if (isCopied) {
+            const timer = setTimeout(() => {
+                setIsCopied(false);
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [isCopied]);
+
+    return (
+        <>
+            {generateData && (
+                <div className={generateDbClasses}>
+                    <SyntaxHighlighter
+                        language={language}
+                        style={isDarkMode ? oneDark : oneLight}
+                        customStyle={{ margin: 0, paddingTop: 20 }}
+                        showLineNumbers={true}
+                        PreTag="div"
+                        wrapLines={true}
+                        lineProps={{
+                            style: {
+                                display: "flex",
+                                flexWrap: "wrap",
+                                contentVisibility: "auto",
+                            },
+                        }}
+                    >
+                        {insertsSql}
+                    </SyntaxHighlighter>
+                    <CodeSnippetActions
+                        idPrefix="generate-db"
+                        isCopied={isCopied}
+                        isCollapsed={isCollapsed}
+                        handleCopied={handleCopied}
+                        handleCollapse={handleCollapse}
+                    />
+                </div>
+            )}
+        </>
+    );
+});
 
 const Export = () => {
     const additionalTextAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -414,7 +393,7 @@ const Export = () => {
     const { isLoading, object, submit, stop } = useObject({
         api: "/erd-data-generator",
         schema: dataSchema,
-        onFinish({ object, error }) {
+        onFinish({ error }) {
             console.log("Schema validation error:", error);
         },
         onError(error) {

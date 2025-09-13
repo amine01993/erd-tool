@@ -44,7 +44,7 @@ interface DiagramStoreProps {
     startRefreshing: () => void;
     endRefreshing: () => void;
     setCategory: (category: DiagramCategory) => void;
-    loadDiagram: () => Promise<any>;
+    loadDiagram: () => Promise<DiagramData | undefined>;
     loadDiagrams: (
         mutation: UseMutationResult<void, Error, DiagramData, unknown>
     ) => Promise<void>;
@@ -215,7 +215,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
                 }),
             });
             setErd(diagram);
-            return diagram;
+            return diagram as DiagramData;
         }
     },
     async loadDiagrams(
@@ -357,7 +357,7 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
 
         if (category === "deleted") return;
 
-        let name = getName();
+        const name = getName();
 
         const newDiagram: DiagramData = {
             id: nanoid(7),
@@ -439,10 +439,10 @@ const useDiagramStore = create<DiagramStoreProps>()((set, get) => ({
         newDiagram.id = nanoid(7);
         const match = currentDiagram.name.match(/\((\d+?)\)$/i);
 
-        let prefix = match
+        const prefix = match
             ? currentDiagram.name.slice(0, match.index)
             : currentDiagram.name;
-        let nbr = match ? parseInt(match[1]) : undefined;
+        const nbr = match ? parseInt(match[1]) : undefined;
         newDiagram.name = getName(prefix.trim(), nbr);
 
         newDiagram.lastUpdate = new Date().toISOString();

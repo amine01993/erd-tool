@@ -24,80 +24,78 @@ import useErdStore from "@/app/store/erd";
 import useDiagramStore, { isReadOnlySelector } from "@/app/store/diagram";
 import { ErdEdgeData } from "@/app/type/EdgeType";
 
-const EdgeLabel = memo(
-    ({
-        transform,
-        value,
-        edgeId,
-        type,
-    }: {
-        transform: string;
-        value: string;
-        edgeId: string;
-        type: "start" | "end";
-    }) => {
-        const selectElem = useRef<HTMLSelectElement>(null);
-        const isReadOnly = useDiagramStore(isReadOnlySelector);
-        const updateEdgeLabel = useErdStore((state) => state.updateEdgeLabel);
-        const [editing, setEditing] = useState(false);
-        const [label, setLabel] = useState(value);
+const EdgeLabel = memo(function EdgeLabel({
+    transform,
+    value,
+    edgeId,
+    type,
+}: {
+    transform: string;
+    value: string;
+    edgeId: string;
+    type: "start" | "end";
+}) {
+    const selectElem = useRef<HTMLSelectElement>(null);
+    const isReadOnly = useDiagramStore(isReadOnlySelector);
+    const updateEdgeLabel = useErdStore((state) => state.updateEdgeLabel);
+    const [editing, setEditing] = useState(false);
+    const [label, setLabel] = useState(value);
 
-        const toggleEdit = useCallback(() => {
-            if (isReadOnly) return;
-            setEditing((prev) => !prev);
-        }, [isReadOnly, setEditing]);
+    const toggleEdit = useCallback(() => {
+        if (isReadOnly) return;
+        setEditing((prev) => !prev);
+    }, [isReadOnly, setEditing]);
 
-        const handleChange = useCallback(
-            (e: ChangeEvent<HTMLSelectElement>) => {
-                setLabel(e.target.value);
-                setEditing(false);
-                updateEdgeLabel(edgeId, type, e.target.value);
-            },
-            [edgeId, type, updateEdgeLabel]
-        );
+    const handleChange = useCallback(
+        (e: ChangeEvent<HTMLSelectElement>) => {
+            setLabel(e.target.value);
+            setEditing(false);
+            updateEdgeLabel(edgeId, type, e.target.value);
+        },
+        [edgeId, type, updateEdgeLabel]
+    );
 
-        useEffect(() => {
-            if (editing && selectElem.current) {
-                selectElem.current.focus();
-            }
-        }, [editing]);
+    useEffect(() => {
+        if (editing && selectElem.current) {
+            selectElem.current.focus();
+        }
+    }, [editing]);
 
-        return (
-            <div
-                style={{
-                    transform,
-                }}
-                className="nodrag nopan edge-label"
-            >
-                {!editing && (
-                    <button aria-label="Edit edge label" onClick={toggleEdit}>
-                        {label}
-                    </button>
-                )}
-                {editing && (
-                    <>
-                        <select
-                            value={label}
-                            ref={selectElem}
-                            onChange={handleChange}
-                            onBlur={toggleEdit}
-                        >
-                            <option value="0..1">0..1</option>
-                            <option value="1">1</option>
-                            <option value="*">*</option>
-                        </select>
-                        <Icon
-                            icon={ChevronDownIcon}
-                            width="10"
-                            height="10"
-                            className="absolute right-0.5 top-1/2 -translate-y-1/2"
-                        />
-                    </>
-                )}
-            </div>
-        );
-    }
-);
+    return (
+        <div
+            style={{
+                transform,
+            }}
+            className="nodrag nopan edge-label"
+        >
+            {!editing && (
+                <button aria-label="Edit edge label" onClick={toggleEdit}>
+                    {label}
+                </button>
+            )}
+            {editing && (
+                <>
+                    <select
+                        value={label}
+                        ref={selectElem}
+                        onChange={handleChange}
+                        onBlur={toggleEdit}
+                    >
+                        <option value="0..1">0..1</option>
+                        <option value="1">1</option>
+                        <option value="*">*</option>
+                    </select>
+                    <Icon
+                        icon={ChevronDownIcon}
+                        width="10"
+                        height="10"
+                        className="absolute right-0.5 top-1/2 -translate-y-1/2"
+                    />
+                </>
+            )}
+        </div>
+    );
+});
 
 function ErdEdge({
     id,
@@ -108,7 +106,7 @@ function ErdEdge({
     style,
     data,
 }: EdgeProps<Edge<ErdEdgeData>>) {
-    const { screenToFlowPosition } = useReactFlow();
+    const screenToFlowPosition = useReactFlow().screenToFlowPosition;
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
     const edgeStyle = useMemo(() => {
@@ -121,135 +119,163 @@ function ErdEdge({
         return _style;
     }, [data, style]);
 
-    if (!sourceNode || !targetNode) {
-        return null;
-    }
+    const { edgePath, sourceX, sourceY, targetX, targetY, sTX, sTY, tTX, tTY } =
+        useMemo(() => {
+            let edgePath = "",
+                sp = "left",
+                tp = "right",
+                sourceX = null,
+                targetX = null,
+                sourceY = null,
+                targetY = null,
+                sTX = 0,
+                sTY = 0,
+                tTX = 0,
+                tTY = 0;
 
-    let edgePath = "",
-        sp = "left",
-        tp = "right",
-        sourceX = null,
-        targetX = null,
-        sourceY = null,
-        targetY = null;
+            if (!sourceNode || !targetNode) {
+                return {
+                    edgePath,
+                    sourceX,
+                    sourceY,
+                    targetX,
+                    targetY,
+                    sTX,
+                    sTY,
+                    tTX,
+                    tTY,
+                };
+            }
 
-    if (source === target) {
-        const path = getSelfLoopPath(sourceNode, data!, screenToFlowPosition);
-        sp = path.sp;
-        tp = path.tp;
-        edgePath = path.edgePath;
-        sourceX = path.sx;
-        sourceY = path.sy;
-        targetX = path.tx;
-        targetY = path.ty;
-    } else {
-        const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
-            sourceNode,
-            targetNode,
-            data!,
-            screenToFlowPosition
-        );
+            if (source === target) {
+                const path = getSelfLoopPath(
+                    sourceNode,
+                    data!,
+                    screenToFlowPosition
+                );
+                sp = path.sp;
+                tp = path.tp;
+                edgePath = path.edgePath;
+                sourceX = path.sx;
+                sourceY = path.sy;
+                targetX = path.tx;
+                targetY = path.ty;
 
-        [edgePath] = getSmoothStepPath({
-            sourceX: sx,
-            sourceY: sy,
-            sourcePosition: sourcePos,
-            targetX: tx,
-            targetY: ty,
-            targetPosition: targetPos,
-            borderRadius: 4,
-        });
-        sp = sourcePos;
-        tp = targetPos;
-        sourceX = sx;
-        sourceY = sy;
-        targetX = tx;
-        targetY = ty;
-    }
-
-    const { sTX, sTY, tTX, tTY } = useMemo(() => {
-        let sTX = 0,
-            sTY = 0,
-            tTX = 0,
-            tTY = 0;
-        if (source === target) {
-            if (sp === "left") {
-                sTX = -150;
-                sTY = -150;
+                if (sp === "left") {
+                    sTX = -150;
+                    sTY = -150;
+                } else {
+                    sTX = 50;
+                    sTY = -150;
+                }
+                if (tp === "left") {
+                    tTX = -150;
+                    tTY = 50;
+                } else {
+                    tTX = 50;
+                    tTY = 50;
+                }
             } else {
-                sTX = 50;
-                sTY = -150;
+                const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
+                    sourceNode,
+                    targetNode,
+                    data!,
+                    screenToFlowPosition
+                );
+
+                [edgePath] = getSmoothStepPath({
+                    sourceX: sx,
+                    sourceY: sy,
+                    sourcePosition: sourcePos,
+                    targetX: tx,
+                    targetY: ty,
+                    targetPosition: targetPos,
+                    borderRadius: 4,
+                });
+                sp = sourcePos;
+                tp = targetPos;
+                sourceX = sx;
+                sourceY = sy;
+                targetX = tx;
+                targetY = ty;
+
+                if (sp === "bottom") {
+                    sTX = -50;
+                    sTY = 75;
+                } else if (sp === "top") {
+                    sTX = -50;
+                    sTY = -150;
+                } else if (sp === "left") {
+                    sTX = -150;
+                    sTY = 75;
+                } else if (sp === "right") {
+                    sTX = 50;
+                    sTY = -150;
+                }
+                if (tp === "bottom") {
+                    tTX = -50;
+                    tTY = 75;
+                } else if (tp === "top") {
+                    tTX = -50;
+                    tTY = -150;
+                } else if (tp === "left") {
+                    tTX = -150;
+                    tTY = -150;
+                } else if (tp === "right") {
+                    tTX = 50;
+                    tTY = -150;
+                }
             }
-            if (tp === "left") {
-                tTX = -150;
-                tTY = 50;
-            } else {
-                tTX = 50;
-                tTY = 50;
-            }
-        } else {
-            if (sp === "bottom") {
-                sTX = -50;
-                sTY = 75;
-            } else if (sp === "top") {
-                sTX = -50;
-                sTY = -150;
-            } else if (sp === "left") {
-                sTX = -150;
-                sTY = 75;
-            } else if (sp === "right") {
-                sTX = 50;
-                sTY = -150;
-            }
-            if (tp === "bottom") {
-                tTX = -50;
-                tTY = 75;
-            } else if (tp === "top") {
-                tTX = -50;
-                tTY = -150;
-            } else if (tp === "left") {
-                tTX = -150;
-                tTY = -150;
-            } else if (tp === "right") {
-                tTX = 50;
-                tTY = -150;
-            }
-        }
-        return { sTX, sTY, tTX, tTY };
-    }, [sp, tp, source, target]);
+
+            return {
+                edgePath,
+                sourceX,
+                sourceY,
+                targetX,
+                targetY,
+                sTX,
+                sTY,
+                tTX,
+                tTY,
+            };
+        }, [sourceNode, targetNode, data]);
 
     return (
         <>
-            <BaseEdge
-                id={id}
-                className={cc([
-                    "react-flow__edge-path",
-                    { suggested: data?.isSuggestion },
-                ])}
-                path={edgePath}
-                markerStart={markerStart}
-                markerEnd={markerEnd}
-                style={edgeStyle}
-            />
+            {sourceNode && targetNode && (
+                <>
+                    <BaseEdge
+                        id={id}
+                        className={cc([
+                            "react-flow__edge-path",
+                            { suggested: data?.isSuggestion },
+                        ])}
+                        path={edgePath}
+                        markerStart={markerStart}
+                        markerEnd={markerEnd}
+                        style={edgeStyle}
+                    />
 
-            <EdgeLabelRenderer>
-                {data?.startValue && (
-                    <EdgeLabel
-                        transform={`translate(${sTX}%, ${sTY}%) translate(${sourceX}px,${sourceY}px)`}
-                        value={data.startValue}
-                        type="start"
-                        edgeId={id}
-                    />
-                )}
-                {data?.endValue && (
-                    <EdgeLabel
-                        transform={`translate(${tTX}%, ${tTY}%) translate(${targetX}px,${targetY}px)`}
-                        value={data.endValue}
-                        type="end"
-                        edgeId={id}
-                    />
-                )}
-            </EdgeLabelRenderer>
+                    <EdgeLabelRenderer>
+                        {data?.startValue && (
+                            <EdgeLabel
+                                transform={`translate(${sTX}%, ${sTY}%) translate(${sourceX}px,${sourceY}px)`}
+                                value={data.startValue}
+                                type="start"
+                                edgeId={id}
+                            />
+                        )}
+                        {data?.endValue && (
+                            <EdgeLabel
+                                transform={`translate(${tTX}%, ${tTY}%) translate(${targetX}px,${targetY}px)`}
+                                value={data.endValue}
+                                type="end"
+                                edgeId={id}
+                            />
+                        )}
+                    </EdgeLabelRenderer>
+                </>
+            )}
         </>
     );
 }
