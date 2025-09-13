@@ -114,7 +114,7 @@ function ErdEdge({
         if (data?.isSuggestion) {
             _style.strokeDasharray = "5,5";
             _style.opacity = 0.6;
-            _style.stroke = "var(--color-gray-700)";
+            _style.stroke = "var(--color-14)";
         }
         return _style;
     }, [data, style]);
